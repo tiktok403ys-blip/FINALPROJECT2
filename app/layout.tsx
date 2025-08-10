@@ -2,17 +2,17 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { Navbar } from "@/components/navbar"
+import { ThemeProvider } from "@/components/theme-provider"
+import Navbar from "@/components/navbar"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "GuruSingapore - Your Ultimate Online Casino Resource",
+  title: "GuruSingapore - Premier Casino Guide",
   description:
-    "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming in Singapore.",
-  keywords: "online casino singapore, casino bonuses, casino reviews, gambling guide singapore, casino games",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
-  generator: "v0.dev",
+    "Singapore's most trusted casino guide with expert reviews, exclusive bonuses, and comprehensive casino information.",
+  keywords: "Singapore casino, casino reviews, online casino, casino bonuses, gambling guide",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -21,10 +21,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Navbar />
-        <main>{children}</main>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <div className="min-h-screen bg-black text-white">
+            <Navbar />
+            <main>{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
