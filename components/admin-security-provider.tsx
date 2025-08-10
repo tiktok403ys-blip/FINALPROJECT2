@@ -3,12 +3,13 @@
 import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
-import { useRouter } from "next/navigation"
 
 interface AdminSecurityContextType {
   user: User | null
+  profile: any | null
   isAdmin: boolean
   loading: boolean
   signOut: () => Promise<void>
@@ -18,49 +19,62 @@ const AdminSecurityContext = createContext<AdminSecurityContextType | undefined>
 
 export function AdminSecurityProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const checkAuth = async () => {
       try {
         const {
-          data: { user: currentUser },
+          data: { user },
         } = await supabase.auth.getUser()
 
-        if (currentUser) {
-          setUser(currentUser)
-
-          // Check admin role
-          const { data: profile } = await supabase.from("profiles").select("role").eq("id", currentUser.id).single()
-
-          setIsAdmin(profile?.role === "admin")
-        } else {
-          setUser(null)
-          setIsAdmin(false)
+        if (!user) {
+          router.push("/admin/auth/login")
+          return
         }
+
+        // Get user profile
+        const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+        if (error || !profile || profile.role !== "admin") {
+          await supabase.auth.signOut()
+          router.push("/admin/auth/login")
+          return
+        }
+
+        setUser(user)
+        setProfile(profile)
       } catch (error) {
-        console.error("Error checking admin status:", error)
-        setUser(null)
-        setIsAdmin(false)
+        console.error("Auth check failed:", error)
+        router.push("/admin/auth/login")
       } finally {
         setLoading(false)
       }
     }
 
-    checkAdminStatus()
+    checkAuth()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
+      if (event === "SIGNED_OUT" || !session) {
         setUser(null)
-        setIsAdmin(false)
+        setProfile(null)
         router.push("/admin/auth/login")
       } else if (session?.user) {
-        await checkAdminStatus()
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+
+        if (!profile || profile.role !== "admin") {
+          await supabase.auth.signOut()
+          router.push("/admin/auth/login")
+          return
+        }
+
+        setUser(session.user)
+        setProfile(profile)
       }
     })
 
@@ -70,26 +84,37 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
   const signOut = async () => {
     try {
       // Log admin logout
-      if (user) {
-        await supabase.rpc("log_admin_action", {
-          p_action: "admin_logout",
-          p_resource_type: "auth",
-          p_resource_id: user.id,
-        })
-      }
+      await supabase.rpc("log_admin_action", {
+        p_action: "admin_logout",
+        p_resource: "auth",
+      })
 
       await supabase.auth.signOut()
-      router.push("/admin/auth/login")
     } catch (error) {
-      console.error("Error signing out:", error)
+      console.error("Sign out error:", error)
     }
   }
 
-  return (
-    <AdminSecurityContext.Provider value={{ user, isAdmin, loading, signOut }}>
-      {children}
-    </AdminSecurityContext.Provider>
-  )
+  const value = {
+    user,
+    profile,
+    isAdmin: profile?.role === "admin",
+    loading,
+    signOut,
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white">Verifying admin access...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return <AdminSecurityContext.Provider value={value}>{children}</AdminSecurityContext.Provider>
 }
 
 export function useAdminSecurity() {

@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Shield, Lock, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Shield, Lock } from "lucide-react"
 
-export default function AdminLogin() {
+export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -32,7 +32,15 @@ export default function AdminLogin() {
         password,
       })
 
-      if (authError) throw authError
+      if (authError) {
+        setError(authError.message)
+        return
+      }
+
+      if (!authData.user) {
+        setError("Authentication failed")
+        return
+      }
 
       // Check if user has admin role
       const { data: profile, error: profileError } = await supabase
@@ -41,111 +49,119 @@ export default function AdminLogin() {
         .eq("id", authData.user.id)
         .single()
 
-      if (profileError) throw profileError
+      if (profileError) {
+        setError("Failed to verify admin privileges")
+        await supabase.auth.signOut()
+        return
+      }
 
       if (profile?.role !== "admin") {
+        setError("Access denied. Admin privileges required.")
         await supabase.auth.signOut()
-        throw new Error("Access denied. Admin privileges required.")
+        return
       }
 
       // Log admin login
       await supabase.rpc("log_admin_action", {
         p_action: "admin_login",
-        p_resource_type: "auth",
-        p_resource_id: authData.user.id,
+        p_resource: "auth",
+        p_ip_address: null, // Would need to get from headers in production
       })
 
+      // Redirect to admin dashboard
       router.push("/admin")
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError("An unexpected error occurred")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      <Card className="w-full max-w-md border-purple-500/20 bg-slate-900/50 backdrop-blur-sm">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-600">
-            <Shield className="h-6 w-6 text-white" />
-          </div>
-          <CardTitle className="text-2xl font-bold text-white">Admin Access</CardTitle>
-          <CardDescription className="text-slate-400">Secure login for GuruSingapore administrators</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <Alert className="border-red-500/20 bg-red-500/10">
-                <AlertDescription className="text-red-400">{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-slate-300">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@gurusingapore.com"
-                required
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
-              />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="bg-black/50 border-gray-800 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mb-4">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-slate-300">
-                Password
-              </label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-slate-400" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <Button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Authenticating...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Secure Login
-                </div>
+            <CardTitle className="text-2xl font-bold text-white">Admin Access</CardTitle>
+            <CardDescription className="text-gray-400">Secure login for authorized administrators only</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {error && (
+                <Alert className="border-red-800 bg-red-900/20">
+                  <AlertDescription className="text-red-400">{error}</AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-slate-500">This is a secure admin area. All access attempts are logged.</p>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium text-gray-300">
+                  Email Address
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-gray-900 border-gray-700 text-white focus:border-red-500"
+                  placeholder="admin@gurusingapore.com"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-gray-300">
+                  Password
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-gray-900 border-gray-700 text-white focus:border-red-500 pr-10"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    Authenticating...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Secure Login
+                  </div>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-xs text-gray-500">
+                This is a restricted area. All access attempts are logged and monitored.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

@@ -1,33 +1,48 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
 
 export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get("host")
+  const hostname = request.headers.get("host") || ""
   const pathname = request.nextUrl.pathname
+
+  // Skip middleware for static files and API routes
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.includes(".") ||
+    pathname.startsWith("/favicon")
+  ) {
+    return NextResponse.next()
+  }
 
   // Admin subdomain security
   if (hostname === "sg44admin.gurusingapore.com") {
-    // Enhanced security for admin subdomain
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    // Check if user is admin
-    if (!user) {
-      return NextResponse.redirect(new URL("/admin/auth/login", request.url))
-    }
-
-    // Check admin role
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      return NextResponse.redirect(new URL("/unauthorized", request.url))
-    }
-
-    // Rewrite admin subdomain to /admin path
+    // Allow admin subdomain to access admin routes
     if (!pathname.startsWith("/admin")) {
       return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url))
+    }
+
+    // Add security headers for admin subdomain
+    const response = NextResponse.next()
+    response.headers.set("X-Robots-Tag", "noindex, nofollow")
+    response.headers.set("X-Frame-Options", "DENY")
+    response.headers.set("X-Content-Type-Options", "nosniff")
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+
+    return response
+  }
+
+  // Block admin access from main domain
+  if (pathname.startsWith("/admin")) {
+    return new NextResponse(null, { status: 404 })
+  }
+
+  // Admin subdomain routing - ONLY allow admin access from subdomain
+  if (hostname === "sg44admin.gurusingapore.com") {
+    // Rewrite admin subdomain to /admin path
+    if (!pathname.startsWith("/admin")) {
+      const url = new URL(`/admin${pathname === "/" ? "" : pathname}`, request.url)
+      return NextResponse.rewrite(url)
     }
   }
 
@@ -35,7 +50,8 @@ export async function middleware(request: NextRequest) {
   if (hostname === "gurusingapore.com" || hostname === "www.gurusingapore.com") {
     // Redirect www to non-www
     if (hostname === "www.gurusingapore.com") {
-      return NextResponse.redirect(new URL(`https://gurusingapore.com${pathname}`, request.url))
+      const url = new URL(`https://gurusingapore.com${pathname}`, request.url)
+      return NextResponse.redirect(url, 301)
     }
   }
 
@@ -43,5 +59,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 }

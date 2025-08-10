@@ -1,280 +1,368 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
+import { ChevronDown, Menu, X, User, LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
-const navigationItems = [
-  {
-    title: "Home",
-    href: "/",
-  },
-  {
-    title: "Casinos",
-    href: "/casinos",
-  },
-  {
-    title: "Best Bonus",
-    href: "/bonuses",
-  },
-  {
-    title: "News",
-    href: "/news",
-  },
-  {
-    title: "Reports",
-    href: "/reports",
-  },
-]
-
-export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [reviewsOpen, setReviewsOpen] = useState(false)
-  const [casinos, setCasinos] = useState<any[]>([])
-  const pathname = usePathname()
+  const [isReviewsOpen, setIsReviewsOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    const getInitialSession = async () => {
+    const getUser = async () => {
       const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUser(user)
+
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+        setProfile(profile)
+      }
     }
 
-    getInitialSession()
+    getUser()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
-      setLoading(false)
+      if (session?.user) {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+        setProfile(profile)
+      } else {
+        setProfile(null)
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase])
 
   useEffect(() => {
-    const fetchCasinos = async () => {
-      const { data } = await supabase.from("casinos").select("id, name").order("rating", { ascending: false }).limit(8)
-      if (data) setCasinos(data)
+    let lastScrollY = window.scrollY
+    let ticking = false
+
+    const updateScrollDirection = () => {
+      const scrollY = window.scrollY
+      const heroHeight = window.innerHeight * 0.8 // Assume hero is 80vh
+
+      if (scrollY < heroHeight) {
+        // In hero section - hide navbar
+        setIsVisible(false)
+        setIsScrolled(false)
+      } else {
+        // Past hero section - show navbar
+        setIsVisible(true)
+        setIsScrolled(true)
+      }
+
+      lastScrollY = scrollY > 0 ? scrollY : 0
+      ticking = false
     }
-    fetchCasinos()
-  }, [supabase])
+
+    const requestTick = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateScrollDirection)
+        ticking = true
+      }
+    }
+
+    const onScroll = () => requestTick()
+
+    // Initial check
+    updateScrollDirection()
+
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-  }
-
-  const createSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
+    setIsUserMenuOpen(false)
   }
 
   return (
-    <nav className="w-full bg-black h-16 flex items-center justify-between px-8">
-      {/* Logo */}
-      <Link href="/" className="text-2xl font-bold text-[#00ff88]">
-        GuruSingapore
-      </Link>
-
-      {/* Desktop Navigation - Centered */}
-      <div className="hidden md:flex items-center space-x-8">
-        {navigationItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "text-white hover:text-[#00ff88] transition-colors text-sm font-medium",
-              pathname === item.href && "text-[#00ff88]",
-            )}
-          >
-            {item.title}
-          </Link>
-        ))}
-
-        {/* Reviews Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setReviewsOpen(!reviewsOpen)}
-            className="flex items-center text-white hover:text-[#00ff88] transition-colors text-sm font-medium"
-          >
-            Reviews
-            <ChevronDown className="w-3 h-3 ml-1" />
-          </button>
-
-          {reviewsOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setReviewsOpen(false)} />
-              <div className="absolute top-full left-0 mt-2 w-64 bg-black border border-gray-800 rounded-md shadow-xl z-20">
-                <div className="py-2">
-                  <Link
-                    href="/reviews"
-                    className="block px-4 py-2 text-white hover:text-[#00ff88] hover:bg-gray-900 text-sm"
-                    onClick={() => setReviewsOpen(false)}
-                  >
-                    All Reviews
-                  </Link>
-                  <div className="border-t border-gray-800 my-2"></div>
-                  {casinos.map((casino) => (
-                    <Link
-                      key={casino.id}
-                      href={`/reviews/${createSlug(casino.name)}-${casino.id}`}
-                      className="block px-4 py-2 text-sm text-gray-300 hover:text-[#00ff88] hover:bg-gray-900"
-                      onClick={() => setReviewsOpen(false)}
-                    >
-                      {casino.name} Review
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Auth Buttons */}
-      <div className="flex items-center space-x-3">
-        {loading ? (
-          <div className="w-16 h-8 bg-gray-800 rounded animate-pulse" />
-        ) : user ? (
-          <div className="flex items-center space-x-3">
-            <span className="text-white text-sm">{user.email?.split("@")[0]}</span>
-            <Button
-              onClick={handleSignOut}
-              variant="ghost"
-              className="text-white hover:text-[#00ff88] text-sm font-medium"
+    <nav
+      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
+        isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+      }`}
+    >
+      <div
+        className={`mx-auto px-6 py-3 rounded-2xl backdrop-blur-xl bg-black/20 border border-white/10 shadow-2xl transition-all duration-300 ${
+          isScrolled ? "bg-black/30 border-white/20 shadow-black/20" : "bg-black/20 border-white/10"
+        }`}
+        style={{
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}
+      >
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link
+              href="/"
+              className="text-[#00ff88] text-xl font-bold hover:text-[#00cc6a] transition-all duration-300 hover:scale-105"
             >
-              Logout
-            </Button>
+              GuruSingapore
+            </Link>
           </div>
-        ) : (
-          <>
-            <Link href="/auth/login">
-              <Button variant="ghost" className="text-white hover:text-[#00ff88] text-sm font-medium">
-                Login
-              </Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button className="bg-[#00ff88] hover:bg-[#00ff88]/90 text-black text-sm font-medium px-6 h-9">
-                Register
-              </Button>
-            </Link>
-          </>
-        )}
 
-        {/* Mobile menu button */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden text-white">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] bg-black border-gray-800">
-            <div className="flex flex-col space-y-4 mt-8">
-              <div className="px-3 py-2 border-b border-gray-800">
-                <span className="text-xl font-bold text-[#00ff88]">GuruSingapore</span>
-              </div>
+          {/* Desktop Navigation */}
+          <div className="hidden lg:block">
+            <div className="flex items-center space-x-1">
+              <Link
+                href="/"
+                className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+              >
+                Home
+              </Link>
+              <Link
+                href="/casinos"
+                className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+              >
+                Casinos
+              </Link>
+              <Link
+                href="/bonuses"
+                className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+              >
+                Best Bonus
+              </Link>
+              <Link
+                href="/news"
+                className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+              >
+                News
+              </Link>
+              <Link
+                href="/reports"
+                className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+              >
+                Reports
+              </Link>
 
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "block px-3 py-2 text-white hover:text-[#00ff88] transition-colors",
-                    pathname === item.href && "text-[#00ff88]",
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.title}
-                </Link>
-              ))}
-
-              <div>
+              {/* Reviews Dropdown */}
+              <div className="relative">
                 <button
-                  onClick={() => setReviewsOpen(!reviewsOpen)}
-                  className="flex items-center justify-between w-full px-3 py-2 text-white hover:text-[#00ff88] transition-colors"
+                  onClick={() => setIsReviewsOpen(!isReviewsOpen)}
+                  className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 flex items-center"
                 >
                   Reviews
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown
+                    className={`ml-1 h-4 w-4 transition-transform duration-300 ${isReviewsOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
-                {reviewsOpen && (
-                  <div className="ml-4 mt-2 space-y-1">
-                    <Link
-                      href="/reviews"
-                      className="block px-3 py-2 text-white hover:text-[#00ff88]"
-                      onClick={() => {
-                        setReviewsOpen(false)
-                        setIsOpen(false)
-                      }}
-                    >
-                      All Reviews
-                    </Link>
-                    {casinos.slice(0, 5).map((casino) => (
-                      <Link
-                        key={casino.id}
-                        href={`/reviews/${createSlug(casino.name)}-${casino.id}`}
-                        className="block px-3 py-2 text-sm text-gray-300 hover:text-[#00ff88]"
-                        onClick={() => {
-                          setReviewsOpen(false)
-                          setIsOpen(false)
-                        }}
-                      >
-                        {casino.name} Review
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
 
-              <div className="border-t border-gray-800 pt-4">
-                {user ? (
-                  <div className="space-y-2">
-                    <div className="px-3 py-2 text-sm text-gray-400">Signed in as {user.email?.split("@")[0]}</div>
-                    <button
-                      onClick={() => {
-                        handleSignOut()
-                        setIsOpen(false)
-                      }}
-                      className="block w-full text-left px-3 py-2 text-white hover:text-[#00ff88]"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Link
-                      href="/auth/login"
-                      className="block px-3 py-2 text-white hover:text-[#00ff88]"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      className="block px-3 py-2 bg-[#00ff88] text-black hover:bg-[#00ff88]/90 text-center rounded"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Register
-                    </Link>
+                {isReviewsOpen && (
+                  <div className="absolute right-0 mt-2 w-56 backdrop-blur-xl bg-black/30 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                    <div className="py-2">
+                      <Link
+                        href="/reviews"
+                        className="block px-4 py-3 text-sm text-white/90 hover:bg-white/10 hover:text-[#00ff88] transition-all duration-300"
+                        onClick={() => setIsReviewsOpen(false)}
+                      >
+                        All Reviews
+                      </Link>
+                      <Link
+                        href="/reviews/casino-reviews"
+                        className="block px-4 py-3 text-sm text-white/90 hover:bg-white/10 hover:text-[#00ff88] transition-all duration-300"
+                        onClick={() => setIsReviewsOpen(false)}
+                      >
+                        Casino Reviews
+                      </Link>
+                      <Link
+                        href="/reviews/bonus-reviews"
+                        className="block px-4 py-3 text-sm text-white/90 hover:bg-white/10 hover:text-[#00ff88] transition-all duration-300"
+                        onClick={() => setIsReviewsOpen(false)}
+                      >
+                        Bonus Reviews
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden lg:block">
+            <div className="flex items-center space-x-3">
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-r from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center mr-2">
+                      <User className="h-4 w-4 text-black" />
+                    </div>
+                    {profile?.username || user.email?.split("@")[0] || "User"}
+                    <ChevronDown
+                      className={`ml-2 h-4 w-4 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 backdrop-blur-xl bg-black/30 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                      <div className="py-2">
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-3 text-sm text-white/90 hover:bg-white/10 hover:text-[#00ff88] transition-all duration-300"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <User className="inline h-4 w-4 mr-2" />
+                          Profile Settings
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="block w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/10 hover:text-red-400 transition-all duration-300"
+                        >
+                          <LogOut className="inline h-4 w-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="text-white/90 hover:text-[#00ff88] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] hover:from-[#00cc6a] hover:to-[#00ff88] text-black px-6 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-[#00ff88]/25"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-white/90 hover:text-[#00ff88] p-2 rounded-xl transition-all duration-300 hover:bg-white/10"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Mobile Navigation */}
+      {isOpen && (
+        <div className="lg:hidden mt-4">
+          <div className="backdrop-blur-xl bg-black/30 border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="px-4 py-6 space-y-2">
+              <Link
+                href="/"
+                className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                onClick={() => setIsOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                href="/casinos"
+                className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                onClick={() => setIsOpen(false)}
+              >
+                Casinos
+              </Link>
+              <Link
+                href="/bonuses"
+                className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                onClick={() => setIsOpen(false)}
+              >
+                Best Bonus
+              </Link>
+              <Link
+                href="/news"
+                className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                onClick={() => setIsOpen(false)}
+              >
+                News
+              </Link>
+              <Link
+                href="/reports"
+                className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                onClick={() => setIsOpen(false)}
+              >
+                Reports
+              </Link>
+              <Link
+                href="/reviews"
+                className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                onClick={() => setIsOpen(false)}
+              >
+                Reviews
+              </Link>
+
+              {user ? (
+                <div className="border-t border-white/10 pt-4 mt-4">
+                  <div className="flex items-center px-4 py-3 text-white/90 text-sm">
+                    <div className="w-8 h-8 bg-gradient-to-r from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center mr-3">
+                      <User className="h-4 w-4 text-black" />
+                    </div>
+                    {profile?.username || user.email?.split("@")[0] || "User"}
+                  </div>
+                  <Link
+                    href="/profile"
+                    className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Profile Settings
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleSignOut()
+                      setIsOpen(false)
+                    }}
+                    className="text-white/90 hover:text-red-400 block px-4 py-3 rounded-xl text-base font-medium w-full text-left transition-all duration-300 hover:bg-white/10"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="border-t border-white/10 pt-4 mt-4 space-y-2">
+                  <Link
+                    href="/auth/login"
+                    className="text-white/90 hover:text-[#00ff88] block px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 hover:bg-white/10"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] hover:from-[#00cc6a] hover:to-[#00ff88] text-black block px-4 py-3 text-base font-medium mx-4 rounded-xl transition-all duration-300 text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   )
 }
+
+// Named export
+
+// Default export
+export default Navbar
