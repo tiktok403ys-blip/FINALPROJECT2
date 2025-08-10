@@ -1,57 +1,74 @@
 -- Drop existing policies if they exist
-DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON profiles;
 
--- Ensure RLS is enabled on profiles table
+-- Drop existing trigger and function if they exist
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+
+-- Create profiles table if it doesn't exist
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL PRIMARY KEY,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  username text UNIQUE,
+  full_name text,
+  avatar_url text,
+  website text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  
+  CONSTRAINT username_length CHECK (char_length(username) >= 3)
+);
+
+-- Enable RLS on profiles table
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Create proper RLS policies
-CREATE POLICY "Enable read access for users based on user_id" ON public.profiles
-    FOR SELECT USING (auth.uid() = id);
+-- Create RLS policies for profiles table
+CREATE POLICY "Public profiles are viewable by everyone" ON profiles
+  FOR SELECT USING (true);
 
-CREATE POLICY "Enable insert for authenticated users only" ON public.profiles
-    FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can insert their own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Enable update for users based on user_id" ON public.profiles
-    FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
 
--- Grant proper permissions
-GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
-GRANT SELECT ON public.profiles TO anon;
-
--- Revoke unnecessary permissions
-REVOKE ALL ON public.profiles FROM public;
-
--- Ensure the trigger function has proper security
+-- Create function to handle new user registration
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER 
+RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  INSERT INTO public.profiles (id, full_name, avatar_url)
   VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
-    COALESCE(NEW.raw_user_meta_data->>'avatar_url', '')
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+    COALESCE(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
   );
-  RETURN NEW;
+  RETURN new;
 EXCEPTION
   WHEN others THEN
-    RAISE LOG 'Error in handle_new_user: %', SQLERRM;
-    RETURN NEW;
+    -- Log error but don't fail the user creation
+    RAISE WARNING 'Could not create profile for user %: %', new.id, SQLERRM;
+    RETURN new;
 END;
 $$;
 
--- Recreate the trigger
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
+-- Create trigger for new user registration
+CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Verify RLS is working
+-- Enable realtime for profiles table
+ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+
+-- Verify RLS is enabled
 SELECT schemaname, tablename, rowsecurity 
 FROM pg_tables 
+WHERE tablename = 'profiles';
+
+-- Show current policies
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual 
+FROM pg_policies 
 WHERE tablename = 'profiles';

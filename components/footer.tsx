@@ -16,7 +16,7 @@ interface FooterContent {
   display_order: number
 }
 
-export function Footer() {
+export default function Footer() {
   const [footerContent, setFooterContent] = useState<FooterContent[]>([])
   const supabase = createClient()
 
@@ -198,3 +198,6 @@ export function Footer() {
     </footer>
   )
 }
+
+// Named export for backward compatibility
+export { Footer }
