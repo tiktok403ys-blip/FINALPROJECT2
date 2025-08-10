@@ -33,7 +33,7 @@ const navigationItems = [
   },
 ]
 
-export function Navbar() {
+export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
@@ -278,6 +278,3 @@ export function Navbar() {
     </nav>
   )
 }
-
-// Default export for backward compatibility
-export default Navbar
