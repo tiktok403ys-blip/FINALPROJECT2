@@ -2,20 +2,20 @@ import { HeroBanner } from "@/components/hero-banner"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
-import { Star, TrendingUp, Trophy, Users } from "lucide-react"
+import { Star, TrendingUp, Trophy, Users, Shield, Award } from "lucide-react"
 import Link from "next/link"
 import { Footer } from "@/components/footer"
 import { LogoSlider } from "@/components/logo-slider"
 import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components/content-sections"
-import type { Casino, News, LeaderboardEntry } from "@/lib/types"
+import type { Casino, News, Bonus } from "@/lib/types"
 
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // Fetch top casinos
-  const { data: topCasinos } = await supabase.from("casinos").select("*").order("rating", { ascending: false }).limit(3)
+  // Fetch top casinos with real data
+  const { data: topCasinos } = await supabase.from("casinos").select("*").order("rating", { ascending: false }).limit(6)
 
-  // Fetch latest news
+  // Fetch latest news with real data
   const { data: latestNews } = await supabase
     .from("news")
     .select("*")
@@ -23,12 +23,33 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(3)
 
-  // Fetch leaderboard preview
-  const { data: leaderboardPreview } = await supabase
-    .from("leaderboard")
-    .select("*, casinos(name)")
-    .order("rank", { ascending: true })
-    .limit(5)
+  // Fetch featured bonuses
+  const { data: featuredBonuses } = await supabase
+    .from("bonuses")
+    .select(`
+      *,
+      casinos (
+        name,
+        logo_url,
+        rating
+      )
+    `)
+    .order("created_at", { ascending: false })
+    .limit(4)
+
+  // Fetch recent reviews
+  const { data: recentReviews } = await supabase
+    .from("casino_reviews")
+    .select(`
+      *,
+      casinos (
+        name,
+        logo_url
+      )
+    `)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .limit(3)
 
   return (
     <div className="min-h-screen bg-black">
@@ -39,23 +60,41 @@ export default async function HomePage() {
         <section>
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-white mb-4">Top Rated Casinos</h2>
-            <p className="text-gray-400 text-lg">Discover our highest-rated online casinos</p>
+            <p className="text-gray-400 text-lg">Discover our highest-rated online casinos with verified reviews</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {topCasinos?.map((casino: Casino) => (
-              <GlassCard key={casino.id} className="p-6">
+              <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Star className="w-8 h-8 text-[#00ff88]" />
+                  <div className="w-full h-16 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden px-4">
+                    {casino.logo_url ? (
+                      <img
+                        src={casino.logo_url || "/placeholder.svg"}
+                        alt={`${casino.name} logo`}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-[#00ff88]/20 to-[#00ff88]/10 rounded flex items-center justify-center">
+                        <span className="text-[#00ff88] font-bold text-lg">{casino.name.charAt(0)}</span>
+                      </div>
+                    )}
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">{casino.name}</h3>
-                  <p className="text-gray-400 mb-4">{casino.description}</p>
+                  <p className="text-gray-400 mb-4 text-sm line-clamp-2">{casino.description}</p>
                   <div className="flex items-center justify-center mb-4">
                     <Star className="w-5 h-5 text-[#00ff88] fill-current" />
-                    <span className="text-white ml-1">{casino.rating}</span>
+                    <span className="text-white ml-1 font-semibold">{casino.rating || "N/A"}</span>
                   </div>
-                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
+                  <div className="space-y-2 mb-4">
+                    {casino.location && <div className="text-xs text-gray-400">Location: {casino.location}</div>}
+                    {casino.bonus_info && (
+                      <div className="text-xs text-[#00ff88] bg-[#00ff88]/10 px-2 py-1 rounded">
+                        {casino.bonus_info}
+                      </div>
+                    )}
+                  </div>
+                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full" asChild>
                     <Link href={`/casinos/${casino.id}`}>View Details</Link>
                   </Button>
                 </div>
@@ -70,25 +109,97 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* Featured Bonuses Section */}
+        <section>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">Exclusive Bonuses</h2>
+            <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {featuredBonuses?.map((bonus: Bonus & { casinos?: Casino }) => (
+              <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {bonus.casinos?.logo_url ? (
+                      <img
+                        src={bonus.casinos.logo_url || "/placeholder.svg"}
+                        alt={`${bonus.casinos.name} logo`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Trophy className="w-8 h-8 text-[#00ff88]" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-1 rounded text-xs font-semibold">
+                        {bonus.bonus_type || "BONUS"}
+                      </span>
+                      {bonus.casinos?.rating && (
+                        <div className="flex items-center">
+                          <Star className="w-3 h-3 text-[#00ff88] fill-current" />
+                          <span className="text-white text-xs ml-1">{bonus.casinos.rating}</span>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">{bonus.title}</h3>
+                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">{bonus.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[#00ff88] font-bold">{bonus.bonus_amount}</div>
+                        <div className="text-gray-400 text-xs">{bonus.casinos?.name}</div>
+                      </div>
+                      <Button size="sm" className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
+                        <Link href={bonus.claim_url || `/casinos/${bonus.casino_id}`}>Claim Now</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          <div className="text-center mt-8">
+            <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
+              <Link href="/bonuses">View All Bonuses</Link>
+            </Button>
+          </div>
+        </section>
+
         {/* Latest News Section */}
         <section>
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Latest News</h2>
-            <p className="text-gray-400 text-lg">Stay updated with the latest casino industry news</p>
+            <h2 className="text-4xl font-bold text-white mb-4">Latest Industry News</h2>
+            <p className="text-gray-400 text-lg">
+              Stay updated with the latest casino industry developments and insights
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {latestNews?.map((article: News) => (
-              <GlassCard key={article.id} className="p-6">
+              <GlassCard key={article.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="flex items-center mb-3">
                   <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
-                  <span className="text-[#00ff88] text-sm">{article.category}</span>
+                  <span className="text-[#00ff88] text-sm font-semibold">{article.category}</span>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-3">{article.title}</h3>
-                <p className="text-gray-400 mb-4">{article.excerpt}</p>
-                <Button variant="ghost" className="text-[#00ff88] p-0" asChild>
-                  <Link href={`/news/${article.id}`}>Read More →</Link>
-                </Button>
+                {article.image_url && (
+                  <div className="w-full h-40 bg-white/10 rounded-lg mb-4 overflow-hidden">
+                    <img
+                      src={article.image_url || "/placeholder.svg"}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <h3 className="text-lg font-bold text-white mb-3 line-clamp-2">{article.title}</h3>
+                <p className="text-gray-400 mb-4 text-sm line-clamp-3">{article.excerpt}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 text-xs">{new Date(article.created_at).toLocaleDateString()}</span>
+                  <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
+                    <Link href={`/news/${article.id}`}>Read More</Link>
+                  </Button>
+                </div>
               </GlassCard>
             ))}
           </div>
@@ -100,63 +211,89 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Leaderboard Preview */}
-        <section>
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Top Players</h2>
-            <p className="text-gray-400 text-lg">See who's leading the rankings</p>
-          </div>
+        {/* Recent Reviews Section */}
+        {recentReviews && recentReviews.length > 0 && (
+          <section>
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-white mb-4">Latest Casino Reviews</h2>
+              <p className="text-gray-400 text-lg">Read honest reviews from our expert team and community</p>
+            </div>
 
-          <GlassCard className="p-8 max-w-2xl mx-auto">
-            <div className="space-y-4">
-              {leaderboardPreview?.map((entry: LeaderboardEntry & { casinos?: { name: string } }, index) => (
-                <div key={entry.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5">
-                  <div className="flex items-center">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 ${
-                        index === 0
-                          ? "bg-yellow-500"
-                          : index === 1
-                            ? "bg-gray-400"
-                            : index === 2
-                              ? "bg-orange-500"
-                              : "bg-[#00ff88]"
-                      }`}
-                    >
-                      {index < 3 ? (
-                        <Trophy className="w-4 h-4 text-white" />
+            <div className="grid md:grid-cols-3 gap-8">
+              {recentReviews.map((review: any) => (
+                <GlassCard key={review.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden">
+                      {review.casinos?.logo_url ? (
+                        <img
+                          src={review.casinos.logo_url || "/placeholder.svg"}
+                          alt={`${review.casinos.name} logo`}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <span className="text-white text-sm">{entry.rank}</span>
+                        <Shield className="w-6 h-6 text-[#00ff88]" />
                       )}
                     </div>
                     <div>
-                      <p className="text-white font-semibold">{entry.player_name}</p>
-                      <p className="text-gray-400 text-sm">{entry.casinos?.name}</p>
+                      <h4 className="text-white font-semibold">{review.casinos?.name}</h4>
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-[#00ff88] fill-current" />
+                        <span className="text-white text-sm ml-1">{review.rating}/5</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-[#00ff88] font-bold">{entry.points} pts</div>
-                </div>
+                  <h3 className="text-lg font-bold text-white mb-3 line-clamp-2">{review.title}</h3>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-3">{review.content}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500 text-xs">By {review.author_name || "GuruSingapore"}</span>
+                    <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
+                      <Link
+                        href={`/reviews/${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}-${review.casino_id}`}
+                      >
+                        Read Review
+                      </Link>
+                    </Button>
+                  </div>
+                </GlassCard>
               ))}
             </div>
 
-            <div className="text-center mt-6">
+            <div className="text-center mt-8">
               <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-                <Link href="/leaderboard">View Full Leaderboard</Link>
+                <Link href="/reviews">View All Reviews</Link>
               </Button>
             </div>
-          </GlassCard>
-        </section>
+          </section>
+        )}
 
-        {/* Call to Action */}
-        <section className="text-center">
-          <GlassCard className="p-12 max-w-3xl mx-auto">
-            <Users className="w-16 h-16 text-[#00ff88] mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-white mb-4">Join Our Community</h2>
-            <p className="text-gray-400 text-lg mb-8">
-              Connect with fellow players, share experiences, and get expert advice in our forum
+        {/* Trust & Safety Section */}
+        <section>
+          <GlassCard className="p-12 max-w-4xl mx-auto text-center">
+            <Shield className="w-16 h-16 text-[#00ff88] mx-auto mb-6" />
+            <h2 className="text-3xl font-bold text-white mb-4">Your Safety is Our Priority</h2>
+            <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+              We thoroughly review every casino, verify licenses, test security measures, and monitor player feedback to
+              ensure you only play at trustworthy establishments.
             </p>
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="text-center">
+                <Award className="w-8 h-8 text-[#00ff88] mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">500+</div>
+                <div className="text-gray-400 text-sm">Casinos Reviewed</div>
+              </div>
+              <div className="text-center">
+                <Shield className="w-8 h-8 text-[#00ff88] mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">24/7</div>
+                <div className="text-gray-400 text-sm">Safety Monitoring</div>
+              </div>
+              <div className="text-center">
+                <Users className="w-8 h-8 text-[#00ff88] mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">50K+</div>
+                <div className="text-gray-400 text-sm">Protected Players</div>
+              </div>
+            </div>
             <Button size="lg" className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
-              <Link href="/forum">Join Forum</Link>
+              <Link href="/reports">Report an Issue</Link>
             </Button>
           </GlassCard>
         </section>

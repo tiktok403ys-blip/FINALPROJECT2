@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, LogOut } from "lucide-react"
+import { Menu, X, LogOut, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/glass-card"
 import { createClient } from "@/lib/supabase/client"
@@ -13,6 +13,8 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [reviewsOpen, setReviewsOpen] = useState(false)
+  const [casinos, setCasinos] = useState<any[]>([])
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -45,17 +47,31 @@ export function Navbar() {
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
+  useEffect(() => {
+    const fetchCasinos = async () => {
+      const { data } = await supabase.from("casinos").select("id, name").order("rating", { ascending: false }).limit(8)
+
+      if (data) setCasinos(data)
+    }
+    fetchCasinos()
+  }, [supabase])
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push("/")
+  }
+
+  const createSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
   }
 
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/casinos", label: "Casinos" },
     { href: "/bonuses", label: "Best Bonus" },
-    { href: "/leaderboard", label: "Leaderboard" },
-    { href: "/forum", label: "Forum" },
     { href: "/news", label: "News" },
     { href: "/reports", label: "Reports" },
     ...(user
@@ -78,7 +94,7 @@ export function Navbar() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-[#00ff88]">
-              Casino Guide
+              GuruSingapore
             </Link>
 
             {/* Desktop Navigation */}
@@ -94,6 +110,42 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
+
+              {/* Reviews Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setReviewsOpen(!reviewsOpen)}
+                  className="flex items-center text-white hover:text-[#00ff88] transition-colors"
+                >
+                  Reviews
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                {reviewsOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg shadow-xl z-50">
+                    <div className="p-2">
+                      <Link
+                        href="/reviews"
+                        className="block px-3 py-2 text-white hover:text-[#00ff88] hover:bg-white/5 rounded transition-colors"
+                        onClick={() => setReviewsOpen(false)}
+                      >
+                        All Reviews
+                      </Link>
+                      <div className="border-t border-white/10 my-2"></div>
+                      {casinos.map((casino) => (
+                        <Link
+                          key={casino.id}
+                          href={`/reviews/${createSlug(casino.name)}-${casino.id}`}
+                          className="block px-3 py-2 text-sm text-gray-300 hover:text-[#00ff88] hover:bg-white/5 rounded transition-colors"
+                          onClick={() => setReviewsOpen(false)}
+                        >
+                          {casino.name} Review
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Auth Section */}
@@ -139,6 +191,45 @@ export function Navbar() {
                     {item.label}
                   </Link>
                 ))}
+
+                {/* Mobile Reviews */}
+                <div>
+                  <button
+                    onClick={() => setReviewsOpen(!reviewsOpen)}
+                    className="flex items-center text-white hover:text-[#00ff88] transition-colors w-full"
+                  >
+                    Reviews
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  </button>
+                  {reviewsOpen && (
+                    <div className="ml-4 mt-2 space-y-2">
+                      <Link
+                        href="/reviews"
+                        className="block text-white hover:text-[#00ff88] transition-colors"
+                        onClick={() => {
+                          setReviewsOpen(false)
+                          setIsOpen(false)
+                        }}
+                      >
+                        All Reviews
+                      </Link>
+                      {casinos.slice(0, 5).map((casino) => (
+                        <Link
+                          key={casino.id}
+                          href={`/reviews/${createSlug(casino.name)}-${casino.id}`}
+                          className="block text-sm text-gray-300 hover:text-[#00ff88] transition-colors"
+                          onClick={() => {
+                            setReviewsOpen(false)
+                            setIsOpen(false)
+                          }}
+                        >
+                          {casino.name} Review
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="pt-4 border-t border-white/10">
                   {user ? (
                     <div className="flex flex-col space-y-2">

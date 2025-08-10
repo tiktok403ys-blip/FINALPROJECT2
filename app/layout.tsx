@@ -7,12 +7,12 @@ import { Navbar } from "@/components/navbar"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Casino Guide - Your Ultimate Online Casino Resource",
+  title: "GuruSingapore - Your Ultimate Online Casino Resource",
   description:
-    "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming.",
-  keywords: "online casino, casino bonuses, casino reviews, gambling guide, casino games",
+    "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming in Singapore.",
+  keywords: "online casino singapore, casino bonuses, casino reviews, gambling guide singapore, casino games",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({

@@ -53,7 +53,7 @@ export function Footer() {
           {/* About Section */}
           <div>
             <Link href="/" className="text-2xl font-bold text-[#00ff88] mb-4 block">
-              Casino Guide
+              GuruSingapore
             </Link>
             {aboutContent && (
               <>
@@ -176,7 +176,9 @@ export function Footer() {
                 </Link>
               ))}
             </div>
-            <div className="text-gray-400 text-sm">© {new Date().getFullYear()} Casino Guide. All rights reserved.</div>
+            <div className="text-gray-400 text-sm">
+              © {new Date().getFullYear()} GuruSingapore. All rights reserved.
+            </div>
           </div>
         </div>
 
@@ -186,8 +188,8 @@ export function Footer() {
             <p className="text-gray-400 text-sm">
               <strong className="text-[#00ff88]">18+ Only.</strong> Gambling can be addictive. Please play responsibly.
               If you need help, visit{" "}
-              <a href="https://www.begambleaware.org" className="text-[#00ff88] hover:underline">
-                BeGambleAware.org
+              <a href="https://www.ncpg.org.sg" className="text-[#00ff88] hover:underline">
+                NCPG.org.sg
               </a>
             </p>
           </GlassCard>
