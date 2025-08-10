@@ -1,10 +1,8 @@
-"use client"
-
-import Link from "next/link"
 import Image from "next/image"
+import Link from "next/link"
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react"
 
-export default function Footer() {
+function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -21,8 +19,8 @@ export default function Footer() {
               />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Your trusted guide to the best online casinos in Singapore. We provide honest reviews, expert insights,
-              and the latest bonuses to help you make informed decisions.
+              Your trusted guide to the best online casinos in Singapore. We provide expert reviews, exclusive bonuses,
+              and comprehensive guides to help you make informed decisions.
             </p>
             <div className="flex space-x-4">
               <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
@@ -45,28 +43,33 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-[#00ff88]">Quick Links</h3>
             <ul className="space-y-2">
               <li>
+                <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Home
+                </Link>
+              </li>
+              <li>
                 <Link href="/casinos" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Online Casinos
+                  Casinos
                 </Link>
               </li>
               <li>
                 <Link href="/reviews" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Casino Reviews
+                  Reviews
                 </Link>
               </li>
               <li>
                 <Link href="/bonuses" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Casino Bonuses
-                </Link>
-              </li>
-              <li>
-                <Link href="/news" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Casino News
+                  Bonuses
                 </Link>
               </li>
               <li>
                 <Link href="/reports" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Submit Report
+                  Reports
+                </Link>
+              </li>
+              <li>
+                <Link href="/news" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  News
                 </Link>
               </li>
             </ul>
@@ -122,14 +125,13 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 text-sm">© 2024 GuruSingapore. All rights reserved.</p>
-            <div className="flex items-center space-x-6">
-              <span className="text-gray-400 text-sm">18+ Only</span>
-              <span className="text-gray-400 text-sm">Gamble Responsibly</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-4 bg-[#00ff88] rounded-sm"></div>
-                <span className="text-gray-400 text-xs">Licensed & Regulated</span>
-              </div>
+            <div className="text-gray-400 text-sm">© 2024 GuruSingapore. All rights reserved.</div>
+            <div className="flex items-center space-x-4 text-gray-400 text-sm">
+              <span>18+ Only</span>
+              <span>•</span>
+              <span>Gamble Responsibly</span>
+              <span>•</span>
+              <span>Licensed & Regulated</span>
             </div>
           </div>
         </div>
@@ -138,4 +140,5 @@ export default function Footer() {
   )
 }
 
+export default Footer
 export { Footer }
