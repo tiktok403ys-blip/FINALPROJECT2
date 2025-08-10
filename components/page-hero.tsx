@@ -16,7 +16,7 @@ interface PageHeroProps {
   date: string
 }
 
-export default function PageHero({ title, description, breadcrumbs, author, date }: PageHeroProps) {
+export function PageHero({ title, description, breadcrumbs, author, date }: PageHeroProps) {
   return (
     <div className="relative bg-gradient-to-br from-gray-900 via-black to-purple-900/20 py-24 overflow-hidden">
       {/* Background Effects */}
@@ -138,3 +138,6 @@ export default function PageHero({ title, description, breadcrumbs, author, date
     </div>
   )
 }
+
+// Default export for backward compatibility
+export default PageHero
