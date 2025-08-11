@@ -28,6 +28,8 @@ export function Navbar() {
   const [profile, setProfile] = useState<any | null>(null)
   const [isVisible, setIsVisible] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const pathname = usePathname()
   const supabase = createClient()
 
@@ -35,34 +37,101 @@ export function Navbar() {
   const isHomePage = pathname === "/"
 
   useEffect(() => {
-    // Get initial user
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
+    let mounted = true
 
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-        setProfile(profile)
+    // Get initial session and user
+    const initializeAuth = async () => {
+      try {
+        setIsLoading(true)
+
+        // First, get the session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          console.error("Session error:", sessionError)
+          if (mounted) {
+            setUser(null)
+            setProfile(null)
+          }
+          return
+        }
+
+        if (session?.user && mounted) {
+          setUser(session.user)
+
+          // Get user profile
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single()
+
+            if (profileError) {
+              console.error("Profile error:", profileError)
+            } else if (mounted) {
+              setProfile(profile)
+            }
+          } catch (profileError) {
+            console.error("Profile fetch error:", profileError)
+          }
+        } else if (mounted) {
+          setUser(null)
+          setProfile(null)
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error)
+        if (mounted) {
+          setUser(null)
+          setProfile(null)
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
       }
     }
-    getUser()
+
+    initializeAuth()
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
-        setProfile(profile)
-      } else {
+      if (!mounted) return
+
+      console.log("Auth event:", event)
+
+      if (event === "SIGNED_IN" && session?.user) {
+        setUser(session.user)
+
+        // Get user profile
+        try {
+          const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+          setProfile(profile)
+        } catch (error) {
+          console.error("Profile fetch error on sign in:", error)
+        }
+      } else if (event === "SIGNED_OUT") {
+        setUser(null)
         setProfile(null)
+        setShowUserMenu(false)
+        setIsSigningOut(false)
+
+        // Clear auth cookies
+        clearAuthCookies()
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        setUser(session.user)
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase.auth])
 
   useEffect(() => {
@@ -104,13 +173,82 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [isHomePage])
 
-  const handleSignOut = async () => {
+  const clearAuthCookies = () => {
+    // Clear Supabase auth cookies
+    const cookiesToClear = [
+      "sb-access-token",
+      "sb-refresh-token",
+      "supabase-auth-token",
+      "supabase.auth.token",
+      `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split("//")[1]?.split(".")[0]}-auth-token`,
+    ]
+
+    cookiesToClear.forEach((cookieName) => {
+      // Clear for current domain
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`
+    })
+
+    // Clear localStorage
     try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.includes("supabase") || key.includes("sb-")) {
+          localStorage.removeItem(key)
+        }
+      })
+    } catch (error) {
+      console.error("Error clearing localStorage:", error)
+    }
+
+    // Clear sessionStorage
+    try {
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.includes("supabase") || key.includes("sb-")) {
+          sessionStorage.removeItem(key)
+        }
+      })
+    } catch (error) {
+      console.error("Error clearing sessionStorage:", error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return
+
+    try {
+      setIsSigningOut(true)
       setShowUserMenu(false)
-      await supabase.auth.signOut()
+
+      console.log("Starting sign out process...")
+
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut({
+        scope: "global",
+      })
+
+      if (error) {
+        console.error("Supabase sign out error:", error)
+      }
+
+      // Clear cookies and storage immediately
+      clearAuthCookies()
+
+      // Clear component state
+      setUser(null)
+      setProfile(null)
+
+      console.log("Sign out completed, redirecting...")
+
+      // Force page reload and redirect
       window.location.href = "/"
     } catch (error) {
       console.error("Sign out failed:", error)
+      setIsSigningOut(false)
+
+      // Fallback: still try to clear everything and redirect
+      clearAuthCookies()
+      window.location.href = "/"
     }
   }
 
@@ -168,7 +306,9 @@ export function Navbar() {
 
             {/* Auth Section */}
             <div className="hidden lg:flex items-center gap-3">
-              {user ? (
+              {isLoading ? (
+                <div className="w-8 h-8 border-2 border-[#00ff88]/30 border-t-[#00ff88] rounded-full animate-spin"></div>
+              ) : user ? (
                 <div className="flex items-center gap-3">
                   {/* Admin Panel Button */}
                   {isAdmin && (
@@ -187,7 +327,8 @@ export function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white"
+                      disabled={isSigningOut}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white disabled:opacity-50"
                     >
                       <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
                         <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
@@ -204,7 +345,7 @@ export function Navbar() {
                     </button>
 
                     {/* User Dropdown */}
-                    {showUserMenu && (
+                    {showUserMenu && !isSigningOut && (
                       <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl py-2">
                         <Link
                           href="/profile"
@@ -225,10 +366,11 @@ export function Navbar() {
                         <hr className="my-2 border-white/10" />
                         <button
                           onClick={handleSignOut}
-                          className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full text-left"
+                          disabled={isSigningOut}
+                          className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full text-left disabled:opacity-50"
                         >
                           <LogOut className="w-4 h-4" />
-                          Sign Out
+                          {isSigningOut ? "Signing Out..." : "Sign Out"}
                         </button>
                       </div>
                     )}
@@ -289,7 +431,11 @@ export function Navbar() {
 
               <hr className="border-white/10 my-3" />
 
-              {user ? (
+              {isLoading ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-[#00ff88]/30 border-t-[#00ff88] rounded-full animate-spin"></div>
+                </div>
+              ) : user ? (
                 <div className="space-y-1">
                   {/* Admin Panel for Mobile */}
                   {isAdmin && (
@@ -329,10 +475,11 @@ export function Navbar() {
                       handleSignOut()
                       setIsOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors w-full text-left text-sm"
+                    disabled={isSigningOut}
+                    className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors w-full text-left text-sm disabled:opacity-50"
                   >
                     <LogOut className="w-4 h-4" />
-                    Sign Out
+                    {isSigningOut ? "Signing Out..." : "Sign Out"}
                   </button>
                 </div>
               ) : (
