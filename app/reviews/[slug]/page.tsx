@@ -1,11 +1,23 @@
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
-import { Star, MessageCircle, ThumbsUp, ThumbsDown, Calendar, ExternalLink, Shield } from "lucide-react"
+import {
+  Star,
+  MessageCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Calendar,
+  ExternalLink,
+  Shield,
+  Award,
+  TrendingUp,
+  Users,
+  Clock,
+  ArrowLeft,
+} from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
-import { PageHeader } from "@/components/page-header"
 import { notFound } from "next/navigation"
 import type { Review } from "@/lib/types"
 
@@ -17,7 +29,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const supabase = await createClient()
-  const casinoId = params.slug.split("-").pop()
+  const casinoId = params.slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
 
   const { data: casino } = await supabase.from("casinos").select("name").eq("id", casinoId).single()
 
@@ -29,7 +41,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function CasinoReviewsPage({ params }: PageProps) {
   const supabase = await createClient()
-  const casinoId = params.slug.split("-").pop()
+  const casinoId = params.slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
 
   if (!casinoId) {
     notFound()
@@ -56,10 +68,19 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
   }
 
   const getRatingColor = (rating: number) => {
+    if (rating >= 4.5) return "text-emerald-400"
     if (rating >= 4) return "text-green-400"
     if (rating >= 3) return "text-yellow-400"
     if (rating >= 2) return "text-orange-400"
     return "text-red-400"
+  }
+
+  const getRatingBgColor = (rating: number) => {
+    if (rating >= 4.5) return "bg-emerald-500/20 border-emerald-500/30"
+    if (rating >= 4) return "bg-green-500/20 border-green-500/30"
+    if (rating >= 3) return "bg-yellow-500/20 border-yellow-500/30"
+    if (rating >= 2) return "bg-orange-500/20 border-orange-500/30"
+    return "bg-red-500/20 border-red-500/30"
   }
 
   const calculateAverageRating = () => {
@@ -82,84 +103,175 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
     return distribution
   }
 
+  const calculateDetailedAverages = () => {
+    if (!reviews || reviews.length === 0) return { gameVariety: 0, customerService: 0, payoutSpeed: 0 }
+
+    const totals = {
+      gameVariety: 0,
+      customerService: 0,
+      payoutSpeed: 0,
+      counts: { gameVariety: 0, customerService: 0, payoutSpeed: 0 },
+    }
+
+    reviews.forEach((review) => {
+      if (review.game_variety_rating) {
+        totals.gameVariety += review.game_variety_rating
+        totals.counts.gameVariety++
+      }
+      if (review.customer_service_rating) {
+        totals.customerService += review.customer_service_rating
+        totals.counts.customerService++
+      }
+      if (review.payout_speed_rating) {
+        totals.payoutSpeed += review.payout_speed_rating
+        totals.counts.payoutSpeed++
+      }
+    })
+
+    return {
+      gameVariety: totals.counts.gameVariety > 0 ? (totals.gameVariety / totals.counts.gameVariety).toFixed(1) : 0,
+      customerService:
+        totals.counts.customerService > 0 ? (totals.customerService / totals.counts.customerService).toFixed(1) : 0,
+      payoutSpeed: totals.counts.payoutSpeed > 0 ? (totals.payoutSpeed / totals.counts.payoutSpeed).toFixed(1) : 0,
+    }
+  }
+
   const averageRating = calculateAverageRating()
   const ratingDistribution = getRatingDistribution()
   const totalReviews = reviews?.length || 0
+  const detailedAverages = calculateDetailedAverages()
+
+  const getRatingLabel = (rating: number) => {
+    if (rating >= 4.5) return "Excellent"
+    if (rating >= 4) return "Very Good"
+    if (rating >= 3) return "Good"
+    if (rating >= 2) return "Fair"
+    return "Poor"
+  }
 
   return (
     <div className="min-h-screen bg-black">
-      <PageHeader
-        title={`${casino.name} Reviews`}
-        description={`Read authentic reviews from players who have experienced ${casino.name}. Get insights into games, customer service, payouts, and overall gaming experience from our verified community.`}
-        breadcrumbs={[{ label: "Reviews", href: "/reviews" }, { label: `${casino.name} Reviews` }]}
-        author="GuruSingapore Community"
-        date={new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-      />
+      {/* Header with Back Button - Fixed navbar overlap */}
+      <div className="pt-28 pb-8">
+        <div className="container mx-auto px-4">
+          <Button
+            variant="outline"
+            className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 mb-8 font-semibold"
+            asChild
+          >
+            <Link href="/casinos">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Casinos
+            </Link>
+          </Button>
 
-      <div className="container mx-auto px-4 py-16">
-        {/* Casino Overview */}
-        <div className="mb-12">
-          <GlassCard className="p-8">
-            <div className="flex flex-col lg:flex-row gap-8">
+          <div className="mb-12">
+            <h1 className="text-5xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              {casino.name} Reviews
+            </h1>
+            <p className="text-gray-400 text-xl leading-relaxed max-w-4xl">
+              Read authentic reviews from players who have experienced {casino.name}. Get insights into games, customer
+              service, payouts, and overall gaming experience from our verified community.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pb-16">
+        {/* Casino Overview - Enhanced */}
+        <div className="mb-16">
+          <GlassCard className="p-8 border border-white/10">
+            <div className="flex flex-col xl:flex-row gap-12">
               {/* Casino Info */}
               <div className="flex-1">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center overflow-hidden">
+                <div className="flex items-start gap-8 mb-8">
+                  {/* Enhanced Logo - Made Wider and Bigger */}
+                  <div className="w-32 h-32 bg-gradient-to-br from-white/20 to-white/5 rounded-3xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl flex-shrink-0">
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
                         alt={`${casino.name} logo`}
-                        width={64}
-                        height={64}
-                        className="max-w-full max-h-full object-contain"
+                        width={128}
+                        height={128}
+                        className="max-w-full max-h-full object-contain p-2"
                       />
                     ) : (
-                      <span className="text-white font-bold text-2xl">{casino.name.charAt(0)}</span>
+                      <span className="text-white font-bold text-4xl">{casino.name.charAt(0)}</span>
                     )}
                   </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-white mb-2">{casino.name}</h2>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center">
-                        <Shield className="w-4 h-4 text-[#00ff88] mr-1" />
-                        <span className="text-[#00ff88] font-semibold">Safety: {casino.rating}/10</span>
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-bold text-white mb-3">{casino.name}</h2>
+                    <div className="flex flex-wrap items-center gap-4 mb-4">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-[#00ff88]/20 border border-[#00ff88]/30 rounded-full">
+                        <Shield className="w-4 h-4 text-[#00ff88]" />
+                        <span className="text-[#00ff88] font-semibold text-sm">Safety Score: {casino.rating}/10</span>
                       </div>
                       {casino.license && (
-                        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Licensed</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                          <Award className="w-4 h-4 text-emerald-400" />
+                          <span className="text-emerald-400 font-semibold text-sm">Licensed & Regulated</span>
+                        </div>
                       )}
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-full">
+                        <Users className="w-4 h-4 text-blue-400" />
+                        <span className="text-blue-400 font-semibold text-sm">{totalReviews} Reviews</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {casino.description && <p className="text-gray-300 leading-relaxed mb-6">{casino.description}</p>}
+                {casino.description && (
+                  <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl">
+                    <p className="text-gray-300 leading-relaxed text-lg">{casino.description}</p>
+                  </div>
+                )}
 
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                   {casino.website_url && (
-                    <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
+                    <Button
+                      className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      asChild
+                    >
                       <Link href={casino.website_url} target="_blank" rel="noopener noreferrer">
                         Visit Casino
-                        <ExternalLink className="w-4 h-4 ml-2" />
+                        <ExternalLink className="w-5 h-5 ml-2" />
                       </Link>
                     </Button>
                   )}
-                  <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-                    <Link href={`/casinos/${casino.id}`}>Full Review</Link>
+                  <Button
+                    variant="outline"
+                    className="border-2 border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold px-8 py-3 rounded-xl transition-all duration-300"
+                    asChild
+                  >
+                    <Link href={`/casinos/${casino.id}`}>Full Casino Review</Link>
                   </Button>
                 </div>
               </div>
 
-              {/* Rating Summary */}
-              <div className="lg:w-80">
-                <GlassCard className="p-6">
-                  <h3 className="text-white font-semibold mb-4">Player Ratings</h3>
+              {/* Enhanced Rating Summary */}
+              <div className="xl:w-96">
+                <GlassCard className="p-8 border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
+                  <div className="flex items-center gap-3 mb-6">
+                    <TrendingUp className="w-6 h-6 text-[#00ff88]" />
+                    <h3 className="text-xl font-bold text-white">Player Ratings</h3>
+                  </div>
 
-                  <div className="text-center mb-6">
-                    <div className="text-4xl font-bold text-[#00ff88] mb-2">{averageRating}</div>
+                  <div className="text-center mb-8">
+                    <div
+                      className={`inline-flex items-center justify-center w-24 h-24 rounded-full border-4 ${getRatingBgColor(Number.parseFloat(averageRating))} mb-4`}
+                    >
+                      <div className="text-center">
+                        <div className={`text-3xl font-bold ${getRatingColor(Number.parseFloat(averageRating))}`}>
+                          {averageRating}
+                        </div>
+                        <div className="text-xs text-gray-400">out of 5</div>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-center mb-2">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-5 h-5 ${
+                          className={`w-6 h-6 ${
                             i < Math.floor(Number.parseFloat(averageRating))
                               ? "text-[#00ff88] fill-current"
                               : "text-gray-600"
@@ -167,54 +279,153 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                         />
                       ))}
                     </div>
-                    <div className="text-gray-400 text-sm">Based on {totalReviews} reviews</div>
+                    <div className={`text-lg font-semibold ${getRatingColor(Number.parseFloat(averageRating))} mb-1`}>
+                      {getRatingLabel(Number.parseFloat(averageRating))}
+                    </div>
+                    <div className="text-gray-400 text-sm">Based on {totalReviews} verified reviews</div>
                   </div>
 
-                  {/* Rating Distribution */}
-                  <div className="space-y-2">
+                  {/* Enhanced Rating Distribution */}
+                  <div className="space-y-3 mb-8">
                     {[5, 4, 3, 2, 1].map((rating) => {
                       const count = ratingDistribution[rating as keyof typeof ratingDistribution]
                       const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0
 
                       return (
-                        <div key={rating} className="flex items-center gap-2 text-sm">
-                          <span className="text-gray-400 w-6">{rating}★</span>
-                          <div className="flex-1 bg-gray-800 rounded-full h-2">
+                        <div key={rating} className="flex items-center gap-3">
+                          <div className="flex items-center gap-1 w-12">
+                            <span className="text-gray-300 text-sm font-medium">{rating}</span>
+                            <Star className="w-3 h-3 text-[#00ff88] fill-current" />
+                          </div>
+                          <div className="flex-1 bg-gray-800/50 rounded-full h-3 border border-gray-700/50">
                             <div
-                              className="bg-[#00ff88] h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${percentage}%` }}
                             ></div>
                           </div>
-                          <span className="text-gray-400 w-8">{count}</span>
+                          <span className="text-gray-400 text-sm w-8 text-right">{count}</span>
                         </div>
                       )
                     })}
                   </div>
+
+                  {/* Detailed Ratings Summary */}
+                  {(Number.parseFloat(detailedAverages.gameVariety) > 0 ||
+                    Number.parseFloat(detailedAverages.customerService) > 0 ||
+                    Number.parseFloat(detailedAverages.payoutSpeed) > 0) && (
+                    <div className="border-t border-white/10 pt-6">
+                      <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wide">
+                        Category Breakdown
+                      </h4>
+                      <div className="space-y-3">
+                        {Number.parseFloat(detailedAverages.gameVariety) > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-400 text-sm">Game Variety</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3 h-3 ${
+                                      i < Number.parseFloat(detailedAverages.gameVariety)
+                                        ? "text-[#00ff88] fill-current"
+                                        : "text-gray-600"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-white font-medium text-sm">{detailedAverages.gameVariety}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {Number.parseFloat(detailedAverages.customerService) > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-400 text-sm">Customer Service</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3 h-3 ${
+                                      i < Number.parseFloat(detailedAverages.customerService)
+                                        ? "text-[#00ff88] fill-current"
+                                        : "text-gray-600"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-white font-medium text-sm">{detailedAverages.customerService}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {Number.parseFloat(detailedAverages.payoutSpeed) > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-400 text-sm">Payout Speed</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3 h-3 ${
+                                      i < Number.parseFloat(detailedAverages.payoutSpeed)
+                                        ? "text-[#00ff88] fill-current"
+                                        : "text-gray-600"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-white font-medium text-sm">{detailedAverages.payoutSpeed}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </GlassCard>
               </div>
             </div>
           </GlassCard>
         </div>
 
-        {/* Reviews List */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Player Reviews ({totalReviews})</h2>
-            <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">Write a Review</Button>
+        {/* Enhanced Reviews Section */}
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">Player Reviews</h2>
+              <p className="text-gray-400">Real experiences from verified players ({totalReviews} reviews)</p>
+            </div>
+            <Button className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Write a Review
+            </Button>
           </div>
 
-          {reviews?.map((review: Review) => (
-            <GlassCard key={review.id} className="p-8">
-              {/* Review Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
-                    <span className="text-black font-bold">{review.reviewer_name?.charAt(0).toUpperCase() || "A"}</span>
+          {reviews?.map((review: Review, index: number) => (
+            <GlassCard
+              key={review.id}
+              className={`p-8 border border-white/10 hover:border-white/20 transition-all duration-300 ${index === 0 ? "ring-2 ring-[#00ff88]/20" : ""}`}
+            >
+              {index === 0 && (
+                <div className="flex items-center gap-2 mb-4">
+                  <Award className="w-4 h-4 text-[#00ff88]" />
+                  <span className="text-[#00ff88] text-sm font-semibold">Most Recent Review</span>
+                </div>
+              )}
+
+              {/* Enhanced Review Header */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-black font-bold text-lg">
+                      {review.reviewer_name?.charAt(0).toUpperCase() || "A"}
+                    </span>
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">{review.reviewer_name || "Anonymous Player"}</h3>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center">
+                    <h3 className="text-white font-bold text-lg">{review.reviewer_name || "Anonymous Player"}</h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
@@ -224,108 +435,132 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                           />
                         ))}
                       </div>
-                      <span className={`font-semibold ${getRatingColor(review.rating || 0)}`}>{review.rating}/5</span>
+                      <span className={`font-bold text-lg ${getRatingColor(review.rating || 0)}`}>
+                        {review.rating}/5
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getRatingBgColor(review.rating || 0)}`}
+                      >
+                        {getRatingLabel(review.rating || 0)}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="text-gray-400 text-sm">
-                  <Calendar className="w-4 h-4 inline mr-1" />
+                <div className="flex items-center gap-2 text-gray-400 text-sm bg-white/5 px-3 py-2 rounded-lg">
+                  <Calendar className="w-4 h-4" />
                   {formatDate(review.created_at)}
                 </div>
               </div>
 
-              {/* Review Content */}
-              <div className="mb-6">
-                <h4 className="text-white font-semibold mb-2">{review.title}</h4>
-                <p className="text-gray-300 leading-relaxed">{review.content}</p>
+              {/* Enhanced Review Content */}
+              <div className="mb-8">
+                <h4 className="text-white font-bold text-xl mb-4 leading-tight">{review.title}</h4>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                  <p className="text-gray-300 leading-relaxed text-lg">{review.content}</p>
+                </div>
               </div>
 
-              {/* Detailed Ratings */}
+              {/* Enhanced Detailed Ratings */}
               {(review.game_variety_rating || review.customer_service_rating || review.payout_speed_rating) && (
-                <div className="mb-6 p-4 bg-white/5 rounded-lg">
-                  <h5 className="text-white font-semibold mb-3">Detailed Ratings:</h5>
-                  <div className="grid md:grid-cols-3 gap-4 text-sm">
+                <div className="mb-8 p-6 bg-gradient-to-r from-white/5 to-white/10 border border-white/10 rounded-xl">
+                  <h5 className="text-white font-bold mb-4 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-[#00ff88]" />
+                    Detailed Category Ratings
+                  </h5>
+                  <div className="grid sm:grid-cols-3 gap-6">
                     {review.game_variety_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Game Variety:</span>
-                        <div className="flex items-center">
+                      <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-gray-400 text-sm font-medium mb-2">Game Variety</div>
+                        <div className="flex items-center justify-center mb-2">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
+                              className={`w-4 h-4 ${
                                 i < review.game_variety_rating ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
-                          <span className="ml-1 text-white">{review.game_variety_rating}/5</span>
                         </div>
+                        <div className="text-white font-bold text-lg">{review.game_variety_rating}/5</div>
                       </div>
                     )}
 
                     {review.customer_service_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Customer Service:</span>
-                        <div className="flex items-center">
+                      <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-gray-400 text-sm font-medium mb-2">Customer Service</div>
+                        <div className="flex items-center justify-center mb-2">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
+                              className={`w-4 h-4 ${
                                 i < review.customer_service_rating ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
-                          <span className="ml-1 text-white">{review.customer_service_rating}/5</span>
                         </div>
+                        <div className="text-white font-bold text-lg">{review.customer_service_rating}/5</div>
                       </div>
                     )}
 
                     {review.payout_speed_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Payout Speed:</span>
-                        <div className="flex items-center">
+                      <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-gray-400 text-sm font-medium mb-2">Payout Speed</div>
+                        <div className="flex items-center justify-center mb-2">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
+                              className={`w-4 h-4 ${
                                 i < review.payout_speed_rating ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
-                          <span className="ml-1 text-white">{review.payout_speed_rating}/5</span>
                         </div>
+                        <div className="text-white font-bold text-lg">{review.payout_speed_rating}/5</div>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Review Actions */}
-              <div className="flex items-center gap-4 text-sm">
-                <button className="flex items-center gap-1 text-gray-400 hover:text-green-400 transition-colors">
+              {/* Enhanced Review Actions */}
+              <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-white/10">
+                <button className="flex items-center gap-2 text-gray-400 hover:text-green-400 transition-colors px-4 py-2 rounded-lg hover:bg-green-500/10 border border-transparent hover:border-green-500/20">
                   <ThumbsUp className="w-4 h-4" />
-                  <span>Helpful ({review.helpful_count || 0})</span>
+                  <span className="font-medium">Helpful ({review.helpful_count || 0})</span>
                 </button>
 
-                <button className="flex items-center gap-1 text-gray-400 hover:text-red-400 transition-colors">
+                <button className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors px-4 py-2 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20">
                   <ThumbsDown className="w-4 h-4" />
-                  <span>Not Helpful ({review.not_helpful_count || 0})</span>
+                  <span className="font-medium">Not Helpful ({review.not_helpful_count || 0})</span>
                 </button>
 
-                <button className="flex items-center gap-1 text-gray-400 hover:text-[#00ff88] transition-colors">
+                <button className="flex items-center gap-2 text-gray-400 hover:text-[#00ff88] transition-colors px-4 py-2 rounded-lg hover:bg-[#00ff88]/10 border border-transparent hover:border-[#00ff88]/20">
                   <MessageCircle className="w-4 h-4" />
-                  <span>Reply</span>
+                  <span className="font-medium">Reply</span>
                 </button>
+
+                <div className="ml-auto flex items-center gap-2 text-gray-500 text-sm">
+                  <Clock className="w-4 h-4" />
+                  <span>Verified Review</span>
+                </div>
               </div>
             </GlassCard>
           ))}
         </div>
 
         {!reviews?.length && (
-          <div className="text-center py-16">
-            <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-4">No Reviews Yet</h3>
-            <p className="text-gray-400 text-lg mb-6">Be the first to share your experience with {casino.name}!</p>
-            <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">Write the First Review</Button>
+          <div className="text-center py-20">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-700">
+              <MessageCircle className="w-12 h-12 text-gray-600" />
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-4">No Reviews Yet</h3>
+            <p className="text-gray-400 text-xl mb-8 max-w-md mx-auto">
+              Be the first to share your experience with {casino.name} and help other players make informed decisions!
+            </p>
+            <Button className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Write the First Review
+            </Button>
           </div>
         )}
       </div>

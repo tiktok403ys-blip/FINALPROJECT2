@@ -15,50 +15,8 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        // Admin subdomain routing
-        {
-          source: '/:path*',
-          has: [
-            {
-              type: 'host',
-              value: 'sg44admin.gurusingapore.com',
-            },
-          ],
-          destination: '/admin/:path*',
-        },
-      ],
-    }
-  },
-  async redirects() {
-    return [
-      // Block admin access from main domain
-      {
-        source: '/admin/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'gurusingapore.com',
-          },
-        ],
-        destination: '/404',
-        permanent: false,
-      },
-      {
-        source: '/admin/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.gurusingapore.com',
-          },
-        ],
-        destination: '/404',
-        permanent: false,
-      },
-    ]
-  },
+  // Remove conflicting redirects and rewrites to prevent loops
+  // Let middleware handle all routing logic
 }
 
 export default nextConfig

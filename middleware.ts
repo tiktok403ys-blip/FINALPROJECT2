@@ -14,48 +14,43 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Admin subdomain security
-  if (hostname === "sg44admin.gurusingapore.com") {
-    // Allow admin subdomain to access admin routes
-    if (!pathname.startsWith("/admin")) {
-      return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url))
+  try {
+    // Admin subdomain handling
+    if (hostname === "sg44admin.gurusingapore.com") {
+      // If accessing admin subdomain but not admin path, rewrite to admin
+      if (!pathname.startsWith("/admin")) {
+        const adminPath = pathname === "/" ? "/admin" : `/admin${pathname}`
+        return NextResponse.rewrite(new URL(adminPath, request.url))
+      }
+
+      // Add security headers for admin subdomain
+      const response = NextResponse.next()
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      response.headers.set("X-Frame-Options", "DENY")
+      response.headers.set("X-Content-Type-Options", "nosniff")
+      return response
     }
 
-    // Add security headers for admin subdomain
-    const response = NextResponse.next()
-    response.headers.set("X-Robots-Tag", "noindex, nofollow")
-    response.headers.set("X-Frame-Options", "DENY")
-    response.headers.set("X-Content-Type-Options", "nosniff")
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    // Main domain handling
+    if (hostname === "gurusingapore.com" || hostname === "www.gurusingapore.com") {
+      // Block admin access from main domain
+      if (pathname.startsWith("/admin")) {
+        return new NextResponse(null, { status: 404 })
+      }
 
-    return response
-  }
-
-  // Block admin access from main domain
-  if (pathname.startsWith("/admin")) {
-    return new NextResponse(null, { status: 404 })
-  }
-
-  // Admin subdomain routing - ONLY allow admin access from subdomain
-  if (hostname === "sg44admin.gurusingapore.com") {
-    // Rewrite admin subdomain to /admin path
-    if (!pathname.startsWith("/admin")) {
-      const url = new URL(`/admin${pathname === "/" ? "" : pathname}`, request.url)
-      return NextResponse.rewrite(url)
+      // Redirect www to non-www (only if it's www)
+      if (hostname === "www.gurusingapore.com") {
+        const url = new URL(request.url)
+        url.hostname = "gurusingapore.com"
+        return NextResponse.redirect(url, 301)
+      }
     }
-  }
 
-  // Main domain routing
-  if (hostname === "gurusingapore.com" || hostname === "www.gurusingapore.com") {
-    // Redirect www to non-www
-    if (hostname === "www.gurusingapore.com") {
-      const url = new URL(`https://gurusingapore.com${pathname}`, request.url)
-      return NextResponse.redirect(url, 301)
-    }
+    return NextResponse.next()
+  } catch (error) {
+    console.error("Middleware error:", error)
+    return NextResponse.next()
   }
-
-  return NextResponse.next()
 }
 
 export const config = {
