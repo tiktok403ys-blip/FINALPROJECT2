@@ -119,7 +119,7 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
                 className="pl-10 pr-10 bg-gray-900/50 border-gray-700 text-white placeholder-gray-400 focus:border-red-500 focus:ring-red-500"
                 disabled={isVerifying}
                 autoComplete="off"
-                maxLength={10}
+                maxLength={30}
               />
               <button
                 type="button"
