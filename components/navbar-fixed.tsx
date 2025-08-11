@@ -26,9 +26,9 @@ import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 interface Profile {
   id: string
-  email: string | null
-  full_name: string | null
-  avatar_url: string | null
+  email: string | null | undefined
+  full_name: string | null | undefined
+  avatar_url: string | null | undefined
   role: string | null
   admin_pin: string | null
 }
@@ -81,11 +81,11 @@ export function NavbarFixed() {
       profileFetchedRef.current = true
       setProfileError(null)
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url, role, admin_pin")
-        .eq("id", currentUser.id)
-        .single()
+      // ✅ INI ADALAH PERUBAHAN YANG HARUS ANDA TERAPKAN PADA FILE components/navbar-fixed.tsx
+      // ✅ BUKAN DIJALANKAN DI SUPABASE SQL EDITOR
+      const { data: profileData, error } = await supabase.rpc("profile_rpc_v4", {
+        user_id_input: currentUser.id, // Sesuaikan dengan nama parameter di fungsi RPC
+      })
 
       if (error) {
         console.error("❌ Profile fetch error:", error)
@@ -252,7 +252,7 @@ export function NavbarFixed() {
     const name = getUserDisplayName()
     return name
       .split(" ")
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2)
