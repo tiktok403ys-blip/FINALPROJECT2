@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/components/auth-provider"
 import type { User } from "@supabase/supabase-js"
 
 interface AdminProfile {
@@ -28,20 +29,18 @@ interface AdminSecurityContextType {
 const AdminSecurityContext = createContext<AdminSecurityContextType | undefined>(undefined)
 
 export function AdminSecurityProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<AdminProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [pinVerified, setPinVerified] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  
+  // Use centralized auth from AuthProvider
+  const { user, signOut: authSignOut } = useAuth()
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
         if (!user) {
           console.log("❌ No user found, redirecting to login")
           router.push("/auth/login")
@@ -53,7 +52,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
 
         if (error || !profile) {
           console.error("❌ Profile fetch error:", error)
-          await supabase.auth.signOut()
+          await authSignOut()
           router.push("/auth/login")
           return
         }
@@ -61,7 +60,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         // Check if user has admin privileges
         if (!profile.role || !["admin", "super_admin"].includes(profile.role)) {
           console.error("❌ Access denied: User is not an admin")
-          await supabase.auth.signOut()
+          await authSignOut()
           router.push("/")
           return
         }
@@ -81,7 +80,6 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
           return
         }
 
-        setUser(user)
         setProfile(profile)
         setPinVerified(true)
 
@@ -100,33 +98,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
     }
 
     checkAuth()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
-        setUser(null)
-        setProfile(null)
-        setPinVerified(false)
-        sessionStorage.removeItem("admin_pin_verified")
-        sessionStorage.removeItem("admin_pin_timestamp")
-        router.push("/")
-      } else if (session?.user) {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
-
-        if (!profile || !["admin", "super_admin"].includes(profile.role)) {
-          await supabase.auth.signOut()
-          router.push("/")
-          return
-        }
-
-        setUser(session.user)
-        setProfile(profile)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase, router])
+  }, [user, router])
 
   const logAdminActionInternal = async (action: string, resource: string, resourceId?: string, details?: any) => {
     try {
@@ -158,7 +130,8 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
       sessionStorage.removeItem("admin_pin_verified")
       sessionStorage.removeItem("admin_pin_timestamp")
 
-      await supabase.auth.signOut()
+      // Use centralized signOut from AuthProvider
+      await authSignOut()
     } catch (error) {
       console.error("Sign out error:", error)
     }
