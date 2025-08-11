@@ -1,76 +1,101 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { NextResponse, type NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get("host") || ""
-  const pathname = request.nextUrl.pathname
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  // Skip middleware for static files, API routes, and specific paths
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".") ||
-    pathname.startsWith("/auth/callback")
-  ) {
-    return NextResponse.next()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({
+            name,
+            value: "",
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
+          })
+        },
+      },
+    },
+  )
+
+  // Get user session
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+
+  // Admin subdomain handling
+  if (request.nextUrl.hostname === "sg44admin.gurusingapore.com") {
+    const url = request.nextUrl.clone()
+    url.hostname = "gurusingapore.com"
+    url.pathname = `/admin${pathname}`
+    return NextResponse.rewrite(url)
   }
 
-  try {
-    // Admin subdomain handling
-    if (hostname === "sg44admin.gurusingapore.com") {
-      // If accessing admin subdomain but not admin path, rewrite to admin
-      if (!pathname.startsWith("/admin")) {
-        const adminPath = pathname === "/" ? "/admin" : `/admin${pathname}`
-        return NextResponse.rewrite(new URL(adminPath, request.url))
-      }
-
-      // Add security headers for admin subdomain
-      const response = NextResponse.next()
-      response.headers.set("X-Robots-Tag", "noindex, nofollow")
-      response.headers.set("X-Frame-Options", "DENY")
-      response.headers.set("X-Content-Type-Options", "nosniff")
+  // Admin routes protection
+  if (pathname.startsWith("/admin")) {
+    // Allow auth routes
+    if (pathname.startsWith("/admin/auth/")) {
       return response
     }
 
-    // Handle www redirect ONLY if it's actually www
-    if (hostname === "www.gurusingapore.com") {
-      const url = new URL(request.url)
-      url.hostname = "gurusingapore.com"
-      return NextResponse.redirect(url, 301)
+    // Check if user is authenticated
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/admin/auth/login"
+      return NextResponse.redirect(url)
     }
 
-    // Main domain handling - allow everything for gurusingapore.com
-    if (hostname === "gurusingapore.com") {
-      // Allow admin access from main domain
-      if (pathname.startsWith("/admin")) {
-        const response = NextResponse.next()
-        response.headers.set("X-Robots-Tag", "noindex, nofollow")
-        response.headers.set("X-Frame-Options", "DENY")
-        response.headers.set("X-Content-Type-Options", "nosniff")
-        return response
-      }
+    // Check if user has admin role
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
-      // Allow all other paths on main domain
-      return NextResponse.next()
+    if (!profile || (profile.role !== "admin" && profile.role !== "super_admin")) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/admin/auth/login"
+      return NextResponse.redirect(url)
     }
-
-    // For any other hostname, just continue
-    return NextResponse.next()
-  } catch (error) {
-    console.error("Middleware error:", error)
-    return NextResponse.next()
   }
+
+  return response
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 }

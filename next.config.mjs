@@ -7,6 +7,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    domains: ['images.unsplash.com', 'via.placeholder.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -15,23 +16,10 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  // Remove any redirects to prevent conflicts with middleware
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-        ],
-      },
-    ]
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'gurusingapore.com', 'sg44admin.gurusingapore.com'],
+    },
   },
 }
 
