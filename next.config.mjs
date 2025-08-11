@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js']
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -15,11 +18,6 @@ const nextConfig = {
       },
     ],
     unoptimized: true,
-  },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'gurusingapore.com', 'sg44admin.gurusingapore.com'],
-    },
   },
 }
 

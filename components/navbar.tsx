@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Home,
@@ -28,9 +28,7 @@ export function Navbar() {
   const [profile, setProfile] = useState<any | null>(null)
   const [isVisible, setIsVisible] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [isSigningOut, setIsSigningOut] = useState(false)
   const pathname = usePathname()
-  const router = useRouter()
   const supabase = createClient()
 
   // Check if we're on home page
@@ -55,8 +53,6 @@ export function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email)
-
       setUser(session?.user ?? null)
       if (session?.user) {
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
@@ -64,21 +60,10 @@ export function Navbar() {
       } else {
         setProfile(null)
       }
-
-      // Handle sign out
-      if (event === "SIGNED_OUT") {
-        setUser(null)
-        setProfile(null)
-        setShowUserMenu(false)
-        setIsSigningOut(false)
-        // Force redirect to home page
-        router.push("/")
-        router.refresh()
-      }
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth, router])
+  }, [supabase.auth])
 
   useEffect(() => {
     if (!isHomePage) {
@@ -121,32 +106,11 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     try {
-      setIsSigningOut(true)
-      console.log("Starting sign out process...")
-
-      // Clear user menu immediately
       setShowUserMenu(false)
-
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut()
-
-      if (error) {
-        console.error("Sign out error:", error)
-        setIsSigningOut(false)
-        return
-      }
-
-      console.log("Sign out successful")
-
-      // Clear local state
-      setUser(null)
-      setProfile(null)
-
-      // Force page refresh and redirect
+      await supabase.auth.signOut()
       window.location.href = "/"
     } catch (error) {
       console.error("Sign out failed:", error)
-      setIsSigningOut(false)
     }
   }
 
@@ -224,7 +188,6 @@ export function Navbar() {
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white"
-                      disabled={isSigningOut}
                     >
                       <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
                         <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
@@ -262,11 +225,10 @@ export function Navbar() {
                         <hr className="my-2 border-white/10" />
                         <button
                           onClick={handleSignOut}
-                          disabled={isSigningOut}
-                          className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full text-left disabled:opacity-50"
+                          className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full text-left"
                         >
                           <LogOut className="w-4 h-4" />
-                          {isSigningOut ? "Signing Out..." : "Sign Out"}
+                          Sign Out
                         </button>
                       </div>
                     )}
@@ -367,11 +329,10 @@ export function Navbar() {
                       handleSignOut()
                       setIsOpen(false)
                     }}
-                    disabled={isSigningOut}
-                    className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors w-full text-left text-sm disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors w-full text-left text-sm"
                   >
                     <LogOut className="w-4 h-4" />
-                    {isSigningOut ? "Signing Out..." : "Sign Out"}
+                    Sign Out
                   </button>
                 </div>
               ) : (

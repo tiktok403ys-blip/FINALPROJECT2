@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
@@ -34,11 +33,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error("Error getting session:", error)
+        }
+
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error("Session error:", error)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
     getInitialSession()
@@ -50,15 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       setLoading(false)
 
-      // Handle sign in
-      if (event === "SIGNED_IN" && session?.user) {
-        // Redirect to home page or dashboard
-        window.location.href = "/"
-      }
-
       // Handle sign out
       if (event === "SIGNED_OUT") {
-        // Redirect to home page
+        setUser(null)
+        // Force page reload to clear all state
         window.location.href = "/"
       }
     })
@@ -67,7 +73,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase.auth])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error("Sign out error:", error)
+        throw error
+      }
+      // Clear user state immediately
+      setUser(null)
+      // Force redirect
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Failed to sign out:", error)
+      throw error
+    }
   }
 
   const value = {
