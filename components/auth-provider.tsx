@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
@@ -9,11 +8,13 @@ import type { User } from "@supabase/supabase-js"
 interface AuthContextType {
   user: User | null
   loading: boolean
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  signOut: async () => {},
 })
 
 export const useAuth = () => {
@@ -30,30 +31,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    const getSession = async () => {
+    let mounted = true
+
+    // Get initial session
+    const getInitialSession = async () => {
       try {
         const {
           data: { session },
+          error,
         } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
+
+        if (error) {
+          console.error("Error getting session:", error)
+        }
+
+        if (mounted) {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
       } catch (error) {
-        console.error("Error getting session:", error)
-      } finally {
-        setLoading(false)
+        console.error("Session error:", error)
+        if (mounted) {
+          setUser(null)
+          setLoading(false)
+        }
       }
     }
 
-    getSession()
+    getInitialSession()
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+
+      console.log("Auth Provider - Auth state changed:", event)
+
       setUser(session?.user ?? null)
       setLoading(false)
+
+      // Handle sign out
+      if (event === "SIGNED_OUT") {
+        setUser(null)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase.auth])
 
-  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "global" })
+      if (error) {
+        console.error("Sign out error:", error)
+        throw error
+      }
+      setUser(null)
+    } catch (error) {
+      console.error("Failed to sign out:", error)
+      throw error
+    }
+  }
+
+  const value = {
+    user,
+    loading,
+    signOut,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

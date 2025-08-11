@@ -20,6 +20,7 @@ interface AdminSecurityContextType {
   isAdmin: boolean
   isSuperAdmin: boolean
   loading: boolean
+  pinVerified: boolean
   signOut: () => Promise<void>
   logAdminAction: (action: string, resource: string, resourceId?: string, details?: any) => Promise<void>
 }
@@ -30,6 +31,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<AdminProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pinVerified, setPinVerified] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -41,7 +43,8 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         } = await supabase.auth.getUser()
 
         if (!user) {
-          router.push("/admin/auth/login")
+          console.log("❌ No user found, redirecting to login")
+          router.push("/auth/login")
           return
         }
 
@@ -49,22 +52,38 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
         if (error || !profile) {
-          console.error("Profile fetch error:", error)
+          console.error("❌ Profile fetch error:", error)
           await supabase.auth.signOut()
-          router.push("/admin/auth/login")
+          router.push("/auth/login")
           return
         }
 
         // Check if user has admin privileges
         if (!profile.role || !["admin", "super_admin"].includes(profile.role)) {
-          console.error("Access denied: User is not an admin")
+          console.error("❌ Access denied: User is not an admin")
           await supabase.auth.signOut()
-          router.push("/admin/auth/login")
+          router.push("/")
+          return
+        }
+
+        // Check PIN verification
+        const pinVerified = sessionStorage.getItem("admin_pin_verified") === "true"
+        const pinTimestamp = sessionStorage.getItem("admin_pin_timestamp")
+        const now = Date.now()
+        const pinAge = pinTimestamp ? now - Number.parseInt(pinTimestamp) : Number.POSITIVE_INFINITY
+
+        // PIN expires after 1 hour (3600000 ms)
+        if (!pinVerified || pinAge > 3600000) {
+          console.log("❌ PIN verification required or expired")
+          sessionStorage.removeItem("admin_pin_verified")
+          sessionStorage.removeItem("admin_pin_timestamp")
+          router.push("/")
           return
         }
 
         setUser(user)
         setProfile(profile)
+        setPinVerified(true)
 
         // Log successful admin access
         await logAdminActionInternal("admin_access", "auth", null, {
@@ -73,8 +92,8 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
           role: profile.role,
         })
       } catch (error) {
-        console.error("Auth check failed:", error)
-        router.push("/admin/auth/login")
+        console.error("❌ Auth check failed:", error)
+        router.push("/")
       } finally {
         setLoading(false)
       }
@@ -88,13 +107,16 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
       if (event === "SIGNED_OUT" || !session) {
         setUser(null)
         setProfile(null)
-        router.push("/admin/auth/login")
+        setPinVerified(false)
+        sessionStorage.removeItem("admin_pin_verified")
+        sessionStorage.removeItem("admin_pin_timestamp")
+        router.push("/")
       } else if (session?.user) {
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
 
         if (!profile || !["admin", "super_admin"].includes(profile.role)) {
           await supabase.auth.signOut()
-          router.push("/admin/auth/login")
+          router.push("/")
           return
         }
 
@@ -132,6 +154,10 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         email: user?.email,
       })
 
+      // Clear PIN verification
+      sessionStorage.removeItem("admin_pin_verified")
+      sessionStorage.removeItem("admin_pin_timestamp")
+
       await supabase.auth.signOut()
     } catch (error) {
       console.error("Sign out error:", error)
@@ -144,6 +170,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
     isAdmin: profile?.role === "admin" || profile?.role === "super_admin",
     isSuperAdmin: profile?.role === "super_admin",
     loading,
+    pinVerified,
     signOut,
     logAdminAction,
   }

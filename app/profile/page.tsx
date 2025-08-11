@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
@@ -9,16 +8,17 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PageHero } from "@/components/page-hero"
 import { LoadingSpinner } from "@/components/loading-spinner"
-import { UserIcon, Mail, Calendar, Save } from "lucide-react"
+import { UserIcon, Mail, Calendar, Save, AlertCircle } from "lucide-react"
 
 interface Profile {
   id: string
-  username: string | null
+  email: string | null
   full_name: string | null
   avatar_url: string | null
   website: string | null
+  role: string | null
+  created_at: string
   updated_at: string
 }
 
@@ -46,36 +46,61 @@ export default function ProfilePage() {
 
         setUser(session.user)
 
+        // Try to get profile from database
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
           .single()
 
-        if (profileError && profileError.code !== "PGRST116") {
-          throw profileError
-        }
+        if (profileError) {
+          if (profileError.code === "PGRST116") {
+            // Profile doesn't exist, create one
+            console.log("Creating new profile...")
+            const newProfile = {
+              id: session.user.id,
+              email: session.user.email,
+              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
+              avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
+              website: null,
+              role: "user",
+            }
 
-        if (profileData) {
-          setProfile(profileData)
-        } else {
-          // Create profile if it doesn't exist
-          const newProfile = {
-            id: session.user.id,
-            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
-            avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
-            username: null,
-            website: null,
+            const { data: createdProfile, error: createError } = await supabase
+              .from("profiles")
+              .insert([newProfile])
+              .select()
+              .single()
+
+            if (createError) {
+              console.error("Error creating profile:", createError)
+              setError("Failed to create profile. Using account data.")
+              // Use fallback profile
+              setProfile({
+                ...newProfile,
+                created_at: session.user.created_at,
+                updated_at: new Date().toISOString(),
+              })
+            } else {
+              setProfile(createdProfile)
+            }
+          } else {
+            console.error("Profile error:", profileError)
+            setError("Failed to load profile from database. Using account data.")
+            // Use fallback profile from user metadata
+            setProfile({
+              id: session.user.id,
+              email: session.user.email,
+              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
+              avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
+              website: null,
+              role: "user",
+              created_at: session.user.created_at,
+              updated_at: new Date().toISOString(),
+            })
           }
-
-          const { data: createdProfile, error: createError } = await supabase
-            .from("profiles")
-            .insert([newProfile])
-            .select()
-            .single()
-
-          if (createError) throw createError
-          setProfile(createdProfile)
+        } else {
+          setProfile(profileData)
         }
       } catch (error) {
         console.error("Error loading profile:", error)
@@ -97,15 +122,15 @@ export default function ProfilePage() {
     setSuccess("")
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: profile.full_name,
-          username: profile.username,
-          website: profile.website,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id)
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        avatar_url: profile.avatar_url,
+        website: profile.website,
+        role: profile.role || "user",
+        updated_at: new Date().toISOString(),
+      })
 
       if (error) throw error
 
@@ -150,13 +175,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <PageHero
-        title="Profile Settings"
-        description="Manage your account information and preferences"
-        backgroundImage="/casino-interior.png"
-      />
-
+    <div className="min-h-screen bg-black pt-24">
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <Card className="bg-white/5 backdrop-blur-sm border-white/10">
@@ -170,6 +189,13 @@ export default function ProfilePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {error && (
+                <div className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-500/10 border border-yellow-500/20 rounded-md p-3">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
+
               <form onSubmit={handleSave} className="space-y-4">
                 {/* Email (read-only) */}
                 <div className="space-y-2">
@@ -198,19 +224,6 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Username */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Username</label>
-                  <Input
-                    type="text"
-                    value={profile.username || ""}
-                    onChange={(e) => handleInputChange("username", e.target.value)}
-                    placeholder="Choose a username"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-[#00ff88] focus:ring-[#00ff88]"
-                  />
-                  <p className="text-xs text-gray-500">Must be at least 3 characters long</p>
-                </div>
-
                 {/* Website */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">Website</label>
@@ -237,9 +250,16 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {error && (
-                  <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-md p-3">
-                    {error}
+                {/* Role */}
+                {profile.role && profile.role !== "user" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Role</label>
+                    <Input
+                      type="text"
+                      value={profile.role}
+                      disabled
+                      className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
+                    />
                   </div>
                 )}
 
