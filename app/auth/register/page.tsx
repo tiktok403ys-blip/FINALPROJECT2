@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Mail, Lock, User, Chrome } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
 
@@ -24,6 +25,7 @@ export default function RegisterPage() {
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const supabase = createClient()
+  const router = useRouter()
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,17 +66,28 @@ export default function RegisterPage() {
         }
       } else if (data.user) {
         if (data.user.email_confirmed_at) {
-          setMessage("Account created successfully! You can now sign in.")
+          setMessage("Account created successfully! Redirecting to home...")
+          // Clear form
+          setEmail("")
+          setPassword("")
+          setConfirmPassword("")
+          setFullName("")
+          setTimeout(() => {
+            router.push("/")
+          }, 1500)
         } else {
           setMessage(
             "Account created! Please check your email and click the confirmation link to activate your account.",
           )
+          // Clear form
+          setEmail("")
+          setPassword("")
+          setConfirmPassword("")
+          setFullName("")
+          setTimeout(() => {
+            router.push("/auth/login")
+          }, 3000)
         }
-        // Clear form
-        setEmail("")
-        setPassword("")
-        setConfirmPassword("")
-        setFullName("")
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.")
