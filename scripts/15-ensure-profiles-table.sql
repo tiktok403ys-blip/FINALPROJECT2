@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     full_name TEXT,
     avatar_url TEXT,
     role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'super_admin')),
-    admin_pin TEXT DEFAULT NULL,
+    admin_pin TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -22,6 +22,10 @@ DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
     FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
 DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
 CREATE POLICY "Admins can view all profiles" ON profiles
     FOR SELECT USING (
@@ -32,7 +36,7 @@ CREATE POLICY "Admins can view all profiles" ON profiles
         )
     );
 
--- Create function to verify admin PIN
+-- Function to verify admin PIN
 CREATE OR REPLACE FUNCTION verify_admin_pin(user_email TEXT, input_pin TEXT)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -43,20 +47,28 @@ DECLARE
     user_role TEXT;
 BEGIN
     -- Get user's PIN and role
-    SELECT admin_pin, role INTO stored_pin, user_role
-    FROM profiles 
-    WHERE email = user_email;
+    SELECT p.admin_pin, p.role INTO stored_pin, user_role
+    FROM profiles p
+    WHERE p.email = user_email;
     
-    -- Check if user is admin/super_admin and PIN matches
+    -- Check if user is admin and PIN matches
     IF user_role IN ('admin', 'super_admin') AND stored_pin = input_pin THEN
+        -- Log successful admin access
+        INSERT INTO admin_logs (user_email, action, timestamp)
+        VALUES (user_email, 'PIN_VERIFIED', NOW());
+        
         RETURN TRUE;
+    ELSE
+        -- Log failed attempt
+        INSERT INTO admin_logs (user_email, action, timestamp)
+        VALUES (user_email, 'PIN_FAILED', NOW());
+        
+        RETURN FALSE;
     END IF;
-    
-    RETURN FALSE;
 END;
 $$;
 
--- Create function to set admin PIN
+-- Function to set admin PIN
 CREATE OR REPLACE FUNCTION set_admin_pin(user_email TEXT, new_pin TEXT)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -67,24 +79,71 @@ BEGIN
     SET admin_pin = new_pin, updated_at = NOW()
     WHERE email = user_email AND role IN ('admin', 'super_admin');
     
-    RETURN FOUND;
+    IF FOUND THEN
+        INSERT INTO admin_logs (user_email, action, timestamp)
+        VALUES (user_email, 'PIN_UPDATED', NOW());
+        RETURN TRUE;
+    END IF;
+    
+    RETURN FALSE;
 END;
 $$;
 
--- Insert/Update super admin profile
-INSERT INTO profiles (id, email, full_name, role, admin_pin)
-SELECT 
-    au.id,
-    'casinogurusg404@gmail.com',
-    'Super Admin',
-    'super_admin',
-    '1234'
-FROM auth.users au
-WHERE au.email = 'casinogurusg404@gmail.com'
-ON CONFLICT (id) DO UPDATE SET
-    role = 'super_admin',
-    admin_pin = '1234',
-    updated_at = NOW();
+-- Create admin logs table
+CREATE TABLE IF NOT EXISTS admin_logs (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    ip_address INET,
+    user_agent TEXT
+);
+
+-- Enable RLS on admin_logs
+ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
+
+-- Policy for admin logs (only admins can view)
+DROP POLICY IF EXISTS "Admins can view logs" ON admin_logs;
+CREATE POLICY "Admins can view logs" ON admin_logs
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('admin', 'super_admin')
+        )
+    );
+
+-- Create trigger to auto-create profile
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    INSERT INTO profiles (id, email, full_name, avatar_url, role, admin_pin)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+        COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
+        CASE 
+            WHEN NEW.email = 'casinogurusg404@gmail.com' THEN 'super_admin'
+            ELSE 'user'
+        END,
+        CASE 
+            WHEN NEW.email = 'casinogurusg404@gmail.com' THEN '1234'
+            ELSE NULL
+        END
+    );
+    RETURN NEW;
+END;
+$$;
+
+-- Create trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- Create trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -101,38 +160,24 @@ CREATE TRIGGER update_profiles_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Create function to log admin actions
-CREATE TABLE IF NOT EXISTS admin_logs (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    action TEXT NOT NULL,
-    resource TEXT NOT NULL,
-    resource_id TEXT,
-    details JSONB,
-    ip_address INET,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Insert/Update super admin profile
+INSERT INTO profiles (id, email, full_name, role, admin_pin)
+SELECT 
+    au.id,
+    'casinogurusg404@gmail.com',
+    'Super Admin',
+    'super_admin',
+    '1234'
+FROM auth.users au
+WHERE au.email = 'casinogurusg404@gmail.com'
+ON CONFLICT (id) DO UPDATE SET
+    role = 'super_admin',
+    admin_pin = '1234',
+    updated_at = NOW();
 
-CREATE OR REPLACE FUNCTION log_admin_action(
-    p_action TEXT,
-    p_resource TEXT,
-    p_resource_id TEXT DEFAULT NULL,
-    p_details TEXT DEFAULT NULL,
-    p_ip_address TEXT DEFAULT NULL
-)
-RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    INSERT INTO admin_logs (user_id, action, resource, resource_id, details, ip_address)
-    VALUES (
-        auth.uid(),
-        p_action,
-        p_resource,
-        p_resource_id,
-        CASE WHEN p_details IS NOT NULL THEN p_details::jsonb ELSE NULL END,
-        CASE WHEN p_ip_address IS NOT NULL THEN p_ip_address::inet ELSE NULL END
-    );
-END;
-$$;
+-- Grant necessary permissions
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON profiles TO anon, authenticated;
+GRANT ALL ON admin_logs TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION verify_admin_pin TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION set_admin_pin TO anon, authenticated;

@@ -5,9 +5,16 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
-import { Shield, Lock, Eye, EyeOff } from "lucide-react"
+import { Shield, Eye, EyeOff, Lock } from "lucide-react"
 
 interface AdminPinDialogProps {
   isOpen: boolean
@@ -18,28 +25,29 @@ interface AdminPinDialogProps {
 
 export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminPinDialogProps) {
   const [pin, setPin] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
   const [error, setError] = useState("")
   const [showPin, setShowPin] = useState(false)
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!pin.trim()) {
-      setError("Please enter your admin PIN")
+
+    if (!pin || pin.length < 4) {
+      setError("PIN must be at least 4 characters")
       return
     }
 
-    setLoading(true)
+    setIsVerifying(true)
     setError("")
 
     try {
       console.log("🔐 Verifying admin PIN for:", userEmail)
 
-      // Call the verify_admin_pin function
+      // Call the database function to verify PIN
       const { data, error } = await supabase.rpc("verify_admin_pin", {
         user_email: userEmail,
-        input_pin: pin.trim(),
+        input_pin: pin,
       })
 
       if (error) {
@@ -51,122 +59,120 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
       if (data === true) {
         console.log("✅ PIN verified successfully")
 
-        // Store PIN verification in session storage
+        // Store verification in session storage (expires in 1 hour)
+        const expirationTime = Date.now() + 60 * 60 * 1000 // 1 hour
         sessionStorage.setItem("admin_pin_verified", "true")
-        sessionStorage.setItem("admin_pin_timestamp", Date.now().toString())
+        sessionStorage.setItem("admin_pin_timestamp", expirationTime.toString())
 
-        // Log successful PIN verification
-        await supabase.rpc("log_admin_action", {
-          p_action: "pin_verification_success",
-          p_resource: "auth",
-          p_details: JSON.stringify({ email: userEmail }),
-        })
-
+        // Clear form
         setPin("")
+        setError("")
+
+        // Call success callback
         onSuccess()
       } else {
         console.log("❌ Invalid PIN")
-        setError("Invalid PIN. Please check your PIN and try again.")
-
-        // Log failed PIN attempt
-        await supabase.rpc("log_admin_action", {
-          p_action: "pin_verification_failed",
-          p_resource: "auth",
-          p_details: JSON.stringify({ email: userEmail }),
-        })
+        setError("Invalid PIN. Please try again.")
+        setPin("")
       }
     } catch (error) {
       console.error("❌ Unexpected error:", error)
       setError("An unexpected error occurred. Please try again.")
     } finally {
-      setLoading(false)
+      setIsVerifying(false)
     }
   }
 
   const handleClose = () => {
     setPin("")
     setError("")
+    setShowPin(false)
     onClose()
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-black border border-red-600/20">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
-            <Shield className="h-5 w-5 text-red-500" />
-            Admin Access Verification
-          </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Enter your admin PIN to access the admin panel. This is required for security purposes.
+      <DialogContent className="sm:max-w-md bg-black/95 backdrop-blur-xl border border-red-500/30 text-white">
+        <DialogHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+            <Shield className="w-6 h-6 text-red-400" />
+          </div>
+          <DialogTitle className="text-xl font-bold text-red-400">Admin Access Required</DialogTitle>
+          <DialogDescription className="text-gray-300">
+            Enter your admin PIN to access the admin panel
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="pin" className="text-sm font-medium text-white">
+            <label htmlFor="pin" className="text-sm font-medium text-gray-300">
               Admin PIN
             </label>
             <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 id="pin"
                 type={showPin ? "text" : "password"}
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder="Enter your admin PIN"
-                className="bg-gray-900 border-gray-700 text-white pr-10"
-                disabled={loading}
-                autoFocus
+                placeholder="Enter your PIN"
+                className="pl-10 pr-10 bg-gray-900/50 border-gray-700 text-white placeholder-gray-400 focus:border-red-500 focus:ring-red-500"
+                disabled={isVerifying}
+                autoComplete="off"
+                maxLength={10}
               />
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPin(!showPin)}
-                disabled={loading}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                disabled={isVerifying}
               >
-                {showPin ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
-              </Button>
+                {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm bg-red-900/20 p-3 rounded border border-red-600/20">{error}</div>
+            <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
           )}
 
-          <div className="flex gap-3 pt-4">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={loading}
-              className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800 bg-transparent"
+              disabled={isVerifying}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white bg-transparent"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={loading || !pin.trim()}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              disabled={isVerifying || !pin}
+              className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
             >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {isVerifying ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Verifying...
-                </div>
+                </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Verify PIN
-                </div>
+                <>
+                  <Shield className="w-4 h-4 mr-2" />
+                  Access Admin Panel
+                </>
               )}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
 
-        <div className="text-xs text-gray-500 text-center pt-2">
-          PIN verification is valid for 1 hour for security purposes.
+        <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+          <p className="text-xs text-yellow-400">
+            <strong>Security Notice:</strong> Admin access is logged and monitored. Unauthorized access attempts will be
+            recorded.
+          </p>
         </div>
       </DialogContent>
     </Dialog>

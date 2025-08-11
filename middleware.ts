@@ -2,26 +2,8 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  const { pathname, hostname } = request.nextUrl
-
-  // Handle admin subdomain routing
-  if (hostname === "sg44admin.gurusingapore.com") {
-    // Rewrite to admin routes
-    const adminPath = pathname === "/" ? "/admin" : `/admin${pathname}`
-    return NextResponse.rewrite(new URL(adminPath, request.url))
-  }
-
-  // Prevent direct access to /admin routes on main domain
-  if (pathname.startsWith("/admin") && hostname !== "sg44admin.gurusingapore.com") {
-    // Redirect to admin subdomain
-    const adminUrl = new URL(pathname.replace("/admin", ""), "https://sg44admin.gurusingapore.com")
-    return NextResponse.redirect(adminUrl)
-  }
-
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+  let supabaseResponse = NextResponse.next({
+    request,
   })
 
   const supabase = createServerClient(
@@ -29,55 +11,46 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
           })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: "",
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          })
+          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
         },
       },
     },
   )
 
-  // Refresh session if expired - required for Server Components
-  try {
-    await supabase.auth.getUser()
-  } catch (error) {
-    console.error("Middleware auth error:", error)
+  // Handle subdomain routing for admin panel
+  const hostname = request.headers.get("host") || ""
+  const url = request.nextUrl.clone()
+
+  // Check if this is the admin subdomain
+  if (hostname === "sg44admin.gurusingapore.com") {
+    console.log("🔄 Admin subdomain detected, routing to /admin")
+
+    // Rewrite to admin path
+    url.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`
+    return NextResponse.rewrite(url)
   }
 
-  return response
+  // Block direct access to /admin on main domain
+  if (url.pathname.startsWith("/admin") && hostname !== "sg44admin.gurusingapore.com") {
+    console.log("🚫 Direct admin access blocked, redirecting to subdomain")
+
+    // Redirect to admin subdomain
+    const adminUrl = new URL(url.pathname, "https://sg44admin.gurusingapore.com")
+    return NextResponse.redirect(adminUrl)
+  }
+
+  // Refresh session if expired - required for Server Components
+  await supabase.auth.getUser()
+
+  return supabaseResponse
 }
 
 export const config = {
@@ -87,7 +60,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * Feel free to modify this pattern to include more paths.
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
