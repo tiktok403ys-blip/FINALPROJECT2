@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Shield, Lock } from "lucide-react"
+import { Eye, EyeOff, Shield, AlertTriangle, Lock, User } from "lucide-react"
+import Link from "next/link"
 
-export default function AdminLoginPage() {
+export default function AdminLogin() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // Sign in with email and password
+      // Sign in user
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -51,24 +51,23 @@ export default function AdminLoginPage() {
 
       if (profileError) {
         setError("Failed to verify admin privileges")
-        await supabase.auth.signOut()
         return
       }
 
-      if (profile?.role !== "admin") {
-        setError("Access denied. Admin privileges required.")
+      if (!profile || (profile.role !== "admin" && profile.role !== "super_admin")) {
         await supabase.auth.signOut()
+        setError("Access denied. Admin privileges required.")
         return
       }
 
       // Log admin login
-      await supabase.rpc("log_admin_action", {
-        p_action: "admin_login",
-        p_resource: "auth",
-        p_ip_address: null, // Would need to get from headers in production
+      await supabase.from("admin_logs").insert({
+        admin_id: authData.user.id,
+        action: "admin_login",
+        ip_address: "unknown",
+        user_agent: navigator.userAgent,
       })
 
-      // Redirect to admin dashboard
       router.push("/admin")
     } catch (err) {
       setError("An unexpected error occurred")
@@ -78,89 +77,113 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="bg-black/50 border-gray-800 backdrop-blur-sm">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mb-4">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-white">Admin Access</CardTitle>
-            <CardDescription className="text-gray-400">Secure login for authorized administrators only</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              {error && (
-                <Alert className="border-red-800 bg-red-900/20">
-                  <AlertDescription className="text-red-400">{error}</AlertDescription>
-                </Alert>
-              )}
+        {/* Security Warning */}
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-2">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <h3 className="text-red-400 font-semibold">Restricted Access</h3>
+          </div>
+          <p className="text-red-300 text-sm">
+            This is a secure admin area. All login attempts are monitored and logged.
+          </p>
+        </div>
 
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-gray-300">
-                  Email Address
-                </label>
+        {/* Login Form */}
+        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Admin Portal</h1>
+            <p className="text-gray-400">Secure access to GuruSingapore admin panel</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            {error && (
+              <Alert className="bg-red-500/10 border-red-500/20 text-red-400">
+                <AlertTriangle className="w-4 h-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Admin Email
+              </label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@gurusingapore.com"
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-red-500/50 focus:ring-red-500/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                Password
+              </label>
+              <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-gray-900 border-gray-700 text-white focus:border-red-500"
-                  placeholder="admin@gurusingapore.com"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
                   required
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-red-500/50 focus:ring-red-500/20 pr-12"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-300">
-                  Password
-                </label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-gray-900 border-gray-700 text-white focus:border-red-500 pr-10"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Authenticating...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4" />
-                    Secure Login
-                  </div>
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-xs text-gray-500">
-                This is a restricted area. All access attempts are logged and monitored.
-              </p>
             </div>
-          </CardContent>
-        </Card>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 transition-all duration-300 hover:scale-[1.02]"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Authenticating...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Access Admin Panel
+                </div>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="text-center">
+              <Link
+                href="/"
+                className="text-sm text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+              >
+                ← Back to GuruSingapore
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Notice */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500">
+            Protected by enterprise-grade security. Unauthorized access attempts will be prosecuted.
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -17,6 +17,7 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  Shield,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -24,6 +25,7 @@ import type { User as SupabaseUser } from "@supabase/supabase-js"
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [profile, setProfile] = useState<any | null>(null)
   const [isVisible, setIsVisible] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const pathname = usePathname()
@@ -39,14 +41,25 @@ export function Navbar() {
         data: { user },
       } = await supabase.auth.getUser()
       setUser(user)
+
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+        setProfile(profile)
+      }
     }
     getUser()
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+        setProfile(profile)
+      } else {
+        setProfile(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -105,6 +118,8 @@ export function Navbar() {
     { name: "Reports", href: "/reports", icon: FileText },
   ]
 
+  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin"
+
   return (
     <>
       {/* Desktop Navbar */}
@@ -149,49 +164,70 @@ export function Navbar() {
             {/* Auth Section */}
             <div className="hidden lg:flex items-center gap-3">
               {user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white"
-                  >
-                    <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
-                      <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <span className="text-sm font-medium">{user.email?.split("@")[0]}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-300 ${showUserMenu ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {/* User Dropdown */}
-                  {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl py-2">
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                        onClick={() => setShowUserMenu(false)}
+                <div className="flex items-center gap-3">
+                  {/* Admin Panel Button */}
+                  {isAdmin && (
+                    <Link href="/admin">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 bg-transparent"
                       >
-                        <User className="w-4 h-4" />
-                        Profile
-                      </Link>
-                      <Link
-                        href="/settings"
-                        className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <Settings className="w-4 h-4" />
-                        Settings
-                      </Link>
-                      <hr className="my-2 border-white/10" />
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full text-left"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                      </button>
-                    </div>
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin Panel
+                      </Button>
+                    </Link>
                   )}
+
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white"
+                    >
+                      <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
+                        <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <span className="text-sm font-medium">{user.email?.split("@")[0]}</span>
+                      {isAdmin && (
+                        <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
+                          {profile?.role === "super_admin" ? "SUPER" : "ADMIN"}
+                        </span>
+                      )}
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-300 ${showUserMenu ? "rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    {/* User Dropdown */}
+                    {showUserMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl py-2">
+                        <Link
+                          href="/profile"
+                          className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <User className="w-4 h-4" />
+                          Profile
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </Link>
+                        <hr className="my-2 border-white/10" />
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
@@ -250,11 +286,30 @@ export function Navbar() {
 
               {user ? (
                 <div className="space-y-1">
+                  {/* Admin Panel for Mobile */}
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-sm border border-red-500/30"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin Panel
+                    </Link>
+                  )}
+
                   <div className="flex items-center gap-2 px-3 py-2 text-white text-sm">
                     <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
                       <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
                     </div>
-                    <span className="font-medium truncate">{user.email?.split("@")[0]}</span>
+                    <div className="flex-1">
+                      <span className="font-medium truncate">{user.email?.split("@")[0]}</span>
+                      {isAdmin && (
+                        <div className="text-xs text-red-400 mt-1">
+                          {profile?.role === "super_admin" ? "Super Admin" : "Admin"}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Link
                     href="/profile"

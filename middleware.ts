@@ -4,12 +4,13 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const pathname = request.nextUrl.pathname
 
-  // Skip middleware for static files and API routes
+  // Skip middleware for static files, API routes, and specific paths
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
+    pathname.startsWith("/favicon") ||
     pathname.includes(".") ||
-    pathname.startsWith("/favicon")
+    pathname.startsWith("/auth/callback")
   ) {
     return NextResponse.next()
   }
@@ -31,21 +32,29 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    // Main domain handling
-    if (hostname === "gurusingapore.com" || hostname === "www.gurusingapore.com") {
-      // Block admin access from main domain
-      if (pathname.startsWith("/admin")) {
-        return new NextResponse(null, { status: 404 })
-      }
-
-      // Redirect www to non-www (only if it's www)
-      if (hostname === "www.gurusingapore.com") {
-        const url = new URL(request.url)
-        url.hostname = "gurusingapore.com"
-        return NextResponse.redirect(url, 301)
-      }
+    // Handle www redirect ONLY if it's actually www
+    if (hostname === "www.gurusingapore.com") {
+      const url = new URL(request.url)
+      url.hostname = "gurusingapore.com"
+      return NextResponse.redirect(url, 301)
     }
 
+    // Main domain handling - allow everything for gurusingapore.com
+    if (hostname === "gurusingapore.com") {
+      // Allow admin access from main domain
+      if (pathname.startsWith("/admin")) {
+        const response = NextResponse.next()
+        response.headers.set("X-Robots-Tag", "noindex, nofollow")
+        response.headers.set("X-Frame-Options", "DENY")
+        response.headers.set("X-Content-Type-Options", "nosniff")
+        return response
+      }
+
+      // Allow all other paths on main domain
+      return NextResponse.next()
+    }
+
+    // For any other hostname, just continue
     return NextResponse.next()
   } catch (error) {
     console.error("Middleware error:", error)

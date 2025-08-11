@@ -15,8 +15,24 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  // Remove conflicting redirects and rewrites to prevent loops
-  // Let middleware handle all routing logic
+  // Remove any redirects to prevent conflicts with middleware
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig
