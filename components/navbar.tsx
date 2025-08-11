@@ -22,14 +22,23 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
+interface Profile {
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+  role?: string
+}
+
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [profile, setProfile] = useState<any | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [isVisible, setIsVisible] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
   const pathname = usePathname()
   const supabase = createClient()
 
@@ -38,10 +47,12 @@ export function Navbar() {
 
   useEffect(() => {
     let mounted = true
+    let profileFetched = false
 
     // Get initial session and user
     const initializeAuth = async () => {
       try {
+        console.log("Initializing auth...")
         setIsLoading(true)
 
         // First, get the session
@@ -55,30 +66,22 @@ export function Navbar() {
           if (mounted) {
             setUser(null)
             setProfile(null)
+            setIsLoading(false)
           }
           return
         }
 
         if (session?.user && mounted) {
+          console.log("User found:", session.user.email)
           setUser(session.user)
 
-          // Get user profile
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .single()
-
-            if (profileError) {
-              console.error("Profile error:", profileError)
-            } else if (mounted) {
-              setProfile(profile)
-            }
-          } catch (profileError) {
-            console.error("Profile fetch error:", profileError)
+          // Only fetch profile if we haven't already
+          if (!profileFetched) {
+            profileFetched = true
+            await fetchUserProfile(session.user.id)
           }
         } else if (mounted) {
+          console.log("No user session")
           setUser(null)
           setProfile(null)
         }
@@ -95,6 +98,60 @@ export function Navbar() {
       }
     }
 
+    const fetchUserProfile = async (userId: string) => {
+      if (!mounted || profileLoading) return
+
+      try {
+        console.log("Fetching profile for user:", userId)
+        setProfileLoading(true)
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, avatar_url, role")
+          .eq("id", userId)
+          .single()
+
+        if (profileError) {
+          console.error("Profile error:", profileError)
+          // If profile doesn't exist, create a basic one
+          if (profileError.code === "PGRST116") {
+            console.log("Profile not found, creating basic profile...")
+            const { data: userData } = await supabase.auth.getUser()
+            if (userData.user && mounted) {
+              const basicProfile: Profile = {
+                id: userData.user.id,
+                email: userData.user.email || "",
+                full_name: userData.user.user_metadata?.full_name || null,
+                avatar_url: userData.user.user_metadata?.avatar_url || null,
+                role: "user",
+              }
+              setProfile(basicProfile)
+            }
+          }
+        } else if (mounted && profileData) {
+          console.log("Profile loaded:", profileData)
+          setProfile(profileData)
+        }
+      } catch (error) {
+        console.error("Profile fetch error:", error)
+        // Set basic profile from user data as fallback
+        if (mounted && user) {
+          const basicProfile: Profile = {
+            id: user.id,
+            email: user.email || "",
+            full_name: user.user_metadata?.full_name || null,
+            avatar_url: user.user_metadata?.avatar_url || null,
+            role: "user",
+          }
+          setProfile(basicProfile)
+        }
+      } finally {
+        if (mounted) {
+          setProfileLoading(false)
+        }
+      }
+    }
+
     initializeAuth()
 
     // Listen for auth changes
@@ -107,24 +164,29 @@ export function Navbar() {
 
       if (event === "SIGNED_IN" && session?.user) {
         setUser(session.user)
+        setIsLoading(false)
 
-        // Get user profile
-        try {
-          const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
-          setProfile(profile)
-        } catch (error) {
-          console.error("Profile fetch error on sign in:", error)
-        }
+        // Reset profile fetched flag and fetch profile
+        profileFetched = false
+        await fetchUserProfile(session.user.id)
       } else if (event === "SIGNED_OUT") {
         setUser(null)
         setProfile(null)
         setShowUserMenu(false)
         setIsSigningOut(false)
+        setIsLoading(false)
+        profileFetched = false
 
         // Clear auth cookies
         clearAuthCookies()
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         setUser(session.user)
+        setIsLoading(false)
+        // Don't refetch profile on token refresh if we already have it
+        if (!profile && !profileFetched) {
+          profileFetched = false
+          await fetchUserProfile(session.user.id)
+        }
       }
     })
 
@@ -132,7 +194,7 @@ export function Navbar() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [supabase.auth])
+  }, []) // Remove dependencies to prevent infinite loops
 
   useEffect(() => {
     if (!isHomePage) {
@@ -263,6 +325,9 @@ export function Navbar() {
 
   const isAdmin = profile?.role === "admin" || profile?.role === "super_admin"
 
+  // Show loading only during initial auth check
+  const showLoading = isLoading && !user
+
   return (
     <>
       {/* Desktop Navbar */}
@@ -306,7 +371,7 @@ export function Navbar() {
 
             {/* Auth Section */}
             <div className="hidden lg:flex items-center gap-3">
-              {isLoading ? (
+              {showLoading ? (
                 <div className="w-8 h-8 border-2 border-[#00ff88]/30 border-t-[#00ff88] rounded-full animate-spin"></div>
               ) : user ? (
                 <div className="flex items-center gap-3">
@@ -331,9 +396,13 @@ export function Navbar() {
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white disabled:opacity-50"
                     >
                       <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
-                        <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
+                        <span className="text-black font-bold text-xs">
+                          {profile?.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || "U"}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium">{user.email?.split("@")[0]}</span>
+                      <span className="text-sm font-medium">
+                        {profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User"}
+                      </span>
                       {isAdmin && (
                         <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
                           {profile?.role === "super_admin" ? "SUPER" : "ADMIN"}
@@ -431,7 +500,7 @@ export function Navbar() {
 
               <hr className="border-white/10 my-3" />
 
-              {isLoading ? (
+              {showLoading ? (
                 <div className="flex justify-center py-4">
                   <div className="w-6 h-6 border-2 border-[#00ff88]/30 border-t-[#00ff88] rounded-full animate-spin"></div>
                 </div>
@@ -451,10 +520,14 @@ export function Navbar() {
 
                   <div className="flex items-center gap-2 px-3 py-2 text-white text-sm">
                     <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
-                      <span className="text-black font-bold text-xs">{user.email?.charAt(0).toUpperCase()}</span>
+                      <span className="text-black font-bold text-xs">
+                        {profile?.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || "U"}
+                      </span>
                     </div>
                     <div className="flex-1">
-                      <span className="font-medium truncate">{user.email?.split("@")[0]}</span>
+                      <span className="font-medium truncate">
+                        {profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User"}
+                      </span>
                       {isAdmin && (
                         <div className="text-xs text-red-400 mt-1">
                           {profile?.role === "super_admin" ? "Super Admin" : "Admin"}
