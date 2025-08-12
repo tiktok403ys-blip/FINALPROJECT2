@@ -72,15 +72,25 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
           return
         }
 
-        // Check PIN verification
-        const pinVerified = sessionStorage.getItem("admin_pin_verified") === "true"
+        // Check PIN verification from cookie (shared across subdomains), fallback to sessionStorage
+        const getCookie = (name: string): string | undefined => {
+          if (typeof document === "undefined") return undefined
+          return document.cookie
+            .split("; ")
+            .find((c) => c.startsWith(`${name}=`))
+            ?.split("=")?.[1]
+        }
+
+        const cookiePin = getCookie("admin_pin_verified") === "1"
+        const pinVerified = cookiePin || sessionStorage.getItem("admin_pin_verified") === "true"
         const pinTimestamp = sessionStorage.getItem("admin_pin_timestamp")
         const now = Date.now()
         const pinAge = pinTimestamp ? now - Number.parseInt(pinTimestamp) : Number.POSITIVE_INFINITY
 
-        // PIN expires after 1 hour (3600000 ms)
+        // PIN expires after 1 hour (3600000 ms) or cookie absent
         if (!pinVerified || pinAge > 3600000) {
           console.log("❌ PIN verification required or expired")
+          // clear local markers
           sessionStorage.removeItem("admin_pin_verified")
           sessionStorage.removeItem("admin_pin_timestamp")
           router.push("/auth/admin-pin")
@@ -152,7 +162,14 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         },
       )
 
-      // Clear PIN verification
+      // Clear PIN verification (cookie + sessionStorage)
+      try {
+        const hostname = typeof window !== "undefined" ? window.location.hostname : ""
+        const parts = hostname.split(".")
+        const apex = parts.length >= 2 ? `${parts[parts.length - 2]}.${parts[parts.length - 1]}` : undefined
+        const domainPart = apex ? `Domain=${apex}; ` : ""
+        document.cookie = `admin_pin_verified=; Max-Age=0; Path=/; ${domainPart}`
+      } catch (_) {}
       sessionStorage.removeItem("admin_pin_verified")
       sessionStorage.removeItem("admin_pin_timestamp")
 

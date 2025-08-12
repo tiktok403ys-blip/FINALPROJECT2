@@ -30,6 +30,14 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
   const [showPin, setShowPin] = useState(false)
   const supabase = createClient()
 
+  const getApexDomain = (hostname: string): string | undefined => {
+    // Do not set domain on localhost or IP addresses
+    if (!hostname || hostname === "localhost" || /\d+\.\d+\.\d+\.\d+/.test(hostname)) return undefined
+    const parts = hostname.split(".")
+    if (parts.length < 2) return undefined
+    return `${parts[parts.length - 2]}.${parts[parts.length - 1]}`
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -59,8 +67,20 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
       if (data === true) {
         console.log("✅ PIN verified successfully")
 
-        // Store verification in session storage (expires in 1 hour)
-        const expirationTime = Date.now() + 60 * 60 * 1000 // 1 hour
+        // Store verification in cookie (apex domain) so it is readable on subdomains
+        try {
+          const hostname = typeof window !== "undefined" ? window.location.hostname : ""
+          const apex = getApexDomain(hostname)
+          const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "Secure; " : ""
+          const domainPart = apex ? `Domain=${apex}; ` : ""
+          // 1 hour validity
+          document.cookie = `admin_pin_verified=1; Max-Age=3600; Path=/; ${domainPart}${secure}SameSite=Lax`
+        } catch (_) {
+          // ignore cookie set errors
+        }
+
+        // Keep sessionStorage as local fallback (1 hour)
+        const expirationTime = Date.now() + 60 * 60 * 1000
         sessionStorage.setItem("admin_pin_verified", "true")
         sessionStorage.setItem("admin_pin_timestamp", expirationTime.toString())
 
