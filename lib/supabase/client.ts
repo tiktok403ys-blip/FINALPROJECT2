@@ -2,8 +2,24 @@ import { createBrowserClient } from "@supabase/ssr"
 
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
 
+function resolveCookieDomain(): string | undefined {
+  if (typeof window === "undefined") return undefined
+  // Prefer explicit ENV for consistency between server and client
+  const fromEnv = (process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN || process.env.SITE_COOKIE_DOMAIN) as
+    | string
+    | undefined
+  if (fromEnv && fromEnv.trim().length > 0) return fromEnv.trim()
+
+  const host = window.location.hostname
+  // Use apex domain in production to share cookies across subdomains
+  if (host.endsWith("gurusingapore.com")) return "gurusingapore.com"
+  // For localhost or unknown hosts, fall back to host-only cookies
+  return undefined
+}
+
 export function createClient() {
   if (!supabaseClient) {
+    const defaultDomain = resolveCookieDomain()
     supabaseClient = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,28 +37,36 @@ export function createClient() {
           },
           set(name: string, value: string, options: any) {
             if (typeof document !== "undefined") {
+              const merged: any = {
+                path: "/",
+                domain: defaultDomain,
+                secure: typeof window !== "undefined" ? window.location.protocol === "https:" : false,
+                sameSite: "lax",
+                ...options,
+              }
+
               let cookieString = `${name}=${value}`
 
-              if (options?.maxAge) {
-                cookieString += `; max-age=${options.maxAge}`
+              if (merged.maxAge) {
+                cookieString += `; max-age=${merged.maxAge}`
               }
-              if (options?.expires) {
-                cookieString += `; expires=${options.expires.toUTCString()}`
+              if (merged.expires) {
+                cookieString += `; expires=${merged.expires.toUTCString()}`
               }
-              if (options?.path) {
-                cookieString += `; path=${options.path}`
+              if (merged.path) {
+                cookieString += `; path=${merged.path}`
               }
-              if (options?.domain) {
-                cookieString += `; domain=${options.domain}`
+              if (merged.domain) {
+                cookieString += `; domain=${merged.domain}`
               }
-              if (options?.secure) {
+              if (merged.secure) {
                 cookieString += "; secure"
               }
-              if (options?.httpOnly) {
+              if (merged.httpOnly) {
                 cookieString += "; httponly"
               }
-              if (options?.sameSite) {
-                cookieString += `; samesite=${options.sameSite}`
+              if (merged.sameSite) {
+                cookieString += `; samesite=${merged.sameSite}`
               }
 
               document.cookie = cookieString
@@ -50,13 +74,14 @@ export function createClient() {
           },
           remove(name: string, options: any) {
             if (typeof document !== "undefined") {
+              const merged: any = { path: "/", domain: defaultDomain, ...options }
               let cookieString = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`
 
-              if (options?.path) {
-                cookieString += `; path=${options.path}`
+              if (merged.path) {
+                cookieString += `; path=${merged.path}`
               }
-              if (options?.domain) {
-                cookieString += `; domain=${options.domain}`
+              if (merged.domain) {
+                cookieString += `; domain=${merged.domain}`
               }
 
               document.cookie = cookieString
