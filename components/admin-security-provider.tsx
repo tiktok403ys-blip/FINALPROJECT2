@@ -54,7 +54,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         }
 
         // Get user profile with role
-        const { data: profile, error } = await supabase.rpc("profile_rpc_v4", { user_id_input: user.id });
+        const { data: profile, error } = await supabase.rpc("profile_rpc_v5", { user_id_input: user.id });
 
         if (error || !profile) {
           console.error("❌ Profile fetch error:", error)
