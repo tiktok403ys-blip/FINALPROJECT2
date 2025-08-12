@@ -79,6 +79,8 @@ export interface Report {
   casinos?: Casino
 }
 
+export type Review = CasinoReview
+
 export interface CasinoReview {
   id: string
   casino_id: string
