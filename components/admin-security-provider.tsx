@@ -36,10 +36,16 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
   const supabase = createClient()
   
   // Use centralized auth from AuthProvider
-  const { user, signOut: authSignOut } = useAuth()
+  const { user, authLoading, signOut: authSignOut } = useAuth()
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Tunggu AuthProvider selesai memuat status otentikasi
+      if (authLoading) {
+        setLoading(true);
+        return;
+      }
+
       try {
         if (!user) {
           console.log("❌ No user found, redirecting to login")
@@ -48,7 +54,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         }
 
         // Get user profile with role
-        const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+        const { data: profile, error } = await supabase.rpc("profile_rpc_v4", { user_id_input: user.id });
 
         if (error || !profile) {
           console.error("❌ Profile fetch error:", error)
@@ -76,7 +82,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
           console.log("❌ PIN verification required or expired")
           sessionStorage.removeItem("admin_pin_verified")
           sessionStorage.removeItem("admin_pin_timestamp")
-          router.push("/")
+          router.push("/auth/admin-pin")
           return
         }
 
@@ -98,33 +104,52 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
     }
 
     checkAuth()
-  }, [user, router])
+  }, [user, router, authLoading])
 
-  const logAdminActionInternal = async (action: string, resource: string, resourceId?: string, details?: any) => {
+  // This function is for logging admin actions directly to the 'admin_actions' table.
+  // It's separate from the useAdminSecurity hook to allow direct calls where needed.
+  const logAdminActionInternal = async (
+    action_type: string,
+    module_name: string,
+    item_id: string | null,
+    details: object,
+  ) => {
+    if (!user) {
+      console.warn("Cannot log admin action: User is not authenticated.")
+      return
+    }
     try {
-      await supabase.rpc("log_admin_action", {
-        p_action: action,
-        p_resource: resource,
-        p_resource_id: resourceId,
-        p_details: details ? JSON.stringify(details) : null,
-        p_ip_address: null, // Would need to get from headers in production
+      const { error } = await supabase.from("admin_actions").insert({
+        user_id: user.id,
+        email: user?.email ?? null,
+        action_type,
+        module_name,
+        item_id,
+        details,
       })
+      if (error) {
+        console.error("Error logging admin action:", error)
+      }
     } catch (error) {
-      console.error("Failed to log admin action:", error)
+      console.error("Exception logging admin action:", error)
     }
   }
 
   const logAdminAction = async (action: string, resource: string, resourceId?: string, details?: any) => {
-    await logAdminActionInternal(action, resource, resourceId, details)
+    await logAdminActionInternal(action, resource, resourceId ?? null, details)
   }
 
   const signOut = async () => {
     try {
-      // Log admin logout
-      await logAdminActionInternal("admin_logout", "auth", null, {
-        user_id: user?.id,
-        email: user?.email,
-      })
+      await logAdminActionInternal(
+        "admin_logout",
+        "auth",
+        null,
+        {
+          user_id: user?.id,
+          email: user?.email ?? null,
+        },
+      )
 
       // Clear PIN verification
       sessionStorage.removeItem("admin_pin_verified")
