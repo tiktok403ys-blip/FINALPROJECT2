@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
+import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js"
 
 interface AuthContextType {
   user: User | null
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (!mounted) return
 
       console.log("Auth Provider - Auth state changed:", event)
@@ -101,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
+    loading,
     authLoading: loading,
     signOut,
   }

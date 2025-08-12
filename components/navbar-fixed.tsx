@@ -83,7 +83,7 @@ export function NavbarFixed() {
 
       // ✅ INI ADALAH PERUBAHAN YANG HARUS ANDA TERAPKAN PADA FILE components/navbar-fixed.tsx
       // ✅ BUKAN DIJALANKAN DI SUPABASE SQL EDITOR
-      const { data: profileData, error } = await supabase.rpc("profile_rpc_v4", {
+      const { data: profileData, error } = await supabase.rpc("profile_rpc_v5", {
         user_id_input: currentUser.id, // Sesuaikan dengan nama parameter di fungsi RPC
       })
 
