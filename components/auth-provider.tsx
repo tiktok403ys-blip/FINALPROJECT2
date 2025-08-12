@@ -9,12 +9,14 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   signOut: () => Promise<void>
+  authLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signOut: async () => {},
+  authLoading: true,
 })
 
 export const useAuth = () => {
@@ -99,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
-    loading,
+    authLoading: loading,
     signOut,
   }
 
