@@ -135,8 +135,9 @@ export function NavbarFixed() {
         }
       } else {
         console.log("✅ Profile loaded successfully:", profileData)
+        const row = Array.isArray(profileData) ? profileData?.[0] : profileData
         if (mountedRef.current) {
-          setProfile(profileData)
+          setProfile(row ?? null)
         }
       }
     } catch (error) {
