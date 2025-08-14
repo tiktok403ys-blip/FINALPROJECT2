@@ -132,14 +132,29 @@ export default function EditBonusPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            <TextField label="Wagering (x)" type="number" inputMode="numeric" {...register("wagering_x")} placeholder="25" />
-            <TextField label="Free Spins" type="number" inputMode="numeric" {...register("free_spins")} placeholder="200" />
-            <TextField label="Value per Spin ($)" type="number" step="0.01" inputMode="decimal" {...register("free_spin_value")} placeholder="0.2" />
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-[#00ff88]">▶</span>
+              <TextField label="Wagering (x)" type="number" inputMode="numeric" {...register("wagering_x")} placeholder="25" className="pl-8" />
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-[#00ff88]">$</span>
+              <TextField label="Free Spins" type="number" inputMode="numeric" {...register("free_spins")} placeholder="200" className="pl-8" />
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-[#00ff88]">$</span>
+              <TextField label="Value per Spin ($)" type="number" step="0.01" inputMode="decimal" {...register("free_spin_value")} placeholder="0.2" className="pl-8" />
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" />
-            <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" />
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-[#00ff88]">$</span>
+              <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" className="pl-8" />
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-[#00ff88]">📅</span>
+              <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" className="pl-8" />
+            </div>
             <div className="flex items-center gap-6">
               <label className="inline-flex items-center gap-2 text-white text-sm">
                 <input type="checkbox" {...register("is_exclusive")} /> Exclusive
