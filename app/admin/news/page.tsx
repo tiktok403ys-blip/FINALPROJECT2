@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,20 +8,42 @@ import { createClient } from "@/lib/supabase/client"
 import { Newspaper, Edit, Trash2, Plus, Search, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import type { News } from "@/lib/types"
+import { useAdminSecurity } from "@/components/admin-security-provider"
 
 export default function AdminNewsPage() {
   const [news, setNews] = useState<News[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const supabase = createClient()
+  const { logAdminAction } = useAdminSecurity()
 
   useEffect(() => {
     fetchNews()
+  }, [page, pageSize])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("news-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "news" }, () => {
+        fetchNews()
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchNews = async () => {
     setLoading(true)
-    const { data } = await supabase.from("news").select("*").order("created_at", { ascending: false })
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    const { data } = await supabase
+      .from("news")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to)
 
     if (data) {
       setNews(data)
@@ -31,26 +53,44 @@ export default function AdminNewsPage() {
 
   const togglePublished = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase.from("news").update({ published: !currentStatus }).eq("id", id)
-
     if (!error) {
+      await logAdminAction("toggle_published", "news", id, { published: !currentStatus })
       fetchNews()
     }
   }
 
+  const parseAssetsPath = (url?: string | null): string | null => {
+    if (!url) return null
+    const marker = "/storage/v1/object/public/assets/"
+    const idx = url.indexOf(marker)
+    if (idx === -1) return null
+    return url.substring(idx + marker.length)
+  }
+
   const deleteNews = async (id: string) => {
     if (confirm("Are you sure you want to delete this news article?")) {
+      const { data: prev } = await supabase.from("news").select("image_url").eq("id", id).single()
       const { error } = await supabase.from("news").delete().eq("id", id)
 
       if (!error) {
+        const oldPath = parseAssetsPath(prev?.image_url)
+        if (oldPath) {
+          await supabase.storage.from("assets").remove([oldPath])
+        }
+        await logAdminAction("delete", "news", id, {})
         fetchNews()
       }
     }
   }
 
-  const filteredNews = news.filter(
-    (article) =>
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.category?.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredNews = useMemo(
+    () =>
+      news.filter(
+        (article) =>
+          article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.category?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [news, searchTerm],
   )
 
   return (
@@ -154,6 +194,30 @@ export default function AdminNewsPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {!loading && filteredNews.length > 0 && (
+        <div className="flex items-center justify-between mt-8">
+          <div className="text-gray-400 text-sm">Page {page}</div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="bg-transparent text-white border-white/20"
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              className="bg-transparent text-white border-white/20"
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

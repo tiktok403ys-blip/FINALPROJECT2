@@ -38,13 +38,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
-  // Block direct access to /admin on main domain
-  if (url.pathname.startsWith("/admin") && hostname !== "sg44admin.gurusingapore.com") {
-    console.log("🚫 Direct admin access blocked, redirecting to subdomain")
-
-    // Redirect to admin subdomain
-    const adminUrl = new URL(url.pathname, "https://sg44admin.gurusingapore.com")
-    return NextResponse.redirect(adminUrl)
+  // STRICT: Block ANY direct access to /admin or /admin-v2 on main domain with 404 (no redirect)
+  if (
+    hostname !== "sg44admin.gurusingapore.com" &&
+    (url.pathname.startsWith("/admin") || url.pathname.startsWith("/admin-v2"))
+  ) {
+    console.log("🚫 Direct admin path on main domain blocked with 404")
+    return new NextResponse(null, { status: 404 })
   }
 
   // Refresh session if expired - required for Server Components

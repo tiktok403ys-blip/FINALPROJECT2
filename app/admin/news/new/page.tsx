@@ -3,30 +3,45 @@
 import type React from "react"
 
 import { useState } from "react"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
-import { GlassCard } from "@/components/glass-card"
+import { FormShell } from "@/components/admin/forms/form-shell"
+import { TextField, TextAreaField } from "@/components/admin/forms/fields"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { UploadInput } from "@/components/admin/upload-input"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, Save } from "lucide-react"
 import Link from "next/link"
 
+const schema = z.object({
+  title: z.string().min(3, "Title is too short"),
+  content: z.string().min(10, "Content is too short"),
+  excerpt: z.string().optional().default(""),
+  category: z.string().optional().default(""),
+  published: z.boolean().optional().default(false),
+  image_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+})
+
+type FormValues = z.infer<typeof schema>
+
 export default function NewNewsPage() {
-  const [formData, setFormData] = useState({
-    title: "",
-    content: "",
-    excerpt: "",
-    category: "",
-    published: false,
-  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
   const supabase = createClient()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { published: false } })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: FormValues) => {
     setLoading(true)
     setError("")
 
@@ -35,10 +50,7 @@ export default function NewNewsPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
-      const { error } = await supabase.from("news").insert({
-        ...formData,
-        author_id: user?.id,
-      })
+      const { error } = await supabase.from("news").insert({ ...data, author_id: user?.id })
 
       if (error) {
         setError(error.message)
@@ -52,60 +64,32 @@ export default function NewNewsPage() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const value = e.target.type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value
-    setFormData({
-      ...formData,
-      [e.target.name]: value,
-    })
-  }
-
   const categories = ["Regulation", "Games", "Security", "Industry", "Reviews", "Bonuses"]
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Button variant="ghost" asChild className="text-white mr-4">
-            <Link href="/admin/news">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to News
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Create News Article</h1>
-            <p className="text-gray-400">Write and publish a new news article</p>
-          </div>
-        </div>
-
-        <GlassCard className="p-8">
+    <FormShell
+      title="Create News Article"
+      description="Write and publish a new news article"
+      headerExtra={
+        <Button variant="ghost" asChild className="text-white">
+          <Link href="/admin/news">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to News
+          </Link>
+        </Button>
+      }
+    >
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Title *</label>
-                <Input
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="Enter article title"
-                  required
-                />
-              </div>
+              <TextField label="Title *" {...register("title")} error={errors.title?.message} placeholder="Enter article title" />
               <div className="space-y-2">
                 <label className="text-white text-sm font-medium">Category</label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-white"
-                >
+                <select {...register("category")} className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-white">
                   <option value="" className="bg-black">
                     Select category
                   </option>
@@ -118,38 +102,18 @@ export default function NewNewsPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">Excerpt</label>
-              <Textarea
-                name="excerpt"
-                value={formData.excerpt}
-                onChange={handleChange}
-                className="bg-white/5 border-white/10 text-white placeholder-gray-400 min-h-[80px]"
-                placeholder="Brief summary of the article..."
-              />
+            <TextAreaField label="Excerpt" {...register("excerpt")} placeholder="Brief summary of the article..." />
+
+            {/* Thumbnail/hero image */}
+            <div className="grid md:grid-cols-2 gap-4 items-end">
+              <TextField label="Image URL" {...register("image_url")} placeholder="https://..." />
+              <UploadInput folder="news/images" onUploaded={(url) => setValue("image_url", url)} label="Upload Image" />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">Content *</label>
-              <Textarea
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                className="bg-white/5 border-white/10 text-white placeholder-gray-400 min-h-[300px]"
-                placeholder="Write your article content here..."
-                required
-              />
-            </div>
+            <TextAreaField label="Content *" {...register("content")} placeholder="Write your article content here..." className="min-h-[300px]" error={errors.content?.message} />
 
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="published"
-                name="published"
-                checked={formData.published}
-                onChange={handleChange}
-                className="w-4 h-4 text-[#00ff88] bg-white/5 border-white/10 rounded focus:ring-[#00ff88]"
-              />
+              <input type="checkbox" id="published" {...register("published")} className="w-4 h-4 text-[#00ff88] bg-white/5 border-white/10 rounded focus:ring-[#00ff88]" />
               <label htmlFor="published" className="text-white text-sm font-medium">
                 Publish immediately
               </label>
@@ -162,7 +126,7 @@ export default function NewNewsPage() {
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    {formData.published ? "Publish Article" : "Save Draft"}
+                    {watch("published") ? "Publish Article" : "Save Draft"}
                   </>
                 )}
               </Button>
@@ -171,8 +135,6 @@ export default function NewNewsPage() {
               </Button>
             </div>
           </form>
-        </GlassCard>
-      </div>
-    </div>
+    </FormShell>
   )
 }

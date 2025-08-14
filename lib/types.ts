@@ -7,6 +7,8 @@ export interface Casino {
   bonus_info: string | null
   logo_url: string | null
   website_url: string | null
+  player_rating_avg?: number | null
+  player_rating_count?: number | null
   created_at: string
   updated_at: string
 }

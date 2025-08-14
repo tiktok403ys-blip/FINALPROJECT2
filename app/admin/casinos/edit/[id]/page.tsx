@@ -3,31 +3,51 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
-import { GlassCard } from "@/components/glass-card"
+import { FormShell } from "@/components/admin/forms/form-shell"
+import { TextField, TextAreaField } from "@/components/admin/forms/fields"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { UploadInput } from "@/components/admin/upload-input"
 import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, Save, Upload } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
 
 interface EditCasinoPageProps {
   params: Promise<{ id: string }>
 }
 
+const schema = z.object({
+  name: z.string().min(2, "Name is too short"),
+  description: z.string().optional().default(""),
+  rating: z
+    .string()
+    .optional()
+    .refine((v) => !v || (!Number.isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= 5), {
+      message: "Rating must be between 0 and 5",
+    }),
+  location: z.string().optional().default(""),
+  bonus_info: z.string().optional().default(""),
+  website_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+  logo_url: z.string().optional().default(""),
+})
+
+type FormValues = z.infer<typeof schema>
+
 export default function EditCasinoPage({ params }: EditCasinoPageProps) {
   const [casinoId, setCasinoId] = useState<string>("")
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    rating: "",
-    location: "",
-    bonus_info: "",
-    website_url: "",
-    logo_url: "",
-  })
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const [prevLogoPath, setPrevLogoPath] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
@@ -45,13 +65,13 @@ export default function EditCasinoPage({ params }: EditCasinoPageProps) {
   const fetchCasino = async (id: string) => {
     const { data, error } = await supabase.from("casinos").select("*").eq("id", id).single()
 
-    if (error) {
+      if (error) {
       setError("Casino not found")
       return
     }
 
     if (data) {
-      setFormData({
+      reset({
         name: data.name || "",
         description: data.description || "",
         rating: data.rating?.toString() || "",
@@ -60,26 +80,28 @@ export default function EditCasinoPage({ params }: EditCasinoPageProps) {
         website_url: data.website_url || "",
         logo_url: data.logo_url || "",
       })
+      setPrevLogoPath(parseAssetsPath(data.logo_url || ""))
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (values: FormValues) => {
     setLoading(true)
     setError("")
 
     try {
       const { error } = await supabase
         .from("casinos")
-        .update({
-          ...formData,
-          rating: formData.rating ? Number.parseFloat(formData.rating) : null,
-        })
+        .update({ ...values, rating: values.rating ? Number(values.rating) : null })
         .eq("id", casinoId)
 
       if (error) {
         setError(error.message)
       } else {
+        // Housekeeping: remove old logo if replaced
+        const newPath = parseAssetsPath(values.logo_url || "")
+        if (prevLogoPath && newPath !== prevLogoPath) {
+          await supabase.storage.from("assets").remove([prevLogoPath])
+        }
         router.push("/admin/casinos")
       }
     } catch (err) {
@@ -89,15 +111,9 @@ export default function EditCasinoPage({ params }: EditCasinoPageProps) {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
-
   const generateLogoUrl = () => {
-    const name = formData.name.replace(/\s+/g, "+")
+    const currentName = (watch("name") || "").toString()
+    const name = currentName.replace(/\s+/g, "+")
     const colors = [
       { bg: "1a1a2e", color: "16213e" },
       { bg: "0f3460", color: "16537e" },
@@ -110,149 +126,73 @@ export default function EditCasinoPage({ params }: EditCasinoPageProps) {
     ]
     const randomColor = colors[Math.floor(Math.random() * colors.length)]
     const logoUrl = `/placeholder.svg?height=80&width=200&text=${name}&bg=${randomColor.bg}&color=${randomColor.color}`
-    setFormData({ ...formData, logo_url: logoUrl })
+    setValue("logo_url", logoUrl)
+  }
+
+  function parseAssetsPath(url: string): string | null {
+    const marker = "/storage/v1/object/public/assets/"
+    const idx = url.indexOf(marker)
+    if (idx === -1) return null
+    return url.substring(idx + marker.length)
   }
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Button variant="ghost" asChild className="text-white mr-4">
-            <Link href="/admin/casinos">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Casinos
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Edit Casino</h1>
-            <p className="text-gray-400">Update casino information and logo</p>
-          </div>
+    <FormShell
+      title="Edit Casino"
+      description="Update casino information and logo"
+      headerExtra={
+        <Button variant="ghost" asChild className="text-white">
+          <Link href="/admin/casinos">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Casinos
+          </Link>
+        </Button>
+      }
+    >
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6">
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
+      )}
 
-        <GlassCard className="p-8">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Logo Preview and URL */}
             <div className="space-y-4">
               <label className="text-white text-sm font-medium">Casino Logo</label>
 
-              {/* Logo Preview */}
-              {formData.logo_url && (
-                <div className="w-full max-w-md mx-auto">
-                  <div className="w-full h-20 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden">
-                    <Image
-                      src={formData.logo_url || "/placeholder.svg"}
-                      alt="Casino logo preview"
-                      width={200}
-                      height={80}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Logo URL Input */}
-              <div className="flex gap-2">
-                <Input
-                  name="logo_url"
-                  value={formData.logo_url}
-                  onChange={handleChange}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="Logo URL or leave empty to auto-generate"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-[#00ff88] text-[#00ff88] bg-transparent"
-                  onClick={generateLogoUrl}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Generate
-                </Button>
-              </div>
+            <div className="flex gap-2 items-center">
+              <Input {...register("logo_url")} className="bg-white/5 border-white/10 text-white placeholder-gray-400" placeholder="Logo URL or leave empty to auto-generate" />
+              <UploadInput folder="casinos/logos" onUploaded={(url) => setValue("logo_url", url)} label="Upload Logo" />
+              <Button type="button" variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" onClick={generateLogoUrl}>
+                <Upload className="w-4 h-4 mr-2" /> Generate
+              </Button>
+            </div>
               <p className="text-gray-400 text-xs">
                 Upload your logo to Supabase Storage or use the generate button for a placeholder logo
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Casino Name *</label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="Enter casino name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Rating (0-5)</label>
-                <Input
-                  name="rating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="4.5"
-                />
-              </div>
-            </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <TextField label="Casino Name *" {...register("name")} error={errors.name?.message} placeholder="Enter casino name" />
+            <TextField
+              label="Rating (0-5)"
+              {...register("rating")}
+              type="number"
+              min="0"
+              max="5"
+              step="0.1"
+              placeholder="4.5"
+              error={errors.rating?.message}
+            />
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Location</label>
-                <Input
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="Malta, Curacao, etc."
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Website URL</label>
-                <Input
-                  name="website_url"
-                  type="url"
-                  value={formData.website_url}
-                  onChange={handleChange}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="https://casino.com"
-                />
-              </div>
-            </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <TextField label="Location" {...register("location")} placeholder="Malta, Curacao, etc." />
+            <TextField label="Website URL" {...register("website_url")} type="url" placeholder="https://casino.com" error={errors.website_url?.message} />
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">Description</label>
-              <Textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="bg-white/5 border-white/10 text-white placeholder-gray-400 min-h-[100px]"
-                placeholder="Describe the casino..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">Bonus Information</label>
-              <Textarea
-                name="bonus_info"
-                value={formData.bonus_info}
-                onChange={handleChange}
-                className="bg-white/5 border-white/10 text-white placeholder-gray-400 min-h-[80px]"
-                placeholder="Welcome bonus details..."
-              />
-            </div>
+          <TextAreaField label="Description" {...register("description")} className="min-h-[100px]" placeholder="Describe the casino..." />
+          <TextAreaField label="Bonus Information" {...register("bonus_info")} className="min-h-[80px]" placeholder="Welcome bonus details..." />
 
             <div className="flex gap-4">
               <Button type="submit" disabled={loading} className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">
@@ -269,9 +209,7 @@ export default function EditCasinoPage({ params }: EditCasinoPageProps) {
                 <Link href="/admin/casinos">Cancel</Link>
               </Button>
             </div>
-          </form>
-        </GlassCard>
-      </div>
-    </div>
+      </form>
+    </FormShell>
   )
 }

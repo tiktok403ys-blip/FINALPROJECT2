@@ -21,6 +21,31 @@ interface ReviewPageProps {
   params: Promise<{ id: string }>
 }
 
+export async function generateMetadata({ params }: ReviewPageProps) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: casino } = await supabase.from("casinos").select("name, description, logo_url").eq("id", id).single()
+  const { data: review } = await supabase
+    .from("casino_reviews")
+    .select("title, rating")
+    .eq("casino_id", id)
+    .eq("is_published", true)
+    .maybeSingle()
+
+  const title = review?.title ? `${review.title} - ${casino?.name || "Casino"}` : `${casino?.name || "Casino"} Full Review`
+  const description = casino?.description || "Read the full editorial review with ratings, pros & cons, and detailed sections."
+  const images = casino?.logo_url ? [casino.logo_url] : []
+  const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
+  const canonical = `https://${host}/casinos/${id}/review`
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, images },
+    twitter: { card: "summary_large_image", title, description, images },
+  }
+}
+
 export default async function CasinoReviewPage({ params }: ReviewPageProps) {
   const { id } = await params
   const supabase = await createClient()
@@ -66,6 +91,25 @@ export default async function CasinoReviewPage({ params }: ReviewPageProps) {
     <div className="min-h-screen bg-black pt-24">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Review",
+                itemReviewed: {
+                  "@type": "Organization",
+                  name: casino.name,
+                },
+                reviewBody: review?.content || undefined,
+                name: review?.title || `${casino.name} Review`,
+                reviewRating: review?.rating
+                  ? { "@type": "Rating", ratingValue: review.rating, bestRating: 5, worstRating: 0 }
+                  : undefined,
+                author: { "@type": "Organization", name: "GuruSingapore" },
+              }),
+            }}
+          />
           {/* Back Button */}
           <div className="mb-8">
             <Button variant="ghost" asChild className="text-white hover:text-[#00ff88]">

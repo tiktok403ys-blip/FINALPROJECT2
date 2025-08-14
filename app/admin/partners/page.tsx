@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { GlassCard } from "@/components/glass-card"
+import { PaginationControls } from "@/components/admin/pagination"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,6 +27,8 @@ export default function AdminPartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingItem, setEditingItem] = useState<Partner | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 12
   const [searchTerm, setSearchTerm] = useState("")
   const [formData, setFormData] = useState({
     name: "",
@@ -40,10 +43,28 @@ export default function AdminPartnersPage() {
 
   useEffect(() => {
     fetchPartners()
+  }, [page])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("partners-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "partners" }, () => {
+        fetchPartners()
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchPartners = async () => {
-    const { data } = await supabase.from("partners").select("*").order("display_order", { ascending: true })
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    const { data } = await supabase
+      .from("partners")
+      .select("*")
+      .order("display_order", { ascending: true })
+      .range(from, to)
 
     if (data) {
       setPartners(data)
@@ -91,11 +112,16 @@ export default function AdminPartnersPage() {
     }
   }
 
-  const deletePartner = async (id: string) => {
+  const deletePartner = async (partner: Partner) => {
     if (confirm("Are you sure you want to delete this partner?")) {
-      const { error } = await supabase.from("partners").delete().eq("id", id)
-
+      const { error } = await supabase.from("partners").delete().eq("id", partner.id)
       if (!error) {
+        const marker = "/storage/v1/object/public/assets/"
+        const idx = (partner.logo_url || '').indexOf(marker)
+        if (idx !== -1) {
+          const path = (partner.logo_url || '').substring(idx + marker.length)
+          await supabase.storage.from("assets").remove([path])
+        }
         fetchPartners()
       }
     }
@@ -125,23 +151,8 @@ export default function AdminPartnersPage() {
           <h1 className="text-3xl font-bold text-white mb-2">Manage Partners</h1>
           <p className="text-gray-400">Edit gaming providers and partner logos</p>
         </div>
-        <Button
-          onClick={() => {
-            setShowCreateForm(true)
-            setEditingItem(null)
-            setFormData({
-              name: "",
-              logo_url: "",
-              website_url: "",
-              description: "",
-              partner_type: "partner",
-              display_order: 0,
-            })
-          }}
-          className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Partner
+        <Button asChild className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">
+          <a href="/admin/partners/new"><Plus className="w-4 h-4 mr-2" /> Add Partner</a>
         </Button>
       </div>
 
@@ -158,100 +169,7 @@ export default function AdminPartnersPage() {
         </div>
       </div>
 
-      {/* Create/Edit Form */}
-      {showCreateForm && (
-        <GlassCard className="p-6 mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">{editingItem ? "Edit Partner" : "Add New Partner"}</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Partner Name *</label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="Evolution Gaming"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Partner Type</label>
-                <select
-                  value={formData.partner_type}
-                  onChange={(e) => setFormData({ ...formData, partner_type: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-white"
-                >
-                  {partnerTypes.map((type) => (
-                    <option key={type} value={type} className="bg-black">
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Logo URL</label>
-                <Input
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="/placeholder.svg?height=60&width=120&text=Logo"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Website URL</label>
-                <Input
-                  value={formData.website_url}
-                  onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="https://example.com"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Description</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400 min-h-[80px]"
-                  placeholder="Brief description of the partner..."
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium">Display Order</label>
-                <Input
-                  type="number"
-                  value={formData.display_order}
-                  onChange={(e) => setFormData({ ...formData, display_order: Number.parseInt(e.target.value) })}
-                  className="bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <Button type="submit" disabled={loading} className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">
-                {loading ? "Saving..." : editingItem ? "Update Partner" : "Create Partner"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowCreateForm(false)
-                  setEditingItem(null)
-                }}
-                className="border-white/10 text-white bg-transparent"
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </GlassCard>
-      )}
+      {/* Create/Edit moved to dedicated pages */}
 
       {/* Partners Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -322,7 +240,7 @@ export default function AdminPartnersPage() {
                 variant="outline"
                 size="sm"
                 className="border-red-500 text-red-500 bg-transparent hover:bg-red-500/10"
-                onClick={() => deletePartner(partner.id)}
+                onClick={() => deletePartner(partner)}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -338,6 +256,7 @@ export default function AdminPartnersPage() {
           </p>
         </div>
       )}
+      <PaginationControls page={page} setPage={setPage} disablePrev={page === 1} disableNext={filteredPartners.length < pageSize} />
     </div>
   )
 }

@@ -20,6 +20,9 @@ import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { notFound } from "next/navigation"
 import type { Review } from "@/lib/types"
+import { WriteReviewForm } from "@/components/reviews/write-review-form"
+import { HelpfulVote } from "@/components/reviews/helpful-vote"
+import { ReviewsRealtimeRefresher } from "@/components/reviews/realtime-refresher"
 
 interface PageProps {
   params: {
@@ -54,8 +57,9 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
   }
 
   const { data: reviews } = await supabase
-    .from("reviews")
+    .from("player_reviews")
     .select("*")
+    .eq("is_approved", true)
     .eq("casino_id", casinoId)
     .order("created_at", { ascending: false })
 
@@ -178,6 +182,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
       </div>
 
       <div className="container mx-auto px-4 pb-16">
+        <ReviewsRealtimeRefresher casinoId={casino.id} />
         {/* Casino Overview - Enhanced */}
         <div className="mb-16">
           <GlassCard className="p-8 border border-white/10">
@@ -396,10 +401,9 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
               <h2 className="text-3xl font-bold text-white mb-2">Player Reviews</h2>
               <p className="text-gray-400">Real experiences from verified players ({totalReviews} reviews)</p>
             </div>
-            <Button className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <MessageCircle className="w-5 h-5 mr-2" />
-              Write a Review
-            </Button>
+            <div className="w-full sm:w-auto">
+              <WriteReviewForm casinoId={casino.id} />
+            </div>
           </div>
 
           {reviews?.map((review: Review, index: number) => (
@@ -426,7 +430,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                     <h3 className="text-white font-bold text-lg">{review.reviewer_name || "Anonymous Player"}</h3>
                     <div className="flex items-center gap-3 mt-1">
                       <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
+                       {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
                             className={`w-4 h-4 ${
@@ -461,7 +465,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
               </div>
 
               {/* Enhanced Detailed Ratings */}
-              {(review.game_variety_rating || review.customer_service_rating || review.payout_speed_rating) && (
+               {(review.game_variety_rating || review.customer_service_rating || review.payout_speed_rating) && (
                 <div className="mb-8 p-6 bg-gradient-to-r from-white/5 to-white/10 border border-white/10 rounded-xl">
                   <h5 className="text-white font-bold mb-4 flex items-center gap-2">
                     <Star className="w-5 h-5 text-[#00ff88]" />
@@ -476,12 +480,12 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${
-                                i < review.game_variety_rating ? "text-[#00ff88] fill-current" : "text-gray-600"
+                                i < Math.floor(review.game_variety_rating) ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
-                        </div>
-                        <div className="text-white font-bold text-lg">{review.game_variety_rating}/5</div>
+                          </div>
+                          <div className="text-white font-bold text-lg">{review.game_variety_rating}/5</div>
                       </div>
                     )}
 
@@ -493,12 +497,12 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${
-                                i < review.customer_service_rating ? "text-[#00ff88] fill-current" : "text-gray-600"
+                                i < Math.floor(review.customer_service_rating) ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
-                        </div>
-                        <div className="text-white font-bold text-lg">{review.customer_service_rating}/5</div>
+                          </div>
+                          <div className="text-white font-bold text-lg">{review.customer_service_rating}/5</div>
                       </div>
                     )}
 
@@ -510,12 +514,12 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${
-                                i < review.payout_speed_rating ? "text-[#00ff88] fill-current" : "text-gray-600"
+                                i < Math.floor(review.payout_speed_rating) ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
-                        </div>
-                        <div className="text-white font-bold text-lg">{review.payout_speed_rating}/5</div>
+                          </div>
+                          <div className="text-white font-bold text-lg">{review.payout_speed_rating}/5</div>
                       </div>
                     )}
                   </div>
@@ -524,22 +528,8 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
 
               {/* Enhanced Review Actions */}
               <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-white/10">
-                <button className="flex items-center gap-2 text-gray-400 hover:text-green-400 transition-colors px-4 py-2 rounded-lg hover:bg-green-500/10 border border-transparent hover:border-green-500/20">
-                  <ThumbsUp className="w-4 h-4" />
-                  <span className="font-medium">Helpful ({review.helpful_count || 0})</span>
-                </button>
-
-                <button className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors px-4 py-2 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20">
-                  <ThumbsDown className="w-4 h-4" />
-                  <span className="font-medium">Not Helpful ({review.not_helpful_count || 0})</span>
-                </button>
-
-                <button className="flex items-center gap-2 text-gray-400 hover:text-[#00ff88] transition-colors px-4 py-2 rounded-lg hover:bg-[#00ff88]/10 border border-transparent hover:border-[#00ff88]/20">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="font-medium">Reply</span>
-                </button>
-
-                <div className="ml-auto flex items-center gap-2 text-gray-500 text-sm">
+                <HelpfulVote reviewId={review.id} helpful={review.helpful_count || 0} notHelpful={review.not_helpful_count || 0} />
+                <div className="ml-auto text-gray-500 text-sm flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   <span>Verified Review</span>
                 </div>

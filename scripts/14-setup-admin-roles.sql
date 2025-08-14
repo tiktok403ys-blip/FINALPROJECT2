@@ -15,55 +15,7 @@ END $$;
 ALTER TABLE profiles ALTER COLUMN role TYPE user_role USING role::user_role;
 ALTER TABLE profiles ALTER COLUMN role SET DEFAULT 'user';
 
--- Create admin_logs table for tracking admin actions
-CREATE TABLE IF NOT EXISTS admin_logs (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    admin_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    action TEXT NOT NULL,
-    resource TEXT NOT NULL,
-    resource_id TEXT,
-    details JSONB,
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create RLS policies for admin_logs
-ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
-
--- Only admins can view admin logs
-CREATE POLICY "Admins can view admin logs" ON admin_logs
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM profiles 
-            WHERE profiles.id = auth.uid() 
-            AND profiles.role IN ('admin', 'super_admin')
-        )
-    );
-
--- Only admins can insert admin logs
-CREATE POLICY "Admins can insert admin logs" ON admin_logs
-    FOR INSERT WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM profiles 
-            WHERE profiles.id = auth.uid() 
-            AND profiles.role IN ('admin', 'super_admin')
-        )
-    );
-
--- Create function to log admin actions
-CREATE OR REPLACE FUNCTION log_admin_action(
-    p_action TEXT,
-    p_resource TEXT,
-    p_resource_id TEXT DEFAULT NULL,
-    p_details JSONB DEFAULT NULL,
-    p_ip_address TEXT DEFAULT NULL
-) RETURNS VOID AS $$
-BEGIN
-    INSERT INTO admin_logs (admin_id, action, resource, resource_id, details, ip_address)
-    VALUES (auth.uid(), p_action, p_resource, p_resource_id, p_details, p_ip_address::INET);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- DEPRECATED: admin_logs is no longer used. See admin_actions table and related policies.
 
 -- Create function to check if user is admin
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$

@@ -24,6 +24,7 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
+import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
 import type { Bonus, Casino } from "@/lib/types"
 
 export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { casinos?: Casino })[] }) {
@@ -336,8 +337,15 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           <span className="text-gray-300 text-sm">Message live chat with promo code</span>
                         </div>
                         <div className="bg-white/10 rounded px-3 py-2 flex items-center justify-between">
-                          <span className="text-[#00ff88] font-bold">GURU2000</span>
-                          <Copy className="w-4 h-4 text-gray-400 cursor-pointer hover:text-white" />
+                          <span className="text-[#00ff88] font-bold">{bonus.promo_code || "GURU2000"}</span>
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(bonus.promo_code || "GURU2000")}
+                            className="p-1 rounded hover:bg-white/10"
+                            aria-label="Copy promo code"
+                          >
+                            <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
+                          </button>
                         </div>
                       </div>
                       <div className="text-center">
@@ -374,24 +382,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       {/* Feedback */}
                       <div className="text-center">
                         <p className="text-gray-400 text-sm mb-2">Has bonus worked for you?</p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 border-green-600 text-green-400 hover:bg-green-600/10 bg-transparent"
-                          >
-                            <ThumbsUp className="w-3 h-3 mr-1" />
-                            Yes
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 border-red-600 text-red-400 hover:bg-red-600/10 bg-transparent"
-                          >
-                            <ThumbsDown className="w-3 h-3 mr-1" />
-                            No
-                          </Button>
-                        </div>
+                        <BonusFeedback bonusId={bonus.id} yes={bonus.yes_count as any} no={bonus.no_count as any} />
                       </div>
                     </div>
                   </div>

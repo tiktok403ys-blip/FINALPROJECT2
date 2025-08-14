@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { GlassCard } from "@/components/glass-card"
+import { useAdminSecurity } from "@/components/admin-security-provider"
 import { Button } from "@/components/ui/button"
+import { PaginationControls } from "@/components/admin/pagination"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/client"
@@ -16,18 +18,36 @@ export default function AdminCasinosPage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [sortBy, setSortBy] = useState<"name" | "rating" | "created_at">("created_at")
+  const [page, setPage] = useState(1)
+  const pageSize = 12
   const supabase = createClient()
+  const { logAdminAction } = useAdminSecurity()
 
   useEffect(() => {
     fetchCasinos()
-  }, [sortBy])
+  }, [sortBy, page])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("casinos-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "casinos" }, () => {
+        fetchCasinos()
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   const fetchCasinos = async () => {
     setLoading(true)
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
     const { data } = await supabase
       .from("casinos")
       .select("*")
       .order(sortBy, { ascending: sortBy === "name" })
+      .range(from, to)
 
     if (data) {
       setCasinos(data)
@@ -35,14 +55,26 @@ export default function AdminCasinosPage() {
     setLoading(false)
   }
 
-  const deleteCasino = async (id: string) => {
+  const deleteCasino = async (casino: Casino) => {
     if (confirm("Are you sure you want to delete this casino?")) {
-      const { error } = await supabase.from("casinos").delete().eq("id", id)
-
+      const { error } = await supabase.from("casinos").delete().eq("id", casino.id)
       if (!error) {
+        await logAdminAction("delete", "casinos", casino.id, {})
+        const path = parseAssetsPath(casino.logo_url as any)
+        if (path) {
+          await supabase.storage.from("assets").remove([path])
+        }
         fetchCasinos()
       }
     }
+  }
+
+  function parseAssetsPath(url?: string | null): string | null {
+    if (!url) return null
+    const marker = "/storage/v1/object/public/assets/"
+    const idx = url.indexOf(marker)
+    if (idx === -1) return null
+    return url.substring(idx + marker.length)
   }
 
   const filteredCasinos = casinos.filter(
@@ -230,7 +262,7 @@ export default function AdminCasinosPage() {
                         variant="outline"
                         size="sm"
                         className="border-red-500 text-red-400 bg-red-500/10 hover:bg-red-500/20"
-                        onClick={() => deleteCasino(casino.id)}
+                        onClick={() => deleteCasino(casino)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -281,7 +313,7 @@ export default function AdminCasinosPage() {
                         variant="outline"
                         size="sm"
                         className="border-red-500 text-red-400 bg-red-500/10 hover:bg-red-500/20"
-                        onClick={() => deleteCasino(casino.id)}
+                        onClick={() => deleteCasino(casino)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -310,6 +342,7 @@ export default function AdminCasinosPage() {
             )}
           </div>
         )}
+        <PaginationControls page={page} setPage={setPage} disablePrev={page === 1} disableNext={filteredCasinos.length < pageSize} />
       </div>
     </div>
   )

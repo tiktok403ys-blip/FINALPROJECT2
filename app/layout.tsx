@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
 import { NavbarFixed } from "@/components/navbar-fixed"
 import { CookieConsent } from "@/components/cookie-consent"
+import { headers } from "next/headers"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -41,15 +42,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const host = headers().get("host") || ""
+  const isAdminSubdomain = host === "sg44admin.gurusingapore.com"
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <div className="min-h-screen bg-black text-white">
-              <NavbarFixed />
+              {!isAdminSubdomain && <NavbarFixed />}
               <main>{children}</main>
-              <CookieConsent />
+              {!isAdminSubdomain && <CookieConsent />}
             </div>
           </AuthProvider>
         </ThemeProvider>

@@ -3,14 +3,32 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export function HeroBanner() {
+interface HeroProps {
+  imageUrl?: string | null
+  title?: string | null
+  subtitle?: string | null
+  ctaPrimaryText?: string | null
+  ctaPrimaryLink?: string | null
+  ctaSecondaryText?: string | null
+  ctaSecondaryLink?: string | null
+}
+
+export function HeroBanner({
+  imageUrl,
+  title = "Ultimate Casino Guide",
+  subtitle = "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming.",
+  ctaPrimaryText = "Explore Casinos",
+  ctaPrimaryLink = "/casinos",
+  ctaSecondaryText = "Best Bonuses",
+  ctaSecondaryLink = "/bonuses",
+}: HeroProps) {
   return (
     <div className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image/Video Placeholder */}
       <div
         className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"
         style={{
-          backgroundImage: `url('/placeholder-714xv.png')`,
+          backgroundImage: `url('${imageUrl || "/placeholder-714xv.png"}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -21,11 +39,18 @@ export function HeroBanner() {
       {/* Content */}
       <div className="relative z-10 text-center max-w-4xl mx-auto px-4 md:px-6">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6 leading-tight">
-          Ultimate <span className="text-[#00ff88]">Casino</span> Guide
+          {title?.split("Casino").length === 2 ? (
+            <>
+              {title.split("Casino")[0]}
+              <span className="text-[#00ff88]">Casino</span>
+              {title.split("Casino")[1]}
+            </>
+          ) : (
+            title
+          )}
         </h1>
         <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
-          Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of
-          online gaming.
+          {subtitle}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
           <Button
@@ -33,7 +58,7 @@ export function HeroBanner() {
             className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 text-base md:text-lg px-6 md:px-8 py-4 md:py-6 w-full sm:w-auto"
             asChild
           >
-            <Link href="/casinos">Explore Casinos</Link>
+            <Link href={ctaPrimaryLink || "/"}>{ctaPrimaryText || "Explore"}</Link>
           </Button>
           <Button
             size="lg"
@@ -41,7 +66,7 @@ export function HeroBanner() {
             className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-black text-base md:text-lg px-6 md:px-8 py-4 md:py-6 bg-transparent w-full sm:w-auto"
             asChild
           >
-            <Link href="/bonuses">Best Bonuses</Link>
+            <Link href={ctaSecondaryLink || "/"}>{ctaSecondaryText || "Learn more"}</Link>
           </Button>
         </div>
       </div>

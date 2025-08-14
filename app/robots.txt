@@ -1,0 +1,8 @@
+export default function Robots() {
+  const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
+  return `User-agent: *
+Allow: /
+Sitemap: https://${host}/sitemap.xml`
+}
+
+

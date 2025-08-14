@@ -54,13 +54,15 @@ BEGIN
     -- Check if user is admin and PIN matches
     IF user_role IN ('admin', 'super_admin') AND stored_pin = input_pin THEN
         -- Log successful admin access
-        INSERT INTO admin_logs (user_email, action, timestamp)
+        -- DEPRECATED: use admin_actions instead of admin_logs
+        -- INSERT INTO admin_logs (user_email, action, timestamp)
         VALUES (user_email, 'PIN_VERIFIED', NOW());
         
         RETURN TRUE;
     ELSE
         -- Log failed attempt
-        INSERT INTO admin_logs (user_email, action, timestamp)
+        -- DEPRECATED: use admin_actions instead of admin_logs
+        -- INSERT INTO admin_logs (user_email, action, timestamp)
         VALUES (user_email, 'PIN_FAILED', NOW());
         
         RETURN FALSE;
@@ -80,7 +82,8 @@ BEGIN
     WHERE email = user_email AND role IN ('admin', 'super_admin');
     
     IF FOUND THEN
-        INSERT INTO admin_logs (user_email, action, timestamp)
+        -- DEPRECATED: use admin_actions instead of admin_logs
+        -- INSERT INTO admin_logs (user_email, action, timestamp)
         VALUES (user_email, 'PIN_UPDATED', NOW());
         RETURN TRUE;
     END IF;
@@ -89,29 +92,7 @@ BEGIN
 END;
 $$;
 
--- Create admin logs table
-CREATE TABLE IF NOT EXISTS admin_logs (
-    id SERIAL PRIMARY KEY,
-    user_email TEXT NOT NULL,
-    action TEXT NOT NULL,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    ip_address INET,
-    user_agent TEXT
-);
-
--- Enable RLS on admin_logs
-ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
-
--- Policy for admin logs (only admins can view)
-DROP POLICY IF EXISTS "Admins can view logs" ON admin_logs;
-CREATE POLICY "Admins can view logs" ON admin_logs
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM profiles 
-            WHERE profiles.id = auth.uid() 
-            AND profiles.role IN ('admin', 'super_admin')
-        )
-    );
+-- DEPRECATED: admin_logs is not used. Use admin_actions for activity tracking.
 
 -- Create trigger to auto-create profile
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -178,6 +159,6 @@ ON CONFLICT (id) DO UPDATE SET
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON profiles TO anon, authenticated;
-GRANT ALL ON admin_logs TO anon, authenticated;
+-- DEPRECATED: admin_logs grants removed
 GRANT EXECUTE ON FUNCTION verify_admin_pin TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION set_admin_pin TO anon, authenticated;
