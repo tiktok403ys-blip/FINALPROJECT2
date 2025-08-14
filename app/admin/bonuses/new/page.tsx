@@ -49,6 +49,10 @@ export default function NewBonusPage() {
     const loadCasinos = async () => {
       const { data } = await supabase.from("casinos").select("id, name, rating").order("name")
       setCasinos(data || [])
+    }
+    loadCasinos()
+  }, [])
+
   const selectedCasinoId = watch("casino_id")
   const selectedCasino = casinos.find((c) => c.id === selectedCasinoId)
   const safetyLabel = (() => {
@@ -58,9 +62,6 @@ export default function NewBonusPage() {
     if (r >= 3.0) return "MED"
     return "LOW"
   })()
-    }
-    loadCasinos()
-  }, [])
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
