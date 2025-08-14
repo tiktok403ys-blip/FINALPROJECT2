@@ -7,7 +7,8 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { FormShell } from "@/components/admin/forms/form-shell"
-import { TextField } from "@/components/admin/forms/fields"
+import { TextField, TextAreaField } from "@/components/admin/forms/fields"
+import { UploadInput } from "@/components/admin/upload-input"
 import Link from "next/link"
 import { ArrowLeft, Save } from "lucide-react"
 
@@ -17,6 +18,17 @@ const schema = z.object({
   bonus_amount: z.string().optional().default(""),
   bonus_type: z.string().optional().default(""),
   claim_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+  promo_code: z.string().optional().or(z.literal("")),
+  is_exclusive: z.boolean().optional().default(false),
+  is_no_deposit: z.boolean().optional().default(false),
+  wagering_x: z.coerce.number().int().positive().optional().or(z.literal(undefined)),
+  free_spins: z.coerce.number().int().nonnegative().optional().or(z.literal(undefined)),
+  free_spin_value: z.coerce.number().nonnegative().optional().or(z.literal(undefined)),
+  max_bet: z.coerce.number().nonnegative().optional().or(z.literal(undefined)),
+  expiry_days: z.coerce.number().int().nonnegative().optional().or(z.literal(undefined)),
+  terms: z.string().optional().or(z.literal("")),
+  how_to_get: z.string().optional().or(z.literal("")),
+  image_url: z.string().url().optional().or(z.literal("")),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -26,7 +38,7 @@ export default function NewBonusPage() {
   const [casinos, setCasinos] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   useEffect(() => {
     const loadCasinos = async () => {
@@ -84,6 +96,36 @@ export default function NewBonusPage() {
         </div>
 
         <TextField label="Claim URL" {...register("claim_url")} placeholder="https://..." error={errors.claim_url?.message} />
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <TextField label="Promo Code" {...register("promo_code")} placeholder="GURU2000" />
+          <div className="space-y-2">
+            <label className="text-white text-sm font-medium">Upload Image (optional)</label>
+            <UploadInput folder="assets/bonuses/images" onUploaded={(url) => setValue("image_url" as any, url)} label="Upload Image" />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <TextField label="Wagering (x)" type="number" inputMode="numeric" {...register("wagering_x")} placeholder="25" />
+          <TextField label="Free Spins" type="number" inputMode="numeric" {...register("free_spins")} placeholder="200" />
+          <TextField label="Value per Spin ($)" type="number" step="0.01" inputMode="decimal" {...register("free_spin_value")} placeholder="0.2" />
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" />
+          <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" />
+          <div className="flex items-center gap-6">
+            <label className="inline-flex items-center gap-2 text-white text-sm">
+              <input type="checkbox" {...register("is_exclusive")} /> Exclusive
+            </label>
+            <label className="inline-flex items-center gap-2 text-white text-sm">
+              <input type="checkbox" {...register("is_no_deposit")} /> No deposit
+            </label>
+          </div>
+        </div>
+
+        <TextAreaField label="How to get" rows={3} {...register("how_to_get")} placeholder="Message live chat with promo code..." />
+        <TextAreaField label="Terms and conditions" rows={5} {...register("terms")} placeholder={"• Bonus valid for new players only\n• One bonus per household/IP address\n• Wagering must be completed within 2 days\n• Maximum withdrawal from bonus winnings: $100\n• Full terms available on casino website"} />
 
         <div className="flex gap-4">
           <Button type="submit" disabled={loading} className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">

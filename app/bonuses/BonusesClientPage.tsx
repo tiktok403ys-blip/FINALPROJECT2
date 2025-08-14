@@ -115,9 +115,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       <div className="flex items-center gap-3">
                         <div className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold flex items-center gap-1">
                           <Gift className="w-3 h-3" />
-                          {bonus.bonus_type?.toUpperCase() || "NO DEPOSIT BONUS"}
+                          {(bonus.bonus_type?.toUpperCase() || (bonus.is_no_deposit ? "NO DEPOSIT BONUS" : "BONUS"))}
                         </div>
-                        <div className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">Exclusive</div>
+                        {bonus.is_exclusive && (
+                          <div className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">Exclusive</div>
+                        )}
                       </div>
                     </div>
 
@@ -159,8 +161,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         >
                           <div className="flex items-center gap-3">
                             <Gauge className="w-4 h-4 text-[#00ff88]" />
-                            <span className="text-white font-medium">Wagering requirements:</span>
-                            <span className="text-[#00ff88] font-semibold">25x</span>
+                             <span className="text-white font-medium">Wagering requirements:</span>
+                             <span className="text-[#00ff88] font-semibold">{bonus.wagering_x ?? 25}x</span>
                             <span className="text-blue-400 text-sm">(restrictions apply)</span>
                           </div>
                           <ChevronDown
@@ -183,9 +185,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         >
                           <div className="flex items-center gap-3">
                             <DollarSign className="w-4 h-4 text-[#00ff88]" />
-                            <span className="text-white font-medium">Value of free spins:</span>
-                            <span className="text-[#00ff88] font-semibold">$40</span>
-                            <span className="text-gray-400 text-sm">(200 spins at $0.2 per spin)</span>
+                             <span className="text-white font-medium">Value of free spins:</span>
+                             <span className="text-[#00ff88] font-semibold">${Number((bonus.free_spins ?? 0) * (bonus.free_spin_value ?? 0)).toFixed(0)}</span>
+                             <span className="text-gray-400 text-sm">({bonus.free_spins ?? 0} spins at ${bonus.free_spin_value ?? 0} per spin)</span>
                           </div>
                           <ChevronDown
                             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "value") ? "rotate-180" : ""}`}
@@ -207,8 +209,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         >
                           <div className="flex items-center gap-3">
                             <CreditCard className="w-4 h-4 text-[#00ff88]" />
-                            <span className="text-white font-medium">Maximum bet:</span>
-                            <span className="text-[#00ff88] font-semibold">$2</span>
+                             <span className="text-white font-medium">Maximum bet:</span>
+                             <span className="text-[#00ff88] font-semibold">${bonus.max_bet ?? 0}</span>
                           </div>
                           <ChevronDown
                             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "maxBet") ? "rotate-180" : ""}`}
@@ -230,8 +232,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         >
                           <div className="flex items-center gap-3">
                             <Calendar className="w-4 h-4 text-[#00ff88]" />
-                            <span className="text-white font-medium">Bonus expiration:</span>
-                            <span className="text-[#00ff88] font-semibold">2 days</span>
+                             <span className="text-white font-medium">Bonus expiration:</span>
+                             <span className="text-[#00ff88] font-semibold">{bonus.expiry_days ?? 0} days</span>
                           </div>
                           <ChevronDown
                             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "expiration") ? "rotate-180" : ""}`}
@@ -264,7 +266,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "speed") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            This bonus is typically credited to your account within minutes of claiming. No lengthy
+                             {bonus.how_to_get || "This bonus is typically credited to your account within minutes of claiming. No lengthy"}
                             verification process required for new players.
                           </div>
                         )}
@@ -286,13 +288,17 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "terms") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            <ul className="space-y-1">
-                              <li>• Bonus valid for new players only</li>
-                              <li>• One bonus per household/IP address</li>
-                              <li>• Wagering must be completed within 2 days</li>
-                              <li>• Maximum withdrawal from bonus winnings: $100</li>
-                              <li>• Full terms available on casino website</li>
-                            </ul>
+                            {bonus.terms ? (
+                              <pre className="whitespace-pre-wrap font-sans text-gray-300 text-sm">{bonus.terms}</pre>
+                            ) : (
+                              <ul className="space-y-1">
+                                <li>• Bonus valid for new players only</li>
+                                <li>• One bonus per household/IP address</li>
+                                <li>• Wagering must be completed within 2 days</li>
+                                <li>• Maximum withdrawal from bonus winnings: $100</li>
+                                <li>• Full terms available on casino website</li>
+                              </ul>
+                            )}
                           </div>
                         )}
                       </div>
