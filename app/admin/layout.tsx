@@ -1,3 +1,4 @@
+"use client"
 import type React from "react"
 import { AdminSecurityProvider } from "@/components/admin-security-provider"
 import { AdminTopbar } from "@/components/admin/admin-topbar"
