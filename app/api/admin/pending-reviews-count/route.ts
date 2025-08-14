@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
@@ -10,12 +9,21 @@ export async function GET() {
       .eq("is_approved", false)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      })
     }
 
-    return NextResponse.json({ count: count ?? 0 }, { headers: { "Cache-Control": "no-store" } })
+    return new Response(JSON.stringify({ count: count ?? 0 }), {
+      status: 200,
+      headers: { "content-type": "application/json", "Cache-Control": "no-store" },
+    })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Unexpected error" }, { status: 500 })
+    return new Response(JSON.stringify({ error: e?.message || "Unexpected error" }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    })
   }
 }
 
