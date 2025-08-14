@@ -12,6 +12,9 @@ import type { Casino, News, Bonus } from "@/lib/types"
 export default async function HomePage() {
   const supabase = await createClient()
 
+  // Site settings for hero/banner (optional row)
+  const { data: settings } = await supabase.from("site_settings").select("*").limit(1).maybeSingle()
+
   // Fetch top casinos with real data
   const { data: topCasinos } = await supabase.from("casinos").select("*").order("rating", { ascending: false }).limit(6)
 
@@ -53,7 +56,15 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <HeroBanner />
+      <HeroBanner
+        imageUrl={settings?.hero_image_url || undefined}
+        title={settings?.hero_title || undefined}
+        subtitle={settings?.hero_subtitle || undefined}
+        ctaPrimaryText={settings?.hero_cta_primary_text || undefined}
+        ctaPrimaryLink={settings?.hero_cta_primary_link || undefined}
+        ctaSecondaryText={settings?.hero_cta_secondary_text || undefined}
+        ctaSecondaryLink={settings?.hero_cta_secondary_link || undefined}
+      />
 
       <div className="container mx-auto px-4 py-16 space-y-16">
         {/* Top Casinos Section */}

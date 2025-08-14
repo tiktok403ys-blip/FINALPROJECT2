@@ -5,6 +5,8 @@ import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
+import { PaginationControls } from "@/components/admin/pagination"
+import { useAdminSecurity } from "@/components/admin-security-provider"
 import { FileText, Edit, Trash2, Plus, Search, Eye, EyeOff, Star } from "lucide-react"
 import Link from "next/link"
 
@@ -28,13 +30,30 @@ export default function AdminReviewsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const [page, setPage] = useState(1)
+  const pageSize = 12
+  const { logAdminAction } = useAdminSecurity()
 
   useEffect(() => {
     fetchReviews()
+  }, [page])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("reviews-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "casino_reviews" }, () => {
+        fetchReviews()
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchReviews = async () => {
     setLoading(true)
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
     const { data } = await supabase
       .from("casino_reviews")
       .select(`
@@ -44,6 +63,7 @@ export default function AdminReviewsPage() {
         )
       `)
       .order("created_at", { ascending: false })
+      .range(from, to)
 
     if (data) {
       setReviews(data)
@@ -55,6 +75,7 @@ export default function AdminReviewsPage() {
     const { error } = await supabase.from("casino_reviews").update({ is_published: !currentStatus }).eq("id", id)
 
     if (!error) {
+      await logAdminAction("toggle_published", "casino_reviews", id, { is_published: !currentStatus })
       fetchReviews()
     }
   }
@@ -63,6 +84,7 @@ export default function AdminReviewsPage() {
     const { error } = await supabase.from("casino_reviews").update({ is_featured: !currentStatus }).eq("id", id)
 
     if (!error) {
+      await logAdminAction("toggle_featured", "casino_reviews", id, { is_featured: !currentStatus })
       fetchReviews()
     }
   }
@@ -72,6 +94,7 @@ export default function AdminReviewsPage() {
       const { error } = await supabase.from("casino_reviews").delete().eq("id", id)
 
       if (!error) {
+        await logAdminAction("delete", "casino_reviews", id, {})
         fetchReviews()
       }
     }
@@ -203,6 +226,7 @@ export default function AdminReviewsPage() {
             </p>
           </div>
         )}
+        <PaginationControls page={page} setPage={setPage} disablePrev={page === 1} disableNext={filteredReviews.length < pageSize} />
       </div>
     </div>
   )

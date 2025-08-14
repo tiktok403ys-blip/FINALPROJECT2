@@ -48,8 +48,8 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
 
       try {
         if (!user) {
-          console.log("❌ No user found, redirecting to login")
-          router.push("/auth/login")
+          console.log("❌ No user found, redirecting to login (main domain)")
+          router.push("https://gurusingapore.com/auth/login")
           return
         }
 
@@ -60,7 +60,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         if (error || !profile) {
           console.error("❌ Profile fetch error:", error)
           await authSignOut()
-          router.push("/auth/login")
+          router.push("https://gurusingapore.com/auth/login")
           return
         }
 
@@ -68,7 +68,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         if (!profile.role || !["admin", "super_admin"].includes(profile.role)) {
           console.error("❌ Access denied: User is not an admin")
           await authSignOut()
-          router.push("/")
+          router.push("https://gurusingapore.com/")
           return
         }
 
@@ -93,7 +93,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
           // clear local markers
           sessionStorage.removeItem("admin_pin_verified")
           sessionStorage.removeItem("admin_pin_timestamp")
-          router.push("/auth/admin-pin")
+          router.push("https://gurusingapore.com/auth/admin-pin")
           return
         }
 
@@ -108,7 +108,7 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         })
       } catch (error) {
         console.error("❌ Auth check failed:", error)
-        router.push("/")
+        router.push("https://gurusingapore.com/")
       } finally {
         setLoading(false)
       }

@@ -88,7 +88,7 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
                   </div>
                   <div className="flex items-center gap-2 text-blue-400">
                     <Users className="w-4 h-4" />
-                    <span>0 Reviews</span>
+                    <span>{casino.player_rating_count || 0} Reviews</span>
                   </div>
                 </div>
                 <p className="text-gray-300 mb-6">{casino.description}</p>
@@ -141,7 +141,7 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
                     <Star className="w-4 h-4" />
                     Player Rating
                   </span>
-                  <span className="text-yellow-500 font-semibold">0.0/5</span>
+                  <span className="text-yellow-500 font-semibold">{(casino.player_rating_avg ?? 0).toFixed(1)}/5</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 flex items-center gap-2">

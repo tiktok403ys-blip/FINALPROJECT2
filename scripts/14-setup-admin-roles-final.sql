@@ -43,22 +43,7 @@ BEGIN
     END IF;
 END $$;
 
--- Step 3: Create admin_logs table for activity tracking
-CREATE TABLE IF NOT EXISTS admin_logs (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    admin_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    action TEXT NOT NULL,
-    table_name TEXT,
-    record_id TEXT,
-    old_data JSONB,
-    new_data JSONB,
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable RLS on admin_logs
-ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
+-- DEPRECATED: admin_logs is no longer used. Use admin_actions.
 
 -- Step 4: Create helper functions
 CREATE OR REPLACE FUNCTION is_admin(user_id UUID DEFAULT auth.uid())
@@ -127,10 +112,7 @@ BEGIN
 END $$;
 
 -- Step 7: Admin logs policies
-CREATE POLICY "admin_logs_admin_access" ON admin_logs
-    FOR ALL TO authenticated
-    USING (is_admin())
-    WITH CHECK (is_admin());
+-- DEPRECATED: admin_logs policies removed.
 
 -- Step 8: Create or update admin user function
 CREATE OR REPLACE FUNCTION create_admin_user(
@@ -192,5 +174,5 @@ BEGIN
     RAISE NOTICE '2. Create admin user in Supabase Auth Dashboard with email: admin@gurusingapore.com';
     RAISE NOTICE '3. Then run: SELECT create_admin_user(''admin@gurusingapore.com'', ''password'', ''admin'');';
     RAISE NOTICE '4. Admin can access panel at /admin after authentication';
-    RAISE NOTICE '5. All admin activities will be logged in admin_logs table';
+    RAISE NOTICE '5. All admin activities will be logged in admin_actions table';
 END $$;

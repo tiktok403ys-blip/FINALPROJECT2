@@ -41,22 +41,7 @@ BEGIN
     END IF;
 END $$;
 
--- Step 3: Create admin_logs table for tracking admin activities
-CREATE TABLE IF NOT EXISTS admin_logs (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    admin_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    action TEXT NOT NULL,
-    table_name TEXT,
-    record_id TEXT,
-    old_data JSONB,
-    new_data JSONB,
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable RLS on admin_logs
-ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
+-- DEPRECATED: admin_logs is no longer used. Use admin_actions.
 
 -- Step 4: Create helper functions
 CREATE OR REPLACE FUNCTION is_admin(user_id UUID DEFAULT auth.uid())
@@ -130,7 +115,7 @@ DECLARE
     tables_to_secure TEXT[] := ARRAY[
         'casinos', 'casino_reviews', 'review_sections', 'reports', 
         'news', 'partners', 'footer_links', 'casino_screenshots',
-        'casino_banners', 'admin_logs'
+    'casino_banners'
     ];
     table_name TEXT;
 BEGIN
@@ -153,11 +138,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- Step 7: Create admin policies for admin_logs table specifically
-CREATE POLICY "admin_logs_admin_access" ON admin_logs
-    FOR ALL TO authenticated
-    USING (is_admin())
-    WITH CHECK (is_admin());
+-- DEPRECATED: admin_logs policies removed.
 
 -- Step 8: Create default admin user function
 CREATE OR REPLACE FUNCTION create_default_admin()
@@ -206,6 +187,6 @@ BEGIN
     RAISE NOTICE '1. Create admin user in Supabase Auth Dashboard';
     RAISE NOTICE '2. Email: casinogurusg404@gmail.com';
     RAISE NOTICE '3. Password: Qwerty1122!';
-    RAISE NOTICE '4. Login at /admin/auth/login';
+    RAISE NOTICE '4. Login via main domain auth flow (subdomain admin has no separate login)';
     RAISE NOTICE '==============================================';
 END $$;
