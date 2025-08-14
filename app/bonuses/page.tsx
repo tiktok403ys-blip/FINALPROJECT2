@@ -23,5 +23,22 @@ export default async function BonusesPage() {
     `)
     .order("created_at", { ascending: false })
 
-  return <BonusesClientPage bonuses={bonuses as (Bonus & { casinos?: Casino })[]} />
+  // Derive whether each bonus' casino has a published editorial review
+  const casinoIds = (bonuses || [])
+    .map((b: any) => b.casino_id)
+    .filter((id: any): id is string => typeof id === "string")
+
+  let bonusesWithFlag = bonuses || []
+  if (casinoIds.length > 0) {
+    const { data: reviews } = await supabase
+      .from("casino_reviews")
+      .select("casino_id")
+      .in("casino_id", casinoIds)
+      .eq("is_published", true)
+
+    const hasReviewSet = new Set((reviews || []).map((r: any) => r.casino_id))
+    bonusesWithFlag = (bonuses || []).map((b: any) => ({ ...b, has_review: hasReviewSet.has(b.casino_id) }))
+  }
+
+  return <BonusesClientPage bonuses={bonusesWithFlag as unknown as (Bonus & { casinos?: Casino })[]} />
 }

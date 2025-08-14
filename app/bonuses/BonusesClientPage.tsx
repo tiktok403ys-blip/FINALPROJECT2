@@ -27,7 +27,7 @@ import { Footer } from "@/components/footer"
 import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
 import type { Bonus, Casino } from "@/lib/types"
 
-export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { casinos?: Casino })[] }) {
+export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { casinos?: Casino; has_review?: boolean })[] }) {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
 
   const toggleSection = (bonusId: string, sectionKey: string) => {
@@ -363,13 +363,23 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
                     {/* Casino Review Link */}
                     <div className="mb-6">
-                      <Link
-                        href={`/casinos/${bonus.casino_id}`}
-                        className="text-purple-400 text-sm hover:underline flex items-center gap-1"
-                      >
-                        <Star className="w-3 h-3" />
-                        Read {bonus.casinos?.name} Casino review
-                      </Link>
+                      {bonus.has_review ? (
+                        <Link
+                          href={`/casinos/${bonus.casino_id}/review`}
+                          className="text-purple-400 text-sm hover:underline flex items-center gap-1"
+                        >
+                          <Star className="w-3 h-3" />
+                          Read {bonus.casinos?.name} Casino review
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/casinos/${bonus.casino_id}`}
+                          className="text-purple-400 text-sm hover:underline flex items-center gap-1"
+                        >
+                          <Star className="w-3 h-3" />
+                          Visit {bonus.casinos?.name}
+                        </Link>
+                      )}
                     </div>
 
                     {/* Action Buttons */}
