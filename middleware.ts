@@ -31,11 +31,12 @@ export async function middleware(request: NextRequest) {
 
   // Check if this is the admin subdomain
   if (hostname === "sg44admin.gurusingapore.com") {
-    console.log("🔄 Admin subdomain detected, routing to /admin")
-
-    // Rewrite to admin path
-    url.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`
-    return NextResponse.rewrite(url)
+    // Only rewrite the root path "/" to "/admin".
+    // Keep requests to existing "/admin/*", "/api/*", etc. unchanged.
+    if (url.pathname === "/") {
+      url.pathname = "/admin"
+      return NextResponse.rewrite(url)
+    }
   }
 
   // STRICT: Block ANY direct access to /admin or /admin-v2 on main domain with 404 (no redirect)
