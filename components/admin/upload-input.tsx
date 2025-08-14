@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Upload, Loader2 } from "lucide-react"
@@ -26,6 +26,7 @@ export function UploadInput({
 }: UploadInputProps) {
   const supabase = createClient()
   const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -65,13 +66,18 @@ export function UploadInput({
   }
 
   return (
-    <label className="inline-flex items-center gap-2">
-      <input type="file" className="hidden" onChange={handleChange} accept={allowedMime.join(',')} />
-      <Button type="button" variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent">
+    <div className="inline-flex items-center gap-2">
+      <input ref={inputRef} type="file" className="hidden" onChange={handleChange} accept={allowedMime.join(',')} />
+      <Button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        variant="outline"
+        className="border-[#00ff88] text-[#00ff88] bg-transparent"
+      >
         {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
         {uploading ? "Uploading..." : label}
       </Button>
-    </label>
+    </div>
   )
 }
 

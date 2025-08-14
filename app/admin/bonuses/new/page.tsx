@@ -29,6 +29,11 @@ const schema = z.object({
   terms: z.string().optional().or(z.literal("")),
   how_to_get: z.string().optional().or(z.literal("")),
   image_url: z.string().url().optional().or(z.literal("")),
+  play_now_text: z.string().optional().or(z.literal("")),
+  wagering_text: z.string().optional().or(z.literal("")),
+  value_text: z.string().optional().or(z.literal("")),
+  max_bet_text: z.string().optional().or(z.literal("")),
+  expiry_text: z.string().optional().or(z.literal("")),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -106,14 +111,29 @@ export default function NewBonusPage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">
-          <TextField label="Wagering (x)" type="number" inputMode="numeric" {...register("wagering_x")} placeholder="25" />
-          <TextField label="Free Spins" type="number" inputMode="numeric" {...register("free_spins")} placeholder="200" />
-          <TextField label="Value per Spin ($)" type="number" step="0.01" inputMode="decimal" {...register("free_spin_value")} placeholder="0.2" />
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-[#00ff88]">▶</span>
+            <TextField label="Wagering (x)" type="number" inputMode="numeric" {...register("wagering_x")} placeholder="25" className="pl-8" />
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-[#00ff88]">$</span>
+            <TextField label="Free Spins" type="number" inputMode="numeric" {...register("free_spins")} placeholder="200" className="pl-8" />
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-[#00ff88]">$</span>
+            <TextField label="Value per Spin ($)" type="number" step="0.01" inputMode="decimal" {...register("free_spin_value")} placeholder="0.2" className="pl-8" />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">
-          <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" />
-          <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" />
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-[#00ff88]">$</span>
+            <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" className="pl-8" />
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-[#00ff88]">📅</span>
+            <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" className="pl-8" />
+          </div>
           <div className="flex items-center gap-6">
             <label className="inline-flex items-center gap-2 text-white text-sm">
               <input type="checkbox" {...register("is_exclusive")} /> Exclusive
@@ -125,6 +145,15 @@ export default function NewBonusPage() {
         </div>
 
         <TextAreaField label="How to get" rows={3} {...register("how_to_get")} placeholder="Message live chat with promo code..." />
+        <div className="grid md:grid-cols-2 gap-4">
+          <TextAreaField label="Play now text (optional)" rows={3} {...register("play_now_text")} placeholder="Custom text to explain no-deposit bonus..." />
+          <TextAreaField label="Wagering text (optional)" rows={3} {...register("wagering_text")} placeholder="Explain wagering details..." />
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <TextAreaField label="Value text (optional)" rows={3} {...register("value_text")} placeholder="Explain free spin value..." />
+          <TextAreaField label="Max bet text (optional)" rows={3} {...register("max_bet_text")} placeholder="Explain max bet..." />
+        </div>
+        <TextAreaField label="Expiry text (optional)" rows={3} {...register("expiry_text")} placeholder="Explain expiry time..." />
         <TextAreaField label="Terms and conditions" rows={5} {...register("terms")} placeholder={"• Bonus valid for new players only\n• One bonus per household/IP address\n• Wagering must be completed within 2 days\n• Maximum withdrawal from bonus winnings: $100\n• Full terms available on casino website"} />
 
         <div className="flex gap-4">
