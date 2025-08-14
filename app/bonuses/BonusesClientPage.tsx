@@ -147,8 +147,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "playNow") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            This is a no deposit bonus, meaning you can claim it without making any initial deposit.
-                            Perfect for new players who want to try the casino risk-free.
+                            {bonus.play_now_text || (
+                              <>This is a no deposit bonus, meaning you can claim it without making any initial deposit. Perfect for new players who want to try the casino risk-free.</>
+                            )}
                           </div>
                         )}
                       </div>
@@ -171,8 +172,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "wagering") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            You need to wager the bonus amount 25 times before you can withdraw any winnings. Some games
-                            may contribute differently to the wagering requirements.
+                            {bonus.wagering_text || (
+                              <>You need to wager the bonus amount {bonus.wagering_x ?? 25} times before you can withdraw any winnings. Some games may contribute differently to the wagering requirements.</>
+                            )}
                           </div>
                         )}
                       </div>
@@ -195,8 +197,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "value") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            Each free spin is worth $0.20, giving you a total bonus value of $40. Free spins are usually
-                            valid on specific slot games only.
+                            {bonus.value_text || (
+                              <>Each free spin is worth ${bonus.free_spin_value ?? 0}, giving you a total bonus value of ${Number((bonus.free_spins ?? 0) * (bonus.free_spin_value ?? 0)).toFixed(0)}. Free spins are usually valid on specific slot games only.</>
+                            )}
                           </div>
                         )}
                       </div>
@@ -218,8 +221,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "maxBet") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            While using bonus funds, your maximum bet per spin/hand is limited to $2. Exceeding this
-                            limit may void your bonus and winnings.
+                            {bonus.max_bet_text || (
+                              <>While using bonus funds, your maximum bet per spin/hand is limited to ${bonus.max_bet ?? 0}. Exceeding this limit may void your bonus and winnings.</>
+                            )}
                           </div>
                         )}
                       </div>
@@ -241,8 +245,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "expiration") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            You have 2 days from the time you claim this bonus to use it and meet the wagering
-                            requirements. After this period, the bonus will expire.
+                            {bonus.expiry_text || (
+                              <>You have {bonus.expiry_days ?? 0} days from the time you claim this bonus to use it and meet the wagering requirements. After this period, the bonus will expire.</>
+                            )}
                           </div>
                         )}
                       </div>
