@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Upload, Loader2 } from "lucide-react"
+import { Upload, Loader2, CheckCircle2 } from "lucide-react"
 
 interface UploadInputProps {
   bucket?: string
@@ -13,6 +13,7 @@ interface UploadInputProps {
   allowedMime?: string[]
   maxSizeMB?: number
   onError?: (message: string) => void
+  showPreview?: boolean
 }
 
 export function UploadInput({
@@ -23,10 +24,12 @@ export function UploadInput({
   allowedMime = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"],
   maxSizeMB = 2,
   onError,
+  showPreview = true,
 }: UploadInputProps) {
   const supabase = createClient()
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const [uploadedInfo, setUploadedInfo] = useState<{ name: string; size: number; url: string } | null>(null)
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -55,6 +58,7 @@ export function UploadInput({
       if (error) throw error
       const { data } = supabase.storage.from(bucket).getPublicUrl(filePath)
       onUploaded(data.publicUrl)
+      setUploadedInfo({ name: file.name, size: file.size, url: data.publicUrl })
     } catch (err) {
       console.error("Upload failed", err)
       onError ? onError("Upload failed. Please try again.") : alert("Upload failed. Please try again.")
@@ -66,7 +70,7 @@ export function UploadInput({
   }
 
   return (
-    <div className="inline-flex items-center gap-2">
+    <div className="inline-flex items-center gap-2 flex-wrap">
       <input ref={inputRef} type="file" className="hidden" onChange={handleChange} accept={allowedMime.join(',')} />
       <Button
         type="button"
@@ -77,6 +81,16 @@ export function UploadInput({
         {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
         {uploading ? "Uploading..." : label}
       </Button>
+      <span className="text-xs text-gray-400">Max {maxSizeMB}MB · {allowedMime.map((m) => m.split("/")[1].toUpperCase()).join("/")}</span>
+      {uploadedInfo && (
+        <span className="flex items-center gap-1 text-xs text-[#00ff88]">
+          <CheckCircle2 className="w-4 h-4" />
+          Done ({(uploadedInfo.size / 1024).toFixed(0)} KB)
+          {showPreview && (
+            <a href={uploadedInfo.url} target="_blank" rel="noreferrer" className="ml-2 underline text-gray-300">View</a>
+          )}
+        </span>
+      )}
     </div>
   )
 }
