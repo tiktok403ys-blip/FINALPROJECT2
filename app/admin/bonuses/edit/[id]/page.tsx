@@ -11,7 +11,7 @@ import { FormShell } from "@/components/admin/forms/form-shell"
 import { TextField, TextAreaField } from "@/components/admin/forms/fields"
 import { UploadInput } from "@/components/admin/upload-input"
 import Link from "next/link"
-import { ArrowLeft, Save, Trash2 } from "lucide-react"
+import { ArrowLeft, Save, Trash2, Calendar } from "lucide-react"
 
 const schema = z.object({
   casino_id: z.string().uuid({ message: "Select a casino" }),
@@ -144,7 +144,7 @@ export default function EditBonusPage() {
 
           <div className="grid md:grid-cols-3 gap-4">
             <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" leftIcon={<span>$</span>} />
-            <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" leftIcon={<span>📅</span>} />
+            <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" leftIcon={<Calendar className="w-4 h-4" />} />
             <div className="flex items-center gap-6">
               <label className="inline-flex items-center gap-2 text-white text-sm">
                 <input type="checkbox" {...register("is_exclusive")} /> Exclusive

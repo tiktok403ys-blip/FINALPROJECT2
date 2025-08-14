@@ -136,10 +136,12 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
                           onClick={() => toggleSection(bonus.id, "playNow")}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <Play className="w-4 h-4 text-[#00ff88]" />
                             <span className="text-white font-medium">Play now, deposit later.</span>
-                            <span className="text-gray-400 text-sm">No deposit bonus for new players</span>
+                            {bonus.is_no_deposit && (
+                              <span className="text-gray-400 text-sm">No deposit bonus for new players</span>
+                            )}
                           </div>
                           <ChevronDown
                             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "playNow") ? "rotate-180" : ""}`}
@@ -160,7 +162,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
                           onClick={() => toggleSection(bonus.id, "wagering")}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <Gauge className="w-4 h-4 text-[#00ff88]" />
                              <span className="text-white font-medium">Wagering requirements:</span>
                              <span className="text-[#00ff88] font-semibold">{bonus.wagering_x ?? 25}x</span>
@@ -185,7 +187,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
                           onClick={() => toggleSection(bonus.id, "value")}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <DollarSign className="w-4 h-4 text-[#00ff88]" />
                              <span className="text-white font-medium">Value of free spins:</span>
                              <span className="text-[#00ff88] font-semibold">${Number((bonus.free_spins ?? 0) * (bonus.free_spin_value ?? 0)).toFixed(0)}</span>
@@ -210,7 +212,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
                           onClick={() => toggleSection(bonus.id, "maxBet")}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <CreditCard className="w-4 h-4 text-[#00ff88]" />
                              <span className="text-white font-medium">Maximum bet:</span>
                              <span className="text-[#00ff88] font-semibold">${bonus.max_bet ?? 0}</span>
@@ -234,7 +236,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
                           onClick={() => toggleSection(bonus.id, "expiration")}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <Calendar className="w-4 h-4 text-[#00ff88]" />
                              <span className="text-white font-medium">Bonus expiration:</span>
                              <span className="text-[#00ff88] font-semibold">{bonus.expiry_days ?? 0} days</span>

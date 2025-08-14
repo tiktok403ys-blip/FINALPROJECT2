@@ -10,7 +10,7 @@ import { FormShell } from "@/components/admin/forms/form-shell"
 import { TextField, TextAreaField } from "@/components/admin/forms/fields"
 import { UploadInput } from "@/components/admin/upload-input"
 import Link from "next/link"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Calendar } from "lucide-react"
 
 const schema = z.object({
   casino_id: z.string().uuid({ message: "Select a casino" }),
@@ -40,15 +40,24 @@ type FormValues = z.infer<typeof schema>
 
 export default function NewBonusPage() {
   const supabase = createClient()
-  const [casinos, setCasinos] = useState<{ id: string; name: string }[]>([])
+  const [casinos, setCasinos] = useState<{ id: string; name: string; rating: number | null }[]>([])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   useEffect(() => {
     const loadCasinos = async () => {
-      const { data } = await supabase.from("casinos").select("id, name").order("name")
+      const { data } = await supabase.from("casinos").select("id, name, rating").order("name")
       setCasinos(data || [])
+  const selectedCasinoId = watch("casino_id")
+  const selectedCasino = casinos.find((c) => c.id === selectedCasinoId)
+  const safetyLabel = (() => {
+    const r = selectedCasino?.rating ?? null
+    if (r === null) return null
+    if (r >= 4.5) return "HIGH"
+    if (r >= 3.0) return "MED"
+    return "LOW"
+  })()
     }
     loadCasinos()
   }, [])
@@ -95,6 +104,16 @@ export default function NewBonusPage() {
           <TextField label="Title *" {...register("title")} error={errors.title?.message} placeholder="Enter bonus title" />
         </div>
 
+        {selectedCasino && selectedCasino.rating !== null && (
+          <div className="text-sm text-gray-300 -mt-2 mb-2">
+            <span className="text-gray-400 mr-2">Safety Index:</span>
+            <span className="text-[#00ff88] font-semibold">{selectedCasino.rating.toFixed(1)}+</span>
+            {safetyLabel && (
+              <span className={`ml-2 inline-block px-2 py-0.5 rounded text-xs ${safetyLabel === "HIGH" ? "bg-green-600/20 text-green-400" : safetyLabel === "MED" ? "bg-yellow-600/20 text-yellow-400" : "bg-red-600/20 text-red-400"}`}>{safetyLabel}</span>
+            )}
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-4">
           <TextField label="Bonus Amount" {...register("bonus_amount")} placeholder="$100 + 100 FS" />
           <TextField label="Bonus Type" {...register("bonus_type")} placeholder="WELCOME / CASHBACK / etc" />
@@ -118,7 +137,7 @@ export default function NewBonusPage() {
 
         <div className="grid md:grid-cols-3 gap-4">
           <TextField label="Max Bet ($)" type="number" step="0.01" inputMode="decimal" {...register("max_bet")} placeholder="2" leftIcon={<span>$</span>} />
-          <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" leftIcon={<span>📅</span>} />
+          <TextField label="Expiry (days)" type="number" inputMode="numeric" {...register("expiry_days")} placeholder="2" leftIcon={<Calendar className="w-4 h-4" />} />
           <div className="flex items-center gap-6">
             <label className="inline-flex items-center gap-2 text-white text-sm">
               <input type="checkbox" {...register("is_exclusive")} /> Exclusive
