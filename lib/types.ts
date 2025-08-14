@@ -22,6 +22,20 @@ export interface Bonus {
   expiry_date: string | null
   casino_id: string | null
   claim_url: string | null
+  // Extended fields for full bonus details
+  promo_code?: string | null
+  is_exclusive?: boolean | null
+  is_no_deposit?: boolean | null
+  wagering_x?: number | null
+  free_spins?: number | null
+  free_spin_value?: number | null
+  max_bet?: number | null
+  expiry_days?: number | null
+  terms?: string | null
+  how_to_get?: string | null
+  image_url?: string | null
+  yes_count?: number | null
+  no_count?: number | null
   created_at: string
   updated_at: string
   casinos?: Casino
