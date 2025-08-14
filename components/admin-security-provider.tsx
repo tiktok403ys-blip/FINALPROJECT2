@@ -82,18 +82,27 @@ export function AdminSecurityProvider({ children }: { children: React.ReactNode 
         }
 
         const cookiePin = getCookie("admin_pin_verified") === "1"
-        const pinVerified = cookiePin || sessionStorage.getItem("admin_pin_verified") === "true"
-        const pinTimestamp = sessionStorage.getItem("admin_pin_timestamp")
-        const now = Date.now()
-        const pinAge = pinTimestamp ? now - Number.parseInt(pinTimestamp) : Number.POSITIVE_INFINITY
+        let pinOk = false
+        if (cookiePin) {
+          // If cookie is present for apex domain, trust it across subdomains
+          pinOk = true
+        } else {
+          // Fallback to sessionStorage when cookie is not present
+          const storageVerified = sessionStorage.getItem("admin_pin_verified") === "true"
+          const pinTimestamp = sessionStorage.getItem("admin_pin_timestamp")
+          const now = Date.now()
+          const pinAge = pinTimestamp ? now - Number.parseInt(pinTimestamp) : Number.POSITIVE_INFINITY
+          pinOk = storageVerified && pinAge <= 3600000
+        }
 
-        // PIN expires after 1 hour (3600000 ms) or cookie absent
-        if (!pinVerified || pinAge > 3600000) {
+        // PIN required if neither cookie nor valid storage marker exists
+        if (!pinOk) {
           console.log("❌ PIN verification required or expired")
           // clear local markers
           sessionStorage.removeItem("admin_pin_verified")
           sessionStorage.removeItem("admin_pin_timestamp")
-          router.push("https://gurusingapore.com/auth/admin-pin")
+          // Always send to main domain PIN page which redirects to subdomain after success
+          window.location.href = "https://gurusingapore.com/auth/admin-pin"
           return
         }
 

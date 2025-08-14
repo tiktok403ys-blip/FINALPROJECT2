@@ -69,15 +69,11 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
 
         // Store verification in cookie (apex domain) so it is readable on subdomains
         try {
-          const hostname = typeof window !== "undefined" ? window.location.hostname : ""
-          const apex = getApexDomain(hostname)
+          const apex = "gurusingapore.com"
           const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "Secure; " : ""
           const domainPart = apex ? `Domain=${apex}; ` : ""
-          // 1 hour validity
           document.cookie = `admin_pin_verified=1; Max-Age=3600; Path=/; ${domainPart}${secure}SameSite=Lax`
-        } catch (_) {
-          // ignore cookie set errors
-        }
+        } catch (_) {}
 
         // Keep sessionStorage as local fallback (1 hour)
         const expirationTime = Date.now() + 60 * 60 * 1000
