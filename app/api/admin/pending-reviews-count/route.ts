@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseServerClient()
     const { count, error } = await supabase
       .from("player_reviews")
       .select("*", { count: "exact", head: true })
