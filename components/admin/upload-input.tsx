@@ -32,7 +32,8 @@ export function UploadInput({
   const [uploadedInfo, setUploadedInfo] = useState<{ name: string; size: number; url: string } | null>(null)
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const inputEl = e.currentTarget
+    const file = inputEl.files?.[0]
     if (!file) return
 
     // Client-side validation
@@ -65,7 +66,7 @@ export function UploadInput({
     } finally {
       setUploading(false)
       // reset value to allow same file re-select
-      e.currentTarget.value = ""
+      if (inputEl) inputEl.value = ""
     }
   }
 
