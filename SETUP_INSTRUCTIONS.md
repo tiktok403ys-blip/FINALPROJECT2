@@ -2,7 +2,7 @@
 
 ## 🚀 Langkah-langkah Setup Database
 
-### 1. Buat Project Supabase Baru
+## 1. Buat Project Supabase Baru
 - Kunjungi [supabase.com](https://supabase.com)
 - Klik "New Project"
 - Isi nama project dan password database
