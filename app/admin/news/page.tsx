@@ -1,223 +1,574 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useMemo } from "react"
-import { GlassCard } from "@/components/glass-card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
-import { Newspaper, Edit, Trash2, Plus, Search, Eye, EyeOff } from "lucide-react"
-import Link from "next/link"
-import type { News } from "@/lib/types"
-import { useAdminSecurity } from "@/components/admin-security-provider"
+import { useState, useEffect } from 'react'
+import { ProtectedRoute } from '@/components/admin/protected-route'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { supabase } from '@/lib/auth/admin-auth'
+import { toast } from 'sonner'
+import {
+  Newspaper,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  Search,
+  Eye,
+  Calendar,
+  User,
+  Tag
+} from 'lucide-react'
+import { ImageUpload } from '@/components/admin/ImageUpload'
 
-export default function AdminNewsPage() {
-  const [news, setNews] = useState<News[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
+interface NewsArticle {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  featured_image: string
+  author: string
+  category: string
+  tags: string[]
+  status: 'draft' | 'published' | 'archived'
+  is_featured: boolean
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+function NewsContentPage() {
+  const [articles, setArticles] = useState<NewsArticle[]>([])
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const supabase = createClient()
-  const { logAdminAction } = useAdminSecurity()
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    excerpt: '',
+    featured_image: '',
+    author: '',
+    category: '',
+    tags: [] as string[],
+    status: 'draft' as 'draft' | 'published' | 'archived',
+    is_featured: false,
+    published_at: null as string | null
+  })
+  const [tagsInput, setTagsInput] = useState('')
+
+  const categories = [
+    'Casino News',
+    'Industry Updates',
+    'Game Reviews',
+    'Promotions',
+    'Regulations',
+    'Technology',
+    'Events',
+    'General'
+  ]
 
   useEffect(() => {
-    fetchNews()
-  }, [page, pageSize])
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("news-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "news" }, () => {
-        fetchNews()
-      })
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    loadArticles()
   }, [])
 
-  const fetchNews = async () => {
-    setLoading(true)
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    const { data } = await supabase
-      .from("news")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(from, to)
+  const loadArticles = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (data) {
-      setNews(data)
-    }
-    setLoading(false)
-  }
-
-  const togglePublished = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase.from("news").update({ published: !currentStatus }).eq("id", id)
-    if (!error) {
-      await logAdminAction("toggle_published", "news", id, { published: !currentStatus })
-      fetchNews()
+      if (error) throw error
+      setArticles(data || [])
+    } catch (error) {
+      console.error('Error loading articles:', error)
+      toast.error('Failed to load articles')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const parseAssetsPath = (url?: string | null): string | null => {
-    if (!url) return null
-    const marker = "/storage/v1/object/public/assets/"
-    const idx = url.indexOf(marker)
-    if (idx === -1) return null
-    return url.substring(idx + marker.length)
-  }
-
-  const deleteNews = async (id: string) => {
-    if (confirm("Are you sure you want to delete this news article?")) {
-      const { data: prev } = await supabase.from("news").select("image_url").eq("id", id).single()
-      const { error } = await supabase.from("news").delete().eq("id", id)
-
-      if (!error) {
-        const oldPath = parseAssetsPath(prev?.image_url)
-        if (oldPath) {
-          await supabase.storage.from("assets").remove([oldPath])
-        }
-        await logAdminAction("delete", "news", id, {})
-        fetchNews()
+  const handleSave = async () => {
+    try {
+      if (!formData.title.trim() || !formData.content.trim()) {
+        toast.error('Title and content are required')
+        return
       }
+
+      const dataToSave = {
+        ...formData,
+        tags: tagsInput.split(',').map(t => t.trim()).filter(t => t),
+        published_at: formData.status === 'published' && !formData.published_at 
+          ? new Date().toISOString() 
+          : formData.published_at
+      }
+
+      if (editingId && editingId !== 'new') {
+        // Update existing article
+        const { error } = await supabase
+          .from('news_articles')
+          .update({
+            ...dataToSave,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingId)
+
+        if (error) throw error
+        toast.success('Article updated successfully')
+      } else {
+        // Create new article
+        const { error } = await supabase
+          .from('news_articles')
+          .insert([dataToSave])
+
+        if (error) throw error
+        toast.success('Article created successfully')
+      }
+
+      resetForm()
+      loadArticles()
+    } catch (error) {
+      console.error('Error saving article:', error)
+      toast.error('Failed to save article')
     }
   }
 
-  const filteredNews = useMemo(
-    () =>
-      news.filter(
-        (article) =>
-          article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          article.category?.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    [news, searchTerm],
-  )
+  const handleEdit = (article: NewsArticle) => {
+    setEditingId(article.id)
+    setFormData({
+      title: article.title,
+      content: article.content,
+      excerpt: article.excerpt,
+      featured_image: article.featured_image,
+      author: article.author,
+      category: article.category,
+      tags: article.tags,
+      status: article.status,
+      is_featured: article.is_featured,
+      published_at: article.published_at
+    })
+    setTagsInput(article.tags.join(', '))
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this article?')) return
+
+    try {
+      const { error } = await supabase
+        .from('news_articles')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Article deleted successfully')
+      loadArticles()
+    } catch (error) {
+      console.error('Error deleting article:', error)
+      toast.error('Failed to delete article')
+    }
+  }
+
+  const toggleStatus = async (id: string, field: 'is_featured', currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('news_articles')
+        .update({ [field]: !currentStatus })
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Featured status updated successfully')
+      loadArticles()
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast.error('Failed to update status')
+    }
+  }
+
+  const changeStatus = async (id: string, newStatus: 'draft' | 'published' | 'archived') => {
+    try {
+      const updateData: any = { 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      }
+      
+      if (newStatus === 'published') {
+        updateData.published_at = new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('news_articles')
+        .update(updateData)
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success(`Article ${newStatus} successfully`)
+      loadArticles()
+    } catch (error) {
+      console.error('Error changing status:', error)
+      toast.error('Failed to change status')
+    }
+  }
+
+  const resetForm = () => {
+    setEditingId(null)
+    setFormData({
+      title: '',
+      content: '',
+      excerpt: '',
+      featured_image: '',
+      author: '',
+      category: '',
+      tags: [],
+      status: 'draft',
+      is_featured: false,
+      published_at: null
+    })
+    setTagsInput('')
+  }
+
+  const filteredArticles = articles.filter(article => {
+    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         article.author.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || article.status === statusFilter
+    const matchesCategory = categoryFilter === 'all' || article.category === categoryFilter
+    return matchesSearch && matchesStatus && matchesCategory
+  })
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'published': return 'bg-green-500/20 text-green-400'
+      case 'draft': return 'bg-yellow-500/20 text-yellow-400'
+      case 'archived': return 'bg-gray-500/20 text-gray-400'
+      default: return 'bg-gray-500/20 text-gray-400'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70">Loading articles...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Manage News</h1>
-          <p className="text-gray-400">Create and manage news articles</p>
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
+            <Newspaper className="w-8 h-8 mr-3" />
+            News Management
+          </h1>
+          <p className="text-white/70">Manage news articles and content</p>
         </div>
-        <Button asChild className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">
-          <Link href="/admin/news/new">
-            <Plus className="w-4 h-4 mr-2" />
-            Add News
-          </Link>
+        <Button
+          onClick={() => setEditingId('new')}
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Article
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="mb-8">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <Input
-            placeholder="Search news..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-400"
-          />
-        </div>
-      </div>
-
-      {/* News List */}
-      <div className="space-y-6">
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-400">Loading news...</p>
+      {/* Filters */}
+      <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
+              <Input
+                placeholder="Search articles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        ) : filteredNews.length > 0 ? (
-          filteredNews.map((article) => (
-            <GlassCard key={article.id} className="p-6">
+        </CardContent>
+      </Card>
+
+      {/* Form */}
+      {editingId && (
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center justify-between">
+              {editingId === 'new' ? 'Add New Article' : 'Edit Article'}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetForm}
+                className="text-white/70 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Title</label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Article title"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Author</label>
+                <Input
+                  value={formData.author}
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  placeholder="Author name"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Category</label>
+                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Status</label>
+                <Select value={formData.status} onValueChange={(value: 'draft' | 'published' | 'archived') => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Featured Image</label>
+              <ImageUpload
+                bucket="news-images"
+                value={formData.featured_image}
+                onChange={(url) => setFormData({ ...formData, featured_image: url })}
+                accept="image/*"
+                maxSize={5 * 1024 * 1024}
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Excerpt</label>
+              <Textarea
+                value={formData.excerpt}
+                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                placeholder="Brief description of the article"
+                rows={3}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Content</label>
+              <Textarea
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                placeholder="Article content"
+                rows={8}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Tags (comma separated)</label>
+              <Input
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                placeholder="casino, gambling, news, review"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center space-x-2 text-white/90">
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                  className="rounded"
+                />
+                <span>Featured Article</span>
+              </label>
+              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                <Save className="w-4 h-4 mr-2" />
+                Save Article
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Articles List */}
+      <div className="grid gap-4">
+        {filteredArticles.map((article) => (
+          <Card key={article.id} className="backdrop-blur-xl bg-white/10 border-white/20">
+            <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {article.category && (
-                      <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-1 rounded text-xs font-medium">
-                        {article.category}
+                  <CardTitle className="text-white flex items-center mb-2">
+                    {article.title}
+                    {article.is_featured && (
+                      <Badge className="ml-2 bg-yellow-500/20 text-yellow-400">Featured</Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-white/60 flex items-center space-x-4">
+                    <span className="flex items-center">
+                      <User className="w-4 h-4 mr-1" />
+                      {article.author}
+                    </span>
+                    <span className="flex items-center">
+                      <Tag className="w-4 h-4 mr-1" />
+                      {article.category}
+                    </span>
+                    {article.published_at && (
+                      <span className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        {new Date(article.published_at).toLocaleDateString()}
                       </span>
                     )}
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        article.published ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
-                      }`}
-                    >
-                      {article.published ? "Published" : "Draft"}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{article.title}</h3>
-                  <p className="text-gray-400 mb-3">{article.excerpt}</p>
-                  <p className="text-gray-500 text-sm">Created: {new Date(article.created_at).toLocaleDateString()}</p>
+                  </CardDescription>
                 </div>
-                <div className="flex space-x-2 ml-4">
+                <div className="flex items-center space-x-2">
+                  <Badge className={getStatusColor(article.status)}>
+                    {article.status}
+                  </Badge>
+                  <Select value={article.status} onValueChange={(value: 'draft' | 'published' | 'archived') => changeStatus(article.id, value)}>
+                    <SelectTrigger className="w-32 bg-white/5 border-white/20 text-white text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className={`${
-                      article.published
-                        ? "border-yellow-500 text-yellow-500 hover:bg-yellow-500/10"
-                        : "border-green-500 text-green-500 hover:bg-green-500/10"
-                    } bg-transparent`}
-                    onClick={() => togglePublished(article.id, article.published)}
+                    onClick={() => toggleStatus(article.id, 'is_featured', article.is_featured)}
+                    className={`${article.is_featured ? 'text-yellow-400' : 'text-white/50'} hover:text-yellow-300`}
                   >
-                    {article.published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <Eye className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="border-[#00ff88] text-[#00ff88] bg-transparent"
-                    asChild
+                    onClick={() => handleEdit(article)}
+                    className="text-white/70 hover:text-white"
                   >
-                    <Link href={`/admin/news/edit/${article.id}`}>
-                      <Edit className="w-4 h-4" />
-                    </Link>
+                    <Edit className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="border-red-500 text-red-500 bg-transparent hover:bg-red-500/10"
-                    onClick={() => deleteNews(article.id)}
+                    onClick={() => handleDelete(article.id)}
+                    className="text-red-400 hover:text-red-300"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-            </GlassCard>
-          ))
-        ) : (
-          <div className="text-center py-16">
-            <Newspaper className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">
-              {searchTerm ? "No news found matching your search." : "No news articles yet. Create your first article!"}
-            </p>
-          </div>
-        )}
+            </CardHeader>
+            <CardContent>
+              {article.featured_image && (
+                <img
+                  src={article.featured_image}
+                  alt={article.title}
+                  className="w-full h-48 object-cover rounded-lg mb-4"
+                />
+              )}
+              <div className="text-white/80 text-sm mb-4">
+                {article.excerpt || (article.content.length > 200 ? `${article.content.substring(0, 200)}...` : article.content)}
+              </div>
+              {article.tags.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags.map((tag, index) => (
+                      <Badge key={index} className="bg-blue-500/20 text-blue-400">
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-xs text-white/50">
+                <span>Created: {new Date(article.created_at).toLocaleDateString()}</span>
+                <span>Updated: {new Date(article.updated_at).toLocaleDateString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Pagination */}
-      {!loading && filteredNews.length > 0 && (
-        <div className="flex items-center justify-between mt-8">
-          <div className="text-gray-400 text-sm">Page {page}</div>
-          <div className="flex gap-2">
+      {filteredArticles.length === 0 && (
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20">
+          <CardContent className="text-center py-12">
+            <Newspaper className="w-12 h-12 text-white/30 mx-auto mb-4" />
+            <p className="text-white/60">No articles found</p>
             <Button
-              variant="outline"
-              className="bg-transparent text-white border-white/20"
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setEditingId('new')}
+              className="mt-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
             >
-              Prev
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Article
             </Button>
-            <Button
-              variant="outline"
-              className="bg-transparent text-white border-white/20"
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
+  )
+}
+
+export default function NewsContentPageWrapper() {
+  return (
+    <ProtectedRoute>
+      <NewsContentPage />
+    </ProtectedRoute>
   )
 }

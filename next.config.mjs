@@ -8,14 +8,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["images.unsplash.com", "via.placeholder.com", "placeholder.com"],
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
-    unoptimized: true,
+    domains: ['localhost', 'via.placeholder.com', 'images.unsplash.com', 'picsum.photos'],
   },
 }
 

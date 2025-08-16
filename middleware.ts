@@ -39,10 +39,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // STRICT: Block ANY direct access to /admin or /admin-v2 on main domain with 404 (no redirect)
+  // STRICT: Block ANY direct access to /admin on main domain with 404 (no redirect)
   if (
     hostname !== "sg44admin.gurusingapore.com" &&
-    (url.pathname.startsWith("/admin") || url.pathname.startsWith("/admin-v2"))
+    url.pathname.startsWith("/admin")
   ) {
     console.log("🚫 Direct admin path on main domain blocked with 404")
     return new NextResponse(null, { status: 404 })

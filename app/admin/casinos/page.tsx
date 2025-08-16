@@ -1,349 +1,623 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { GlassCard } from "@/components/glass-card"
-import { useAdminSecurity } from "@/components/admin-security-provider"
-import { Button } from "@/components/ui/button"
-import { PaginationControls } from "@/components/admin/pagination"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { createClient } from "@/lib/supabase/client"
-import { Star, MapPin, Edit, Trash2, Plus, Search, Grid, List, Eye, Calendar } from "lucide-react"
-import Link from "next/link"
-import type { Casino } from "@/lib/types"
+import { useState, useEffect } from 'react'
+import { ProtectedRoute } from '@/components/admin/protected-route'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { supabase } from '@/lib/auth/admin-auth'
+import { toast } from 'sonner'
+import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
+import { TableSkeleton } from '@/components/admin/loading-skeleton'
+import ImageUpload from '@/components/admin/ImageUpload'
+import {
+  Building2,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  Search,
+  Eye,
+  ExternalLink,
+  Star
+} from 'lucide-react'
 
-export default function AdminCasinosPage() {
-  const [casinos, setCasinos] = useState<Casino[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
-  const [sortBy, setSortBy] = useState<"name" | "rating" | "created_at">("created_at")
-  const [page, setPage] = useState(1)
-  const pageSize = 12
-  const supabase = createClient()
-  const { logAdminAction } = useAdminSecurity()
+interface Casino {
+  id: string
+  name: string
+  description: string
+  website_url: string
+  logo_url: string
+  rating: number
+  bonus_info: string
+  features: string[]
+  payment_methods: string[]
+  license: string
+  established_year: number
+  is_featured: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
 
-  useEffect(() => {
-    fetchCasinos()
-  }, [sortBy, page])
+function CasinosContentPage() {
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    website_url: '',
+    logo_url: '',
+    rating: 5,
+    bonus_info: '',
+    features: [] as string[],
+    payment_methods: [] as string[],
+    license: '',
+    established_year: new Date().getFullYear(),
+    is_featured: false,
+    is_active: true
+  })
+  const [featuresInput, setFeaturesInput] = useState('')
+  const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("casinos-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "casinos" }, () => {
-        fetchCasinos()
+  // Use optimized query hook
+  const { 
+    data: casinos = [], 
+    loading, 
+    error, 
+    refetch 
+  } = useOptimizedQuery<Casino>({
+    table: 'casinos',
+    select: '*',
+    filters: {
+      ...(searchTerm && { name: `%${searchTerm}%` }),
+      ...(statusFilter !== 'all' && { 
+        ...(statusFilter === 'active' && { is_active: true }),
+        ...(statusFilter === 'inactive' && { is_active: false }),
+        ...(statusFilter === 'featured' && { is_featured: true })
       })
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    },
+    orderBy: { column: 'created_at', ascending: false },
+    enableRealtime: true,
+    cacheKey: `casinos-${searchTerm}-${statusFilter}`,
+    debounceMs: 500
+  })
+
+  // Use optimized mutation hook
+  const { mutate, loading: mutationLoading } = useOptimizedMutation<Casino>({
+    table: 'casinos',
+    onSuccess: () => {
+      toast.success('Operation completed successfully')
+      refetch()
+    },
+    onError: (error) => {
+      toast.error(error.message)
+    },
+    invalidateQueries: [`casinos-${searchTerm}-${statusFilter}`]
+  })
+
+  useEffect(() => {
+    loadCasinos()
   }, [])
 
-  const fetchCasinos = async () => {
-    setLoading(true)
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    const { data } = await supabase
-      .from("casinos")
-      .select("*")
-      .order(sortBy, { ascending: sortBy === "name" })
-      .range(from, to)
+  const loadCasinos = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('casinos')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (data) {
-      setCasinos(data)
+      if (error) throw error
+      setCasinos(data || [])
+    } catch (error) {
+      console.error('Error loading casinos:', error)
+      toast.error('Failed to load casinos')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
-  const deleteCasino = async (casino: Casino) => {
-    if (confirm("Are you sure you want to delete this casino?")) {
-      const { error } = await supabase.from("casinos").delete().eq("id", casino.id)
-      if (!error) {
-        await logAdminAction("delete", "casinos", casino.id, {})
-        const path = parseAssetsPath(casino.logo_url as any)
-        if (path) {
-          await supabase.storage.from("assets").remove([path])
-        }
-        fetchCasinos()
+  const handleSave = async () => {
+    try {
+      if (!formData.name.trim() || !formData.description.trim()) {
+        toast.error('Name and description are required')
+        return
       }
+
+      const dataToSave = {
+        ...formData,
+        features: featuresInput.split(',').map(f => f.trim()).filter(f => f),
+        payment_methods: paymentMethodsInput.split(',').map(p => p.trim()).filter(p => p)
+      }
+
+      if (editingId && editingId !== 'new') {
+        // Update existing casino
+        const { error } = await supabase
+          .from('casinos')
+          .update({
+            ...dataToSave,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingId)
+
+        if (error) throw error
+        toast.success('Casino updated successfully')
+      } else {
+        // Create new casino
+        const { error } = await supabase
+          .from('casinos')
+          .insert([dataToSave])
+
+        if (error) throw error
+        toast.success('Casino created successfully')
+      }
+
+      resetForm()
+      loadCasinos()
+    } catch (error) {
+      console.error('Error saving casino:', error)
+      toast.error('Failed to save casino')
     }
   }
 
-  function parseAssetsPath(url?: string | null): string | null {
-    if (!url) return null
-    const marker = "/storage/v1/object/public/assets/"
-    const idx = url.indexOf(marker)
-    if (idx === -1) return null
-    return url.substring(idx + marker.length)
+  const handleEdit = (casino: Casino) => {
+    setEditingId(casino.id)
+    setFormData({
+      name: casino.name,
+      description: casino.description,
+      website_url: casino.website_url,
+      logo_url: casino.logo_url,
+      rating: casino.rating,
+      bonus_info: casino.bonus_info,
+      features: casino.features,
+      payment_methods: casino.payment_methods,
+      license: casino.license,
+      established_year: casino.established_year,
+      is_featured: casino.is_featured,
+      is_active: casino.is_active
+    })
+    setFeaturesInput(casino.features.join(', '))
+    setPaymentMethodsInput(casino.payment_methods.join(', '))
   }
 
-  const filteredCasinos = casinos.filter(
-    (casino) =>
-      casino.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      casino.location?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this casino?')) return
 
-  return (
-    <div className="min-h-screen bg-black">
-      {/* Header Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-[#00ff88]/5" />
-        <div className="container mx-auto px-4 py-12 relative">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-[#00ff88] bg-clip-text text-transparent mb-3">
-                Casino Management
-              </h1>
-              <p className="text-gray-400 text-lg">Add, edit, and manage casino listings with advanced controls</p>
-            </div>
-            <Button asChild className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 h-12 px-6 text-base font-semibold">
-              <Link href="/admin/casinos/new">
-                <Plus className="w-5 h-5 mr-2" />
-                Add New Casino
-              </Link>
-            </Button>
-          </div>
+    try {
+      const { error } = await supabase
+        .from('casinos')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Casino deleted successfully')
+      loadCasinos()
+    } catch (error) {
+      console.error('Error deleting casino:', error)
+      toast.error('Failed to delete casino')
+    }
+  }
+
+  const toggleStatus = async (id: string, field: 'is_active' | 'is_featured', currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('casinos')
+        .update({ [field]: !currentStatus })
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success(`${field === 'is_active' ? 'Status' : 'Featured'} updated successfully`)
+      loadCasinos()
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast.error('Failed to update status')
+    }
+  }
+
+  const resetForm = () => {
+    setEditingId(null)
+    setFormData({
+      name: '',
+      description: '',
+      website_url: '',
+      logo_url: '',
+      rating: 5,
+      bonus_info: '',
+      features: [],
+      payment_methods: [],
+      license: '',
+      established_year: new Date().getFullYear(),
+      is_featured: false,
+      is_active: true
+    })
+    setFeaturesInput('')
+    setPaymentMethodsInput('')
+  }
+
+  const filteredCasinos = casinos.filter(casino => {
+    const matchesSearch = casino.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         casino.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && casino.is_active) ||
+                         (statusFilter === 'inactive' && !casino.is_active) ||
+                         (statusFilter === 'featured' && casino.is_featured)
+    return matchesSearch && matchesStatus
+  })
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-400'}`}
+      />
+    ))
+  }
+
+  if (loading) {
+    return <TableSkeleton />
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">Error loading casinos: {error}</p>
+          <Button onClick={refetch} variant="outline">
+            Try Again
+          </Button>
         </div>
       </div>
+    )
+  }
 
-      <div className="container mx-auto px-4 pb-16">
-        {/* Enhanced Controls */}
-        <GlassCard className="p-6 mb-8 bg-gradient-to-r from-white/5 to-white/10 border-white/20">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+  return (
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
+            <Building2 className="w-8 h-8 mr-3" />
+            Casinos Management
+          </h1>
+          <p className="text-white/70">Manage casino listings and information</p>
+        </div>
+        <Button
+          onClick={() => setEditingId('new')}
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Casino
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
               <Input
-                placeholder="Search casinos by name or location..."
+                placeholder="Search by name or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-400 h-11"
+                className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/50"
               />
             </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Casinos</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="featured">Featured</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-            {/* Controls */}
-            <div className="flex items-center space-x-4">
-              {/* Sort */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
+      {/* Form */}
+      {editingId && (
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center justify-between">
+              {editingId === 'new' ? 'Add New Casino' : 'Edit Casino'}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetForm}
+                className="text-white/70 hover:text-white"
               >
-                <option value="created_at" className="bg-black">
-                  Latest First
-                </option>
-                <option value="name" className="bg-black">
-                  Name A-Z
-                </option>
-                <option value="rating" className="bg-black">
-                  Rating
-                </option>
-              </select>
-
-              {/* View Mode */}
-              <div className="flex items-center space-x-1 p-1 bg-white/5 rounded-lg border border-white/10">
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={viewMode === "list" ? "bg-[#00ff88] text-black" : "text-gray-400 hover:text-white"}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={viewMode === "grid" ? "bg-[#00ff88] text-black" : "text-gray-400 hover:text-white"}
-                >
-                  <Grid className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
-            <div className="flex items-center space-x-6">
-              <div className="text-sm">
-                <span className="text-gray-400">Total: </span>
-                <span className="text-white font-semibold">{casinos.length}</span>
-              </div>
-              <div className="text-sm">
-                <span className="text-gray-400">Showing: </span>
-                <span className="text-[#00ff88] font-semibold">{filteredCasinos.length}</span>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Casinos Display */}
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin w-8 h-8 border-2 border-[#00ff88] border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-gray-400">Loading casinos...</p>
-          </div>
-        ) : filteredCasinos.length > 0 ? (
-          <div className={viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-            {filteredCasinos.map((casino) => (
-              <GlassCard
-                key={casino.id}
-                className="p-6 hover:scale-[1.01] transition-all duration-300 group border-white/10 hover:border-[#00ff88]/30"
-              >
-                {viewMode === "list" ? (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
-                      {/* Logo/Avatar */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#00ff88]/20 to-blue-500/20 rounded-xl flex items-center justify-center border border-[#00ff88]/20">
-                        {casino.logo_url ? (
-                          <img
-                            src={casino.logo_url || "/placeholder.svg"}
-                            alt={casino.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <Star className="w-8 h-8 text-[#00ff88]" />
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-xl font-bold text-white group-hover:text-[#00ff88] transition-colors">
-                            {casino.name}
-                          </h3>
-                          <Badge variant="outline" className="border-[#00ff88]/30 text-[#00ff88] bg-[#00ff88]/10">
-                            Active
-                          </Badge>
-                        </div>
-                        <div className="flex items-center space-x-6 mb-3">
-                          <div className="flex items-center space-x-1">
-                            <Star className="w-4 h-4 text-[#00ff88] fill-current" />
-                            <span className="text-white font-medium">{casino.rating}</span>
-                          </div>
-                          {casino.location && (
-                            <div className="flex items-center text-gray-400">
-                              <MapPin className="w-4 h-4 mr-1" />
-                              <span>{casino.location}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center text-gray-400">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            <span>{new Date(casino.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <p className="text-gray-400 text-sm line-clamp-2">{casino.description}</p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20"
-                        asChild
-                      >
-                        <Link href={`/casinos/${casino.id}`}>
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#00ff88] text-[#00ff88] bg-[#00ff88]/10 hover:bg-[#00ff88]/20"
-                        asChild
-                      >
-                        <Link href={`/admin/casinos/edit/${casino.id}`}>
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-red-500 text-red-400 bg-red-500/10 hover:bg-red-500/20"
-                        onClick={() => deleteCasino(casino)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  // Grid View
-                  <div className="text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#00ff88]/20 to-blue-500/20 rounded-xl flex items-center justify-center border border-[#00ff88]/20 mx-auto mb-4">
-                      {casino.logo_url ? (
-                        <img
-                          src={casino.logo_url || "/placeholder.svg"}
-                          alt={casino.name}
-                          className="w-16 h-16 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <Star className="w-10 h-10 text-[#00ff88]" />
-                      )}
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#00ff88] transition-colors">
-                      {casino.name}
-                    </h3>
-                    <div className="flex items-center justify-center space-x-4 mb-3">
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-[#00ff88] fill-current" />
-                        <span className="text-white text-sm">{casino.rating}</span>
-                      </div>
-                      {casino.location && (
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          <span>{casino.location}</span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-3">{casino.description}</p>
-                    <div className="flex items-center justify-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#00ff88] text-[#00ff88] bg-[#00ff88]/10 hover:bg-[#00ff88]/20"
-                        asChild
-                      >
-                        <Link href={`/admin/casinos/edit/${casino.id}`}>
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-red-500 text-red-400 bg-red-500/10 hover:bg-red-500/20"
-                        onClick={() => deleteCasino(casino)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </GlassCard>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <div className="w-24 h-24 bg-gradient-to-br from-gray-600/20 to-gray-800/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Star className="w-12 h-12 text-gray-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">{searchTerm ? "No casinos found" : "No casinos yet"}</h3>
-            <p className="text-gray-400 text-lg mb-8">
-              {searchTerm ? "Try adjusting your search terms." : "Add your first casino to get started!"}
-            </p>
-            {!searchTerm && (
-              <Button asChild className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">
-                <Link href="/admin/casinos/new">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Casino
-                </Link>
+                <X className="w-4 h-4" />
               </Button>
-            )}
-          </div>
-        )}
-        <PaginationControls page={page} setPage={setPage} disablePrev={page === 1} disableNext={filteredCasinos.length < pageSize} />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Casino Name</label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Casino name"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Website URL</label>
+                <Input
+                  value={formData.website_url}
+                  onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
+                  placeholder="https://casino-website.com"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Rating</label>
+                <Select value={formData.rating.toString()} onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map(rating => (
+                      <SelectItem key={rating} value={rating.toString()}>
+                        {rating} Star{rating > 1 ? 's' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Established Year</label>
+                <Input
+                  type="number"
+                  value={formData.established_year}
+                  onChange={(e) => setFormData({ ...formData, established_year: parseInt(e.target.value) || new Date().getFullYear() })}
+                  placeholder="2020"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">License</label>
+                <Input
+                  value={formData.license}
+                  onChange={(e) => setFormData({ ...formData, license: e.target.value })}
+                  placeholder="Malta Gaming Authority"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Logo Casino</label>
+              <ImageUpload
+                value={formData.logo_url}
+                onChange={(url) => setFormData({ ...formData, logo_url: url })}
+                bucket="casino-images"
+                folder="logos"
+                placeholder="Upload logo casino"
+                maxSize={2}
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Description</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Casino description"
+                rows={4}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Bonus Information</label>
+              <Textarea
+                value={formData.bonus_info}
+                onChange={(e) => setFormData({ ...formData, bonus_info: e.target.value })}
+                placeholder="Welcome bonus and promotions"
+                rows={3}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Features (comma separated)</label>
+              <Input
+                value={featuresInput}
+                onChange={(e) => setFeaturesInput(e.target.value)}
+                placeholder="Live Casino, Sports Betting, Mobile App"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Payment Methods (comma separated)</label>
+              <Input
+                value={paymentMethodsInput}
+                onChange={(e) => setPaymentMethodsInput(e.target.value)}
+                placeholder="Visa, Mastercard, Bitcoin, PayPal"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2 text-white/90">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span>Active</span>
+                </label>
+                <label className="flex items-center space-x-2 text-white/90">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_featured}
+                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span>Featured</span>
+                </label>
+              </div>
+              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                <Save className="w-4 h-4 mr-2" />
+                Save Casino
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Casinos List */}
+      <div className="grid gap-4">
+        {filteredCasinos.map((casino) => (
+          <Card key={casino.id} className="backdrop-blur-xl bg-white/10 border-white/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {casino.logo_url && (
+                    <img
+                      src={casino.logo_url}
+                      alt={casino.name}
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+                  )}
+                  <div>
+                    <CardTitle className="text-white flex items-center">
+                      {casino.name}
+                      {casino.is_featured && (
+                        <Badge className="ml-2 bg-yellow-500/20 text-yellow-400">Featured</Badge>
+                      )}
+                      {casino.website_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(casino.website_url, '_blank')}
+                          className="ml-2 text-white/70 hover:text-white"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </CardTitle>
+                    <CardDescription className="text-white/60 flex items-center mt-1">
+                      <div className="flex items-center mr-4">
+                        {renderStars(casino.rating)}
+                      </div>
+                      <span className="mr-4">Est. {casino.established_year}</span>
+                      {casino.license && <span>{casino.license}</span>}
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant={casino.is_active ? "secondary" : "destructive"}
+                    className={casino.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}
+                    onClick={() => toggleStatus(casino.id, 'is_active', casino.is_active)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {casino.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleStatus(casino.id, 'is_featured', casino.is_featured)}
+                    className="text-yellow-400 hover:text-yellow-300"
+                  >
+                    <Star className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(casino)}
+                    className="text-white/70 hover:text-white"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(casino.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-white/80 text-sm mb-4">
+                {casino.description.length > 200 ? `${casino.description.substring(0, 200)}...` : casino.description}
+              </div>
+              {casino.bonus_info && (
+                <div className="bg-white/5 rounded-lg p-3 mb-4">
+                  <h4 className="text-white/90 font-medium mb-1">Bonus Information</h4>
+                  <p className="text-white/70 text-sm">{casino.bonus_info}</p>
+                </div>
+              )}
+              {casino.features.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-white/90 font-medium mb-2">Features</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {casino.features.map((feature, index) => (
+                      <Badge key={index} className="bg-blue-500/20 text-blue-400">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {casino.payment_methods.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-white/90 font-medium mb-2">Payment Methods</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {casino.payment_methods.map((method, index) => (
+                      <Badge key={index} className="bg-green-500/20 text-green-400">
+                        {method}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-xs text-white/50">
+                <span>Created: {new Date(casino.created_at).toLocaleDateString()}</span>
+                <span>Updated: {new Date(casino.updated_at).toLocaleDateString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {filteredCasinos.length === 0 && (
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20">
+          <CardContent className="text-center py-12">
+            <Building2 className="w-12 h-12 text-white/30 mx-auto mb-4" />
+            <p className="text-white/60">No casinos found</p>
+            <Button
+              onClick={() => setEditingId('new')}
+              className="mt-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Casino
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
+  )
+}
+
+export default function CasinosContentPageWrapper() {
+  return (
+    <ProtectedRoute>
+      <CasinosContentPage />
+    </ProtectedRoute>
   )
 }
