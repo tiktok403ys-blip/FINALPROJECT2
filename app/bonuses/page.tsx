@@ -25,8 +25,8 @@ export default async function BonusesPage() {
 
   // Derive whether each bonus' casino has a published editorial review
   const casinoIds = (bonuses || [])
-    .map((b: any) => b.casino_id)
-    .filter((id: any): id is string => typeof id === "string")
+    .map((b: Bonus) => b.casino_id)
+    .filter((id: string | null): id is string => typeof id === "string")
 
   let bonusesWithFlag = bonuses || []
   if (casinoIds.length > 0) {
@@ -36,8 +36,8 @@ export default async function BonusesPage() {
       .in("casino_id", casinoIds)
       .eq("is_published", true)
 
-    const hasReviewSet = new Set((reviews || []).map((r: any) => r.casino_id))
-    bonusesWithFlag = (bonuses || []).map((b: any) => ({ ...b, has_review: hasReviewSet.has(b.casino_id) }))
+    const hasReviewSet = new Set((reviews || []).map((r: { casino_id: string }) => r.casino_id))
+    bonusesWithFlag = (bonuses || []).map((b: Bonus) => ({ ...b, has_review: hasReviewSet.has(b.casino_id || '') }))
   }
 
   return <BonusesClientPage bonuses={bonusesWithFlag as unknown as (Bonus & { casinos?: Casino })[]} />

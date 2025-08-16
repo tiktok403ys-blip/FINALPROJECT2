@@ -8,31 +8,13 @@
 - Isi nama project dan password database
 - Tunggu hingga project selesai dibuat (2-3 menit)
 
-### 2. Jalankan SQL Scripts (URUTAN PENTING!)
+### 2. Jalankan SQL Scripts (Konsolidasi P0.1)
 
-**Step 1: Buat Tables**
-\`\`\`sql
--- Copy paste script: 01-create-tables-fixed.sql
--- Jalankan di SQL Editor Supabase
-\`\`\`
+- Untuk fresh install: jalankan `scripts/baseline.sql` sekali di SQL Editor Supabase (idempotent)
+- Untuk upgrade database yang sudah ada: jalankan `scripts/delta-upgrade.sql`
+- Detail lengkap lihat `SQL_EXECUTION_GUIDE.md`
 
-**Step 2: Enable RLS & Policies**
-\`\`\`sql
--- Copy paste script: 02-enable-rls.sql  
--- Jalankan di SQL Editor Supabase
-\`\`\`
-
-**Step 3: Insert Sample Data**
-\`\`\`sql
--- Copy paste script: 03-seed-data-fixed.sql
--- Jalankan di SQL Editor Supabase
-\`\`\`
-
-**Step 4: Add Admin Features**
-\`\`\`sql
--- Copy paste script: 04-admin-features-fixed.sql
--- Jalankan di SQL Editor Supabase
-\`\`\`
+> Catatan: Webhook Slack opsional. Bila tidak ada ENV, fitur ini tidak aktif.
 
 ### 3. Enable Authentication
 
@@ -74,15 +56,15 @@ Jika semua query berhasil, database sudah siap!
 
 ### Error: "relation does not exist"  
 - **Solusi**: Pastikan menjalankan scripts sesuai urutan
-- Jalankan `01-create-tables-fixed.sql` terlebih dahulu
+- Untuk fresh install, jalankan `scripts/baseline.sql` saja
 
 ### Error: "function gen_random_uuid() does not exist"
 - **Solusi**: Supabase sudah support UUID by default
 - Script sudah menggunakan `gen_random_uuid()`
 
 ### RLS Policy Issues
-- **Solusi**: Pastikan RLS enabled sebelum membuat policies
-- Jalankan `02-enable-rls.sql` setelah create tables
+- **Solusi**: Script `baseline.sql` sudah mengatur RLS dan policies
+- Tidak perlu menjalankan script terpisah lagi
 
 ## ✅ Verification Checklist
 

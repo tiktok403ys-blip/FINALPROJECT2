@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import PageHero from "@/components/page-hero"
+import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import {
@@ -80,9 +80,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
   return (
     <div className="min-h-screen bg-black">
-      <PageHero
-        title="Best Casino Bonuses for December 2024 - Exclusive Offers"
-        description="Discover the most generous casino bonuses and exclusive promotional offers available this month. Our team verifies every bonus to ensure you get the best value and fair terms. From welcome bonuses to free spins, find the perfect offer for your gaming style."
+      <DynamicPageHero
+        pageName="bonuses"
+        sectionType="hero"
+        fallbackTitle="Best Casino Bonuses for December 2024 - Exclusive Offers"
+        fallbackDescription="Discover the most generous casino bonuses and exclusive promotional offers available this month. Our team verifies every bonus to ensure you get the best value and fair terms. From welcome bonuses to free spins, find the perfect offer for your gaming style."
         breadcrumbs={[{ label: "Best Casino Bonuses" }]}
         author="GuruSingapore Bonus Team"
         date="10 Dec 2024"
@@ -91,7 +93,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
       <div className="container mx-auto px-4 py-16">
         {/* Bonuses List */}
         <div className="space-y-6">
-          {bonuses?.map((bonus: Bonus & { casinos?: Casino }, index: number) => {
+          {bonuses?.map((bonus: Bonus & { casinos?: Casino; has_review?: boolean }, index: number) => {
             const typeColor = getBonusTypeColor(bonus.bonus_type || "")
             const expiringSoon = bonus.expiry_date ? isExpiringSoon(bonus.expiry_date) : false
             const expired = bonus.expiry_date ? isExpired(bonus.expiry_date) : false

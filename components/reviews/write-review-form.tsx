@@ -32,7 +32,7 @@ export function WriteReviewForm({ casinoId, onSubmitted }: { casinoId: string; o
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(Boolean(data.user)))
+    supabase.auth.getUser().then(({ data }: { data: any }) => setIsLoggedIn(Boolean(data.user)))
   }, [])
 
   const onSubmit = async (values: FormValues) => {

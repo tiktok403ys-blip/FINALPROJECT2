@@ -163,7 +163,10 @@ export default function EditNewsPage() {
           {/* Thumbnail/hero image */}
           <div className="grid md:grid-cols-2 gap-4 items-end">
             <TextField label="Image URL" {...register("image_url")} placeholder="https://..." />
-            <UploadInput folder="news/images" onUploaded={(url) => (document.querySelector<HTMLInputElement>('input[name="image_url"]').value = url) || undefined} label="Upload Image" />
+            <UploadInput folder="news/images" onUploaded={(url) => {
+              const input = document.querySelector<HTMLInputElement>('input[name="image_url"]')
+              if (input) input.value = url
+            }} label="Upload Image" />
           </div>
           <TextAreaField label="Content *" {...register("content")} className="min-h-[300px]" placeholder="Write content..." error={errors.content?.message} />
 

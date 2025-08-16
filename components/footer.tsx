@@ -26,10 +26,10 @@ function Footer() {
               <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
                 <Facebook className="w-5 h-5" />
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-[#8b5cf6] transition-colors">
                 <Twitter className="w-5 h-5" />
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-[#06b6d4] transition-colors">
                 <Instagram className="w-5 h-5" />
               </Link>
               <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
@@ -97,6 +97,11 @@ function Footer() {
               <li>
                 <Link href="/cookie-policy" className="text-gray-400 hover:text-white transition-colors text-sm">
                   Cookie Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/fair-gambling-codex" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  Fair gambling codex
                 </Link>
               </li>
             </ul>

@@ -17,7 +17,8 @@ interface CasinoPageProps {
 export default async function CasinoPage({ params }: CasinoPageProps) {
   const supabase = createClient()
 
-  const { data: casino, error } = await supabase.from("casinos").select("*").eq("id", params.id).single()
+  const supabaseClient = await supabase
+  const { data: casino, error } = await supabaseClient.from("casinos").select("*").eq("id", params.id).single()
 
   if (error || !casino) {
     notFound()

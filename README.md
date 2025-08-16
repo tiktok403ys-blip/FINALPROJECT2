@@ -39,18 +39,24 @@ npm install
 ### 2. Supabase Setup
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Copy your project URL and anon key
-3. Run the SQL scripts in the `scripts/` folder:
-   - Execute `01-create-tables.sql` in SQL Editor
-   - Execute `02-seed-data.sql` for sample data
+3. For complete setup, follow the detailed `SQL_EXECUTION_GUIDE.md`:
+   - **Fresh Install**: Execute `scripts/baseline.sql` (recommended)
+   - **Existing Database**: Execute `scripts/delta-upgrade.sql`
 
 ### 3. Environment Variables
 \`\`\`bash
 cp .env.example .env.local
 \`\`\`
-Fill in your Supabase credentials:
+Fill in your credentials:
 \`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+NEXT_PUBLIC_SITE_DOMAIN=your-domain.com
+
+# Optional: For Slack notifications
+WEBHOOK_SECRET=your_webhook_secret_minimum_32_chars
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
 \`\`\`
 
 ### 4. Run Development Server

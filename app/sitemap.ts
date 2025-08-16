@@ -8,6 +8,7 @@ export default async function sitemap() {
     { url: "https://" + process.env.NEXT_PUBLIC_SITE_DOMAIN + "/casinos" },
     { url: "https://" + process.env.NEXT_PUBLIC_SITE_DOMAIN + "/news" },
     { url: "https://" + process.env.NEXT_PUBLIC_SITE_DOMAIN + "/reviews" },
+    { url: "https://" + process.env.NEXT_PUBLIC_SITE_DOMAIN + "/fair-gambling-codex" },
   ]
 
   const { data: news } = await supabase.from("news").select("id, updated_at").eq("published", true)

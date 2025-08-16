@@ -1,4 +1,4 @@
-import PageHero from "@/components/page-hero"
+import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
@@ -60,9 +60,11 @@ export default async function ReviewsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <PageHero
-        title="Casino Reviews for December 2024 - Real Player Experiences"
-        description="Read honest and comprehensive casino reviews from our expert team and verified players. We test every aspect of online casinos including games, bonuses, payment methods, and customer support to help you make informed decisions."
+      <DynamicPageHero
+        pageName="reviews"
+        sectionType="hero"
+        fallbackTitle="Casino Reviews for December 2024 - Real Player Experiences"
+        fallbackDescription="Read honest and comprehensive casino reviews from our expert team and verified players. We test every aspect of online casinos including games, bonuses, payment methods, and customer support to help you make informed decisions."
         breadcrumbs={[{ label: "Casino Reviews" }]}
         author="GuruSingapore Review Team"
         date="10 Dec 2024"

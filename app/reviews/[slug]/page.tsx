@@ -25,14 +25,15 @@ import { HelpfulVote } from "@/components/reviews/helpful-vote"
 import { ReviewsRealtimeRefresher } from "@/components/reviews/realtime-refresher"
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: PageProps) {
+  const { slug } = await params
   const supabase = await createClient()
-  const casinoId = params.slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
+  const casinoId = slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
 
   const { data: casino } = await supabase.from("casinos").select("name").eq("id", casinoId).single()
 
@@ -42,9 +43,10 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-export default async function CasinoReviewsPage({ params }: PageProps) {
+export default async function ReviewsPage({ params }: PageProps) {
+  const { slug } = await params
   const supabase = await createClient()
-  const casinoId = params.slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
+  const casinoId = slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
 
   if (!casinoId) {
     notFound()
@@ -263,10 +265,10 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
 
                   <div className="text-center mb-8">
                     <div
-                      className={`inline-flex items-center justify-center w-24 h-24 rounded-full border-4 ${getRatingBgColor(Number.parseFloat(averageRating))} mb-4`}
+                      className={`inline-flex items-center justify-center w-24 h-24 rounded-full border-4 ${getRatingBgColor(Number.parseFloat(averageRating.toString()))} mb-4`}
                     >
                       <div className="text-center">
-                        <div className={`text-3xl font-bold ${getRatingColor(Number.parseFloat(averageRating))}`}>
+                        <div className={`text-3xl font-bold ${getRatingColor(Number.parseFloat(averageRating.toString()))}`}>
                           {averageRating}
                         </div>
                         <div className="text-xs text-gray-400">out of 5</div>
@@ -277,15 +279,15 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                         <Star
                           key={i}
                           className={`w-6 h-6 ${
-                            i < Math.floor(Number.parseFloat(averageRating))
+                            i < Math.floor(Number.parseFloat(averageRating.toString()))
                               ? "text-[#00ff88] fill-current"
                               : "text-gray-600"
                           }`}
                         />
                       ))}
                     </div>
-                    <div className={`text-lg font-semibold ${getRatingColor(Number.parseFloat(averageRating))} mb-1`}>
-                      {getRatingLabel(Number.parseFloat(averageRating))}
+                    <div className={`text-lg font-semibold ${getRatingColor(Number.parseFloat(averageRating.toString()))} mb-1`}>
+                      {getRatingLabel(Number.parseFloat(averageRating.toString()))}
                     </div>
                     <div className="text-gray-400 text-sm">Based on {totalReviews} verified reviews</div>
                   </div>
@@ -315,15 +317,15 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                   </div>
 
                   {/* Detailed Ratings Summary */}
-                  {(Number.parseFloat(detailedAverages.gameVariety) > 0 ||
-                    Number.parseFloat(detailedAverages.customerService) > 0 ||
-                    Number.parseFloat(detailedAverages.payoutSpeed) > 0) && (
+                  {(Number.parseFloat(detailedAverages.gameVariety.toString()) > 0 ||
+                    Number.parseFloat(detailedAverages.customerService.toString()) > 0 ||
+                    Number.parseFloat(detailedAverages.payoutSpeed.toString()) > 0) && (
                     <div className="border-t border-white/10 pt-6">
                       <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wide">
                         Category Breakdown
                       </h4>
                       <div className="space-y-3">
-                        {Number.parseFloat(detailedAverages.gameVariety) > 0 && (
+                        {Number.parseFloat(detailedAverages.gameVariety.toString()) > 0 && (
                           <div className="flex items-center justify-between">
                             <span className="text-gray-400 text-sm">Game Variety</span>
                             <div className="flex items-center gap-2">
@@ -332,7 +334,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                                   <Star
                                     key={i}
                                     className={`w-3 h-3 ${
-                                      i < Number.parseFloat(detailedAverages.gameVariety)
+                                      i < Number.parseFloat(detailedAverages.gameVariety.toString())
                                         ? "text-[#00ff88] fill-current"
                                         : "text-gray-600"
                                     }`}
@@ -344,7 +346,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                           </div>
                         )}
 
-                        {Number.parseFloat(detailedAverages.customerService) > 0 && (
+                        {Number.parseFloat(detailedAverages.customerService.toString()) > 0 && (
                           <div className="flex items-center justify-between">
                             <span className="text-gray-400 text-sm">Customer Service</span>
                             <div className="flex items-center gap-2">
@@ -353,7 +355,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                                   <Star
                                     key={i}
                                     className={`w-3 h-3 ${
-                                      i < Number.parseFloat(detailedAverages.customerService)
+                                      i < Number.parseFloat(detailedAverages.customerService.toString())
                                         ? "text-[#00ff88] fill-current"
                                         : "text-gray-600"
                                     }`}
@@ -365,7 +367,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                           </div>
                         )}
 
-                        {Number.parseFloat(detailedAverages.payoutSpeed) > 0 && (
+                        {Number.parseFloat(detailedAverages.payoutSpeed.toString()) > 0 && (
                           <div className="flex items-center justify-between">
                             <span className="text-gray-400 text-sm">Payout Speed</span>
                             <div className="flex items-center gap-2">
@@ -374,7 +376,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                                   <Star
                                     key={i}
                                     className={`w-3 h-3 ${
-                                      i < Number.parseFloat(detailedAverages.payoutSpeed)
+                                      i < Math.floor(Number.parseFloat(detailedAverages.payoutSpeed.toString()))
                                         ? "text-[#00ff88] fill-current"
                                         : "text-gray-600"
                                     }`}
@@ -480,7 +482,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${
-                                i < Math.floor(review.game_variety_rating) ? "text-[#00ff88] fill-current" : "text-gray-600"
+                                i < Math.floor(review.game_variety_rating || 0) ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
@@ -497,7 +499,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${
-                                i < Math.floor(review.customer_service_rating) ? "text-[#00ff88] fill-current" : "text-gray-600"
+                                i < Math.floor(review.customer_service_rating || 0) ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}
@@ -514,7 +516,7 @@ export default async function CasinoReviewsPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${
-                                i < Math.floor(review.payout_speed_rating) ? "text-[#00ff88] fill-current" : "text-gray-600"
+                                i < Math.floor(review.payout_speed_rating || 0) ? "text-[#00ff88] fill-current" : "text-gray-600"
                               }`}
                             />
                           ))}

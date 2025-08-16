@@ -14,7 +14,7 @@ export function BonusFeedback({ bonusId, yes = 0, no = 0 }: { bonusId: string; y
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
+    supabase.auth.getUser().then(async ({ data }: { data: any }) => {
       const uid = data.user?.id || null
       setUserId(uid)
       if (!uid) return

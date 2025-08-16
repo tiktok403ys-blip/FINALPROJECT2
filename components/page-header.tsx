@@ -28,7 +28,7 @@ export function PageHeader({ title, description, breadcrumbs = [], author, class
         {/* Breadcrumbs - More compact on mobile */}
         {breadcrumbs.length > 0 && (
           <nav className="flex items-center space-x-1 text-xs md:text-sm text-muted-foreground mb-2 md:mb-4 overflow-x-auto">
-            <Link href="/" className="hover:text-[#00ff88] transition-colors whitespace-nowrap">
+            <Link href="/" className="hover:text-[#6366f1] transition-colors whitespace-nowrap">
               Home
             </Link>
             {breadcrumbs.map((item, index) => (
@@ -55,7 +55,7 @@ export function PageHeader({ title, description, breadcrumbs = [], author, class
           {/* Author Info - Compact mobile layout */}
           {author && (
             <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground bg-background/50 rounded-lg px-3 py-2 md:px-4 md:py-3 border">
-              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#00ff88]/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#00ff88]/20 flex items-center justify-center flex-shrink-0">
                 {author.avatar ? (
                   <img
                     src={author.avatar || "/placeholder.svg"}

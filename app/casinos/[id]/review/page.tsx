@@ -181,7 +181,7 @@ export default async function CasinoReviewPage({ params }: ReviewPageProps) {
                     <h3 className="text-xl font-semibold text-white">Pros</h3>
                   </div>
                   <ul className="space-y-2">
-                    {review.pros.map((pro, index) => (
+                    {review.pros.map((pro: string, index: number) => (
                       <li key={index} className="flex items-start">
                         <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
                         <span className="text-gray-300 text-sm">{pro}</span>
@@ -199,7 +199,7 @@ export default async function CasinoReviewPage({ params }: ReviewPageProps) {
                     <h3 className="text-xl font-semibold text-white">Cons</h3>
                   </div>
                   <ul className="space-y-2">
-                    {review.cons.map((con, index) => (
+                    {review.cons.map((con: string, index: number) => (
                       <li key={index} className="flex items-start">
                         <XCircle className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
                         <span className="text-gray-300 text-sm">{con}</span>

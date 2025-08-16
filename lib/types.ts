@@ -7,6 +7,7 @@ export interface Casino {
   bonus_info: string | null
   logo_url: string | null
   website_url: string | null
+  license?: string | null
   player_rating_avg?: number | null
   player_rating_count?: number | null
   created_at: string
@@ -27,10 +28,15 @@ export interface Bonus {
   is_exclusive?: boolean | null
   is_no_deposit?: boolean | null
   wagering_x?: number | null
+  wagering_text?: string | null
   free_spins?: number | null
   free_spin_value?: number | null
+  value_text?: string | null
   max_bet?: number | null
+  max_bet_text?: string | null
   expiry_days?: number | null
+  expiry_text?: string | null
+  play_now_text?: string | null
   terms?: string | null
   how_to_get?: string | null
   image_url?: string | null
@@ -50,26 +56,6 @@ export interface News {
   image_url: string | null
   author_id: string | null
   published: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface ForumPost {
-  id: string
-  title: string
-  content: string | null
-  category: string | null
-  author_id: string
-  created_at: string
-  updated_at: string
-  forum_comments?: ForumComment[]
-}
-
-export interface ForumComment {
-  id: string
-  content: string
-  post_id: string
-  author_id: string
   created_at: string
   updated_at: string
 }
@@ -111,6 +97,15 @@ export interface CasinoReview {
   is_published: boolean
   created_at: string
   updated_at: string
+  // Player review specific fields
+  reviewer_name?: string | null
+  game_variety_rating?: number | null
+  customer_service_rating?: number | null
+  payout_speed_rating?: number | null
+  helpful_count?: number | null
+  not_helpful_count?: number | null
+  is_approved?: boolean
+  user_id?: string | null
 }
 
 export interface ReviewSection {

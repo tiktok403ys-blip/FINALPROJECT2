@@ -19,7 +19,7 @@ export function HelpfulVote({ reviewId, helpful, notHelpful }: HelpfulVoteProps)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
+    supabase.auth.getUser().then(async ({ data }: { data: any }) => {
       const uid = data.user?.id || null
       setUserId(uid)
       if (!uid) return

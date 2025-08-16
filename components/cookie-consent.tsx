@@ -84,7 +84,7 @@ export function CookieConsent() {
         <Card className="bg-black/90 backdrop-blur-xl border border-white/20 shadow-2xl">
           <CardContent className="p-6">
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-[#00ff88] rounded-full flex items-center justify-center mb-4">
                 <Cookie className="w-4 h-4 text-black" />
               </div>
               <div className="flex-1">
@@ -99,9 +99,8 @@ export function CookieConsent() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 onClick={acceptAll}
-                className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold flex-1"
+                className="bg-[#00ff88] hover:bg-[#00ff88]/80 text-black px-6 py-2 rounded-lg transition-all duration-300"
               >
-                <Check className="w-4 h-4 mr-2" />
                 Accept All
               </Button>
               <Button
@@ -221,7 +220,7 @@ export function CookieConsent() {
               <div className="flex gap-3 mt-8">
                 <Button
                   onClick={acceptSelected}
-                  className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold flex-1"
+                  className="bg-[#00ff88] hover:bg-[#00ff88]/80 text-black px-4 py-2 rounded-lg transition-all duration-300"
                 >
                   Save Preferences
                 </Button>

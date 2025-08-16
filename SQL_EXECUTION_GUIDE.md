@@ -1,94 +1,111 @@
-# 🔧 Panduan Eksekusi SQL - Step by Step
+# 🔧 Panduan Eksekusi SQL - P0.1 (Consolidated)
 
-## ❌ **Error yang Anda Alami:**
-\`\`\`
-ERROR: 42601: syntax error at or near "n"
-LINE 79: ('Play'n GO', ...)
-\`\`\`
+Panduan ini menggantikan instruksi lama dan menyederhanakan eksekusi SQL menjadi dua skenario: Fresh Install (baseline.sql) dan Upgrade dari DB yang sudah ada (delta-upgrade.sql).
 
-**Penyebab:** Apostrophe (') di "Play'n GO" menyebabkan syntax error SQL.
+## 📦 Opsi Eksekusi
 
-## ✅ **Solusi - Jalankan Script Terpisah:**
+- Fresh install (environment baru): jalankan `scripts/baseline.sql`
+- Upgrade existing (sudah punya data/tables): jalankan `scripts/delta-upgrade.sql`
 
-### **Step 1: Buat Tables & Footer Content**
-\`\`\`sql
--- Copy paste dan jalankan: 05-add-footer-and-partners-fixed.sql
--- Script ini sudah diperbaiki dan aman
-\`\`\`
+> Catatan: Fitur notifikasi Slack via webhook bersifat opsional namun disiapkan. Aktif bila ENV sudah di-setup pada Vercel.
 
-### **Step 2: Insert Partners Data**
-\`\`\`sql
--- Copy paste dan jalankan: 06-insert-partners-data.sql  
--- Script terpisah untuk data partners (sudah fix apostrophe issue)
-\`\`\`
+---
 
-## 🎯 **Perbaikan yang Dilakukan:**
+## 1) Persiapan
 
-### **1. Apostrophe Issue Fixed:**
-- ❌ `'Play'n GO'` → ✅ `'Play n GO'`
-- Menghindari syntax error dengan menghilangkan apostrophe
+- Supabase project aktif dan kredensial siap
+- Aplikasi Next.js sudah terhubung ke Supabase (URL dan anon key)
+- Pada Vercel (Production), set ENV berikut untuk mengaktifkan notifikasi Slack:
+  - `WEBHOOK_SECRET` = secret kuat Anda (contoh: string acak minimal 32 chars)
+  - `SLACK_WEBHOOK_URL` = Incoming Webhook URL dari Slack
 
-### **2. Script Separation:**
-- **Script 1**: Table creation + footer content
-- **Script 2**: Partners data insertion
-- Lebih mudah debug jika ada error
+> Jika ENV tidak diset, webhook tetap terpasang tetapi tidak akan mengirim apa pun.
 
-### **3. Additional Partners:**
-- Ditambah 2 partner baru: Betsoft Gaming, Push Gaming
-- Total 12 gaming providers untuk slider
+---
 
-## 📋 **Urutan Eksekusi yang Benar:**
+## 2) Fresh Install (baseline.sql)
 
-1. ✅ **Jalankan**: `05-add-footer-and-partners-fixed.sql`
-2. ✅ **Jalankan**: `06-insert-partners-data.sql`
+1. Buka Supabase SQL Editor
+2. Copy seluruh isi `scripts/baseline.sql`
+3. Execute sekali (idempotent; aman di environment bersih)
+4. Hasil yang dibuat:
+   - Core tables: casinos, bonuses, leaderboard, news, forum_posts, forum_comments, reports
+   - Auth & profiles (RLS, trigger handle_new_user)
+   - Footer & partners (RLS + policies)
+   - Admin roles & helper (enum user_role, is_admin, verify_admin_pin, set_admin_pin)
+   - Player reviews + webhook function & trigger (opsional)
+   - Default data footer
 
-## 🔍 **Verifikasi Berhasil:**
+Verifikasi cepat:
+```sql
+SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY 1;
+SELECT policyname, tablename FROM pg_policies WHERE schemaname='public' ORDER BY tablename, policyname;
+```
 
-Setelah kedua script berhasil, test dengan query:
+Aktivasi webhook (opsional, runtime):
+```sql
+--   select set_config('app.webhook_player_review_url', 'https://YOUR_DOMAIN/api/webhooks/player-review', false);
+--   select set_config('app.webhook_secret', 'YOUR_SECRET', false);
+-- 
+-- ATAU untuk pengaturan persistent (recommend untuk production):
+--   ALTER DATABASE your_db_name SET app.webhook_player_review_url = 'https://YOUR_DOMAIN/api/webhooks/player-review';
+--   ALTER DATABASE your_db_name SET app.webhook_secret = 'YOUR_SECRET';
+```
 
-\`\`\`sql
--- Test footer content
-SELECT COUNT(*) as footer_items FROM footer_content;
+---
 
--- Test partners
-SELECT COUNT(*) as total_partners FROM partners;
+## 3) Upgrade (delta-upgrade.sql)
 
--- Test specific data
-SELECT name, partner_type FROM partners ORDER BY display_order;
-\`\`\`
+1. Buka Supabase SQL Editor
+2. Copy seluruh isi `scripts/delta-upgrade.sql`
+3. Execute sekali (transaksional dan non-destruktif)
+4. Hasil yang diselaraskan:
+   - Pembuatan tabel yang belum ada (core, footer, partners, player_reviews)
+   - RLS dan policies distandardisasi
+   - Admin helpers dan enum user_role dipastikan tersedia
+   - Webhook function + trigger disiapkan
 
-**Expected Results:**
-- Footer items: ~20 items
-- Partners: 12 partners
-- No syntax errors
+Verifikasi cepat (sama seperti di atas) + cek trigger webhook:
+```sql
+SELECT tgname, tgrelid::regclass FROM pg_trigger WHERE tgname='trg_notify_new_player_review';
+```
 
-## 🚀 **Setelah SQL Berhasil:**
+---
 
-1. **Akses Admin Panel:**
-   - `/admin/footer` - Manage footer content
-   - `/admin/partners` - Manage partner logos
+## 4) Rollback dan Keamanan
 
-2. **Test Homepage:**
-   - Logo slider akan muncul dengan 12 partners
-   - Footer akan tampil dengan content dari database
+- Selalu buat snapshot/backup sebelum menjalankan script di Production
+- Seluruh perubahan pada `delta-upgrade.sql` berada dalam transaksi `BEGIN; ... COMMIT;`
+- Untuk menonaktifkan webhook tanpa mengubah code:
+```sql
+select set_config('app.webhook_player_review_url', '', false);
+```
 
-3. **Customize:**
-   - Upload logo real ke Supabase Storage
-   - Update partner URLs dan descriptions
-   - Edit footer content sesuai kebutuhan
+---
 
-## 💡 **Tips Menghindari Error:**
+## 5) Troubleshooting
 
-1. **Escape Characters:**
-   - Gunakan `''` untuk apostrophe dalam string
-   - Atau hindari karakter khusus
+- Jika terdapat error policy sudah ada: script sudah drop-if-exists sebelum create; jalankan ulang jika perlu
+- Jika tipe enum `user_role` sudah ada: script secara otomatis melewati pembuatan tipe
+- Jika `on_auth_user_created` trigger sudah ada, script mengganti fungsi secara aman (OR REPLACE)
 
-2. **Test Small Batches:**
-   - Jalankan INSERT dalam batch kecil
-   - Lebih mudah identify error
+---
 
-3. **Use SQL Editor Features:**
-   - Format SQL untuk readability
-   - Check syntax sebelum execute
+## 6) Langkah Berikutnya
 
-Dengan script yang sudah diperbaiki ini, Anda tidak akan mengalami syntax error lagi! 🎉
+1. Pastikan admin user dibuat pada Supabase Auth Dashboard (email produksi Anda)
+2. Update role admin:
+```sql
+UPDATE profiles SET role='admin'::user_role WHERE id=(SELECT id FROM auth.users WHERE email='YOUR_ADMIN_EMAIL');
+```
+3. Set PIN admin via function:
+```sql
+SELECT set_admin_pin('YOUR_ADMIN_EMAIL', 'PIN_KUAT');
+```
+4. Uji end-to-end:
+   - Login → akses admin UI (PIN)
+   - Buat `player_reviews` dan cek notifikasi Slack (jika ENV sudah di-setup)
+
+---
+
+Dokumen ini adalah sumber kebenaran terbaru untuk eksekusi SQL P0.1 di Production. Jika ada kebutuhan khusus (misal menghapus fitur forum), beri tahu saya untuk menyesuaikan baseline/delta.

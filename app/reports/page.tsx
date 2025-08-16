@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import PageHero from "@/components/page-hero"
+import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { ReportDialog } from "@/components/report-dialog"
@@ -88,9 +88,11 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <PageHero
-        title="Casino Reports & Complaints for December 2024 - Player Protection"
-        description="Report casino issues and complaints. Our expert team investigates every complaint and works to resolve disputes between players and casinos. Help us maintain a safe and fair gambling environment for everyone."
+      <DynamicPageHero
+        pageName="reports"
+        sectionType="hero"
+        fallbackTitle="Casino Reports & Complaints for December 2024 - Player Protection"
+        fallbackDescription="Report casino issues and complaints. Our expert team investigates every complaint and works to resolve disputes between players and casinos. Help us maintain a safe and fair gambling environment for everyone."
         breadcrumbs={[{ label: "Casino Reports" }]}
         author="GuruSingapore Protection Team"
         date="10 Dec 2024"

@@ -99,7 +99,7 @@ export function Navbar() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (!mountedRef.current) return
 
       console.log("🔄 Auth state changed:", event, session?.user?.email)
@@ -153,11 +153,11 @@ export function Navbar() {
           console.log("🔄 Creating new profile...")
           const newProfile = {
             id: currentUser.id,
-            email: currentUser.email,
+            email: currentUser.email ?? null,
             full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
             avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: currentUser.email === "casinogurusg404@gmail.com" ? "super_admin" : "user",
-            admin_pin: currentUser.email === "casinogurusg404@gmail.com" ? "1234" : null,
+            role: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "super_admin" : "user",
+            admin_pin: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "1234" : null,
           }
 
           const { data: createdProfile, error: createError } = await supabase
@@ -180,10 +180,10 @@ export function Navbar() {
         } else {
           const fallbackProfile: Profile = {
             id: currentUser.id,
-            email: currentUser.email,
+            email: currentUser.email ?? null,
             full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
             avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: currentUser.email === "casinogurusg404@gmail.com" ? "super_admin" : "user",
+            role: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "super_admin" : "user",
             admin_pin: null,
           }
 
@@ -203,10 +203,10 @@ export function Navbar() {
 
       const fallbackProfile: Profile = {
         id: currentUser.id,
-        email: currentUser.email,
+        email: currentUser.email ?? null,
         full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
         avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-        role: currentUser.email === "casinogurusg404@gmail.com" ? "super_admin" : "user",
+        role: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "super_admin" : "user",
         admin_pin: null,
       }
 
@@ -346,7 +346,7 @@ export function Navbar() {
     const name = getUserDisplayName()
     return name
       .split(" ")
-      .map((n) => n[0])
+      .map((n: any) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2)

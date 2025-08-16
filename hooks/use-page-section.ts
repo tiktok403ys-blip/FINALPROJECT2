@@ -1,0 +1,201 @@
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+interface PageSection {
+  id: string
+  page_name: string
+  section_type: string
+  heading: string
+  content: string
+  display_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface UsePageSectionOptions {
+  pageName?: string
+  sectionType?: string
+  enabled?: boolean
+}
+
+export function usePageSection(options: UsePageSectionOptions = {}) {
+  const { pageName, sectionType, enabled = true } = options
+  const [data, setData] = useState<PageSection[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchPageSections = async () => {
+    if (!enabled) return
+    
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = new URLSearchParams()
+      if (pageName) params.append('page_name', pageName)
+      if (sectionType) params.append('section_type', sectionType)
+      
+      const response = await fetch(`/api/admin/page-sections?${params.toString()}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch page sections')
+      }
+      
+      const result = await response.json()
+      setData(result.data || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      setData([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPageSections()
+  }, [pageName, sectionType, enabled])
+
+  const refetch = () => {
+    fetchPageSections()
+  }
+
+  return {
+    data,
+    loading,
+    error,
+    refetch
+  }
+}
+
+// Hook untuk mendapatkan single page section berdasarkan page name dan section type
+export function usePageSectionSingle(pageName: string, sectionType: string = 'hero') {
+  const { data, loading, error, refetch } = usePageSection({
+    pageName,
+    sectionType,
+    enabled: !!pageName
+  })
+
+  const section = data.length > 0 ? data[0] : null
+
+  return {
+    section,
+    loading,
+    error,
+    refetch
+  }
+}
+
+// Hook untuk real-time updates menggunakan Supabase subscriptions
+export function usePageSectionRealtime(options: UsePageSectionOptions = {}) {
+  const { pageName, sectionType, enabled = true } = options
+  const [data, setData] = useState<PageSection[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    if (!enabled) return
+
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        let query = supabase
+          .from('page_sections')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+        
+        if (pageName) {
+          query = query.eq('page_name', pageName)
+        }
+        
+        if (sectionType) {
+          query = query.eq('section_type', sectionType)
+        }
+        
+        const { data: sections, error } = await query
+        
+        if (error) {
+          throw error
+        }
+        
+        setData(sections || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInitialData()
+
+    // Setup real-time subscription
+    const channel = supabase
+      .channel('page_sections_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'page_sections',
+          filter: pageName ? `page_name=eq.${pageName}` : undefined
+        },
+        () => {
+          // Refetch data when changes occur
+          fetchInitialData()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [pageName, sectionType, enabled, supabase])
+
+  const refetch = async () => {
+    if (!enabled) return
+    
+    try {
+      setLoading(true)
+      setError(null)
+      
+      let query = supabase
+        .from('page_sections')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+      
+      if (pageName) {
+        query = query.eq('page_name', pageName)
+      }
+      
+      if (sectionType) {
+        query = query.eq('section_type', sectionType)
+      }
+      
+      const { data: sections, error } = await query
+      
+      if (error) {
+        throw error
+      }
+      
+      setData(sections || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      setData([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return {
+    data,
+    loading,
+    error,
+    refetch
+  }
+}

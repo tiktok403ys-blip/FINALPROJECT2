@@ -37,12 +37,12 @@ export const metadata: Metadata = {
     generator: 'v0.dev'
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const host = headers().get("host") || ""
+  const host = (await headers()).get("host") || ""
   const isAdminSubdomain = host === "sg44admin.gurusingapore.com"
   return (
     <html lang="en" suppressHydrationWarning>

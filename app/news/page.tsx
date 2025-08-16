@@ -1,3 +1,4 @@
+import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { createClient } from "@/lib/supabase/server"
 import { Calendar, User, TrendingUp } from "lucide-react"
@@ -17,14 +18,20 @@ export default async function NewsPage() {
   const categories = [...new Set(news?.map((article) => article.category).filter(Boolean))]
 
   return (
-    <div className="min-h-screen bg-black pt-24">
+    <div className="min-h-screen bg-black">
+      <DynamicPageHero
+        pageName="news"
+        sectionType="hero"
+        fallbackTitle="Latest Casino News"
+        fallbackDescription="Stay updated with the latest developments in the online gambling industry. Breaking news, regulatory updates, and industry insights."
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'News', href: '/news' }
+        ]}
+        author="Casino Guru Team"
+        date="Updated daily"
+      />
       <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Casino News</h1>
-          <p className="text-gray-400 text-lg">
-            Stay updated with the latest news and insights from the casino industry
-          </p>
-        </div>
 
         {/* Trending Topics */}
         {news && news.length > 0 && (

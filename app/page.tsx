@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Footer } from "@/components/footer"
 import { LogoSlider } from "@/components/logo-slider"
 import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components/content-sections"
+import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
 
 export default async function HomePage() {
@@ -66,16 +67,16 @@ export default async function HomePage() {
         ctaSecondaryLink={settings?.hero_cta_secondary_link || undefined}
       />
 
-      <div className="container mx-auto px-4 py-16 space-y-16">
+      <div className="container mx-auto px-4 py-4 sm:py-6 md:py-12 lg:py-16 space-y-4 sm:space-y-6 md:space-y-12 lg:space-y-16">
         {/* Top Casinos Section */}
         <section>
-          <div className="text-center mb-12">
+          <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-12">
             <h2 className="text-4xl font-bold text-white mb-4">Top Rated Casinos</h2>
             <p className="text-gray-400 text-lg">Discover our highest-rated online casinos with verified reviews</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {topCasinos?.map((casino: Casino) => (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="text-center">
                   <div className="w-full h-16 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden px-4">
@@ -113,17 +114,20 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div className="text-center mt-8">
+          <div className="text-center mt-4 sm:mt-6 md:mt-8">
             <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
               <Link href="/casinos">View All Casinos</Link>
             </Button>
           </div>
         </section>
 
+        {/* Content Separator */}
+        <DataPointsSeparator />
+
         {/* Featured Bonuses Section */}
         <section>
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Exclusive Bonuses</h2>
+          <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 md:mb-4">Exclusive Bonuses</h2>
             <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p>
           </div>
 
@@ -178,10 +182,13 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* Content Separator */}
+        <ExpertAnalysisSeparator />
+
         {/* Latest News Section */}
         <section>
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Latest Industry News</h2>
+          <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 md:mb-4">Latest Industry News</h2>
             <p className="text-gray-400 text-lg">
               Stay updated with the latest casino industry developments and insights
             </p>
@@ -221,6 +228,9 @@ export default async function HomePage() {
             </Button>
           </div>
         </section>
+
+        {/* Content Separator */}
+        <TrustedPlatformSeparator />
 
         {/* Recent Reviews Section */}
         {recentReviews && recentReviews.length > 0 && (
