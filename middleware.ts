@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminSecurityMiddleware, createCORSPreflightResponse, getSecurityHeaders } from './lib/security/admin-security-middleware';
+import { validatePinVerification } from './lib/auth/admin-middleware';
 
 /**
  * Check if request is from admin subdomain
@@ -53,6 +54,17 @@ export async function middleware(request: NextRequest) {
     );
   }
   
+  // Validate PIN for admin page routes (not API routes, handled separately above)
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/api/admin/')) {
+    const isPinVerified = await validatePinVerification(request);
+    
+    if (!isPinVerified) {
+      // Redirect to main site with PIN dialog trigger
+      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gurusingapore.com';
+      return NextResponse.redirect(`${mainSiteUrl}?showPin=true`);
+    }
+  }
+  
   // Handle CORS preflight requests for admin API
   if (request.method === 'OPTIONS' && pathname.startsWith('/api/admin/')) {
     return createCORSPreflightResponse(request);
@@ -60,6 +72,25 @@ export async function middleware(request: NextRequest) {
   
   // Apply security middleware to admin API endpoints
   if (pathname.startsWith('/api/admin/')) {
+    // Skip PIN validation for PIN verification endpoint itself
+    if (!pathname.startsWith('/api/admin/pin-verify')) {
+      // Validate PIN verification first
+      const isPinVerified = await validatePinVerification(request);
+      
+      if (!isPinVerified) {
+        return new NextResponse(
+          JSON.stringify({ error: 'PIN verification required', code: 'PIN_REQUIRED' }),
+          { 
+            status: 403,
+            headers: {
+              'Content-Type': 'application/json',
+              ...getSecurityHeaders(isFromAdminDomain)
+            }
+          }
+        );
+      }
+    }
+    
     const securityResult = await adminSecurityMiddleware(request);
     
     if (!securityResult.allowed) {

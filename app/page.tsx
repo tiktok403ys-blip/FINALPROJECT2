@@ -11,6 +11,9 @@ import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components
 import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
 
+// Revalidate every hour for better performance
+export const revalidate = 3600
+
 export default async function HomePage() {
   const supabase = await createClient()
 

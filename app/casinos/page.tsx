@@ -35,6 +35,9 @@ export const metadata = {
     "Discover the best online casinos with verified reviews, ratings, and exclusive bonuses. Find your perfect casino today.",
 }
 
+// Revalidate every 2 hours for casino listings
+export const revalidate = 7200
+
 export default async function CasinosPage() {
   const supabase = await createClient()
 

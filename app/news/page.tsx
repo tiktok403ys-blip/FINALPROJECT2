@@ -6,6 +6,9 @@ import Link from "next/link"
 import { Input, Button } from "@/components/ui"
 import type { News } from "@/lib/types"
 
+// Revalidate every 30 minutes for news content
+export const revalidate = 1800
+
 export default async function NewsPage() {
   const supabase = await createClient()
 

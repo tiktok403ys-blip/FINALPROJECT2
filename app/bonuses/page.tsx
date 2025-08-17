@@ -8,6 +8,9 @@ export const metadata = {
     "Discover the best casino bonuses and exclusive offers. Get more value from your casino experience with verified bonus codes.",
 }
 
+// Revalidate every hour for bonus offers
+export const revalidate = 3600
+
 export default async function BonusesPage() {
   const supabase = await createClient()
 

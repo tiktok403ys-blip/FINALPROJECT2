@@ -7,12 +7,24 @@ export default function Robots() {
   // Ensure we use https for production domains
   const protocol = host.includes('localhost') ? 'http' : 'https'
   
+  // Check if this is admin subdomain
+  const isAdminSubdomain = host.startsWith('admin.') || host.includes('admin.')
+  
+  // For admin subdomain, allow all access including /admin
+  // For main site, disallow /admin to prevent indexing
+  const rules = isAdminSubdomain 
+    ? {
+        userAgent: '*',
+        allow: '/',
+      }
+    : {
+        userAgent: '*',
+        allow: '/',
+        disallow: '/admin',
+      }
+  
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: '/admin',
-    },
+    rules,
     sitemap: `${protocol}://${host}/sitemap.xml`,
   }
 }
