@@ -160,7 +160,7 @@ export default function ReportsPage() {
       setUser(currentUser)
     }
     loadUser()
-  }, [])
+  }, [adminAuth])
 
   // Load admins and casinos for selection
   useEffect(() => {

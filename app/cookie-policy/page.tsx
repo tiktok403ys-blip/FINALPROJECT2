@@ -183,7 +183,7 @@ export default function CookiePolicyPage() {
             <h2 className="text-2xl font-bold text-[#00ff88] mb-6">Cookie Consent</h2>
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <p className="text-gray-300 leading-relaxed mb-4">
-                When you first visit our website, you'll see a cookie banner asking for your consent to use
+                When you first visit our website, you&apos;ll see a cookie banner asking for your consent to use
                 non-essential cookies. You have the following options:
               </p>
               <ul className="list-disc list-inside text-gray-300 space-y-2 ml-4 mb-4">
@@ -192,7 +192,7 @@ export default function CookiePolicyPage() {
                 <li>Customize your preferences by cookie category</li>
               </ul>
               <p className="text-gray-300 leading-relaxed">
-                You can change your cookie preferences at any time by clicking the "Cookie Settings" link in our footer
+                You can change your cookie preferences at any time by clicking the &quot;Cookie Settings&quot; link in our footer
                 or by clearing your browser cookies and revisiting our site.
               </p>
             </div>
@@ -226,7 +226,7 @@ export default function CookiePolicyPage() {
               <p className="text-gray-300 leading-relaxed">
                 We may update this Cookie Policy from time to time to reflect changes in our practices, technology,
                 legal requirements, or for other operational reasons. We encourage you to check this page periodically
-                for any updates. The "Last updated" date at the bottom of this policy indicates when it was last
+                for any updates. The &quot;Last updated&quot; date at the bottom of this policy indicates when it was last
                 revised.
               </p>
             </div>
@@ -237,7 +237,7 @@ export default function CookiePolicyPage() {
             <h2 className="text-2xl font-bold text-[#00ff88] mb-6">Contact Us</h2>
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <p className="text-gray-300 leading-relaxed mb-4">
-                If you have any questions about our use of cookies or this Cookie Policy, please don't hesitate to
+                If you have any questions about our use of cookies or this Cookie Policy, please don&apos;t hesitate to
                 contact us:
               </p>
               <div className="space-y-2">

@@ -206,7 +206,7 @@ export default async function ReviewsPage() {
           <div className="text-center py-16">
             <Star className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-4">No Reviews Yet</h3>
-            <p className="text-gray-400 text-lg mb-6">We're working on adding comprehensive casino reviews.</p>
+            <p className="text-gray-400 text-lg mb-6">We&apos;re working on adding comprehensive casino reviews.</p>
             <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
               <Link href="/casinos">Browse Casinos</Link>
             </Button>

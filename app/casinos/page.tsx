@@ -67,7 +67,7 @@ export default async function CasinosPage() {
         pageName="casinos"
         sectionType="hero"
         fallbackTitle="Best Online Casinos for December 2024 - Expert Picks You Can Trust"
-        fallbackDescription="We've reviewed more than 7,000 online casinos to bring you the TOP 10 for December. Each is rated using our unique Safety Index - developed by experts, grounded in real casino data, and shaped by insights from our active community. Find the best online casino for you."
+        fallbackDescription="We&apos;ve reviewed more than 7,000 online casinos to bring you the TOP 10 for December. Each is rated using our unique Safety Index - developed by experts, grounded in real casino data, and shaped by insights from our active community. Find the best online casino for you."
         breadcrumbs={[{ label: "Best online casinos" }]}
         author={{ name: "GuruSingapore Team" }}
         date="10 Dec 2024"
@@ -283,7 +283,7 @@ export default async function CasinosPage() {
           <div className="text-center py-16">
             <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-4">No Casinos Found</h3>
-            <p className="text-gray-400 text-lg">We're working on adding more casinos to our database.</p>
+            <p className="text-gray-400 text-lg">We&apos;re working on adding more casinos to our database.</p>
           </div>
         )}
 
@@ -401,9 +401,9 @@ export default async function CasinosPage() {
                     <h3 className="text-2xl font-bold text-white">Fairness of terms and conditions</h3>
                   </div>
                   <p className="text-gray-300 leading-relaxed">
-                    GuruSingapore reviews each casino's Terms and Conditions (T&Cs) to identify clauses that may be
-                    unfair, misleading, or potentially harmful to players. Such clauses can adversely affect a casino's
-                    Safety Index. Over 600 casinos have amended their T&Cs based on GuruSingapore's recommendations.
+                    GuruSingapore reviews each casino&apos;s Terms and Conditions (T&Cs) to identify clauses that may be
+                    unfair, misleading, or potentially harmful to players. Such clauses can adversely affect a casino&apos;s
+                    Safety Index. Over 600 casinos have amended their T&Cs based on GuruSingapore&apos;s recommendations.
                   </p>
                 </div>
 
@@ -428,14 +428,14 @@ export default async function CasinosPage() {
                     <h3 className="text-2xl font-bold text-white">Player complaints</h3>
                   </div>
                   <p className="text-gray-300 leading-relaxed">
-                    GuruSingapore's{" "}
+                    GuruSingapore&apos;s{" "}
                     <Link href="/reports" className="text-[#00ff88] hover:underline">
                       Complaint Resolution Center
                     </Link>{" "}
                     has handled over 53,000 complaints, providing valuable insights into how casinos treat their
                     players. Each complaint is assessed for validity, and justified complaints that remain unresolved
-                    negatively impact the casino's Safety Index. This thorough evaluation ensures that the Safety Index
-                    accurately reflects a casino's commitment to fair play.
+                    negatively impact the casino&apos;s Safety Index. This thorough evaluation ensures that the Safety Index
+                    accurately reflects a casino&apos;s commitment to fair play.
                   </p>
                 </div>
 
@@ -448,9 +448,9 @@ export default async function CasinosPage() {
                   <p className="text-gray-300 leading-relaxed">
                     Inclusion of reputable blacklists, including{" "}
                     <Link href="/reports" className="text-[#00ff88] hover:underline">
-                      GuruSingapore's own blacklist
+                      GuruSingapore&apos;s own blacklist
                     </Link>
-                    , signals potential issues with a casino's operations. Such listings are factored into the Safety
+                    , signals potential issues with a casino&apos;s operations. Such listings are factored into the Safety
                     Index, with blacklisted casinos receiving lower scores. This approach helps players avoid platforms
                     with a history of unethical practices.
                   </p>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { ProtectedRoute } from '@/components/admin/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -466,9 +467,11 @@ function CasinosContentPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {casino.logo_url && (
-                    <img
+                    <Image
                       src={casino.logo_url}
                       alt={casino.name}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded-lg object-cover"
                     />
                   )}

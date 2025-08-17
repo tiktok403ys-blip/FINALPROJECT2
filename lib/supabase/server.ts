@@ -4,8 +4,16 @@ import { cookies } from "next/headers"
 function resolveCookieDomainFromEnv(): string | undefined {
   const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
   if (explicit && explicit.trim().length > 0) return explicit.trim()
-  // Fallback to apex domain used in production
-  return process.env.NODE_ENV === "production" ? (process.env.NEXT_PUBLIC_SITE_DOMAIN || "gurusingapore.com") : undefined
+  
+  // In production, NEXT_PUBLIC_SITE_DOMAIN must be set - no hardcode fallback
+  if (process.env.NODE_ENV === "production") {
+    if (!process.env.NEXT_PUBLIC_SITE_DOMAIN) {
+      throw new Error("NEXT_PUBLIC_SITE_DOMAIN environment variable is required in production")
+    }
+    return process.env.NEXT_PUBLIC_SITE_DOMAIN
+  }
+  
+  return undefined
 }
 
 export async function createClient() {

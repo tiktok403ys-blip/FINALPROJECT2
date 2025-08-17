@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -31,9 +31,14 @@ export function WriteReviewForm({ casinoId, onSubmitted }: { casinoId: string; o
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
+  const checkAuthStatus = useCallback(async () => {
+    const { data } = await supabase.auth.getUser()
+    setIsLoggedIn(Boolean(data.user))
+  }, [supabase])
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }: { data: any }) => setIsLoggedIn(Boolean(data.user)))
-  }, [])
+    checkAuthStatus()
+  }, [checkAuthStatus])
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)

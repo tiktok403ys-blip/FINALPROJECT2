@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/admin/protected-route'
 import { AdminAuth } from '@/lib/auth/admin-auth'
@@ -60,60 +60,7 @@ function AdminDashboard() {
   })
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Load current user
-    const loadUser = async () => {
-      const currentUser = await adminAuth.getCurrentUser()
-      setUser(currentUser)
-    }
-    loadUser()
-    loadDashboardStats()
-    
-    // Set up real-time subscriptions for dashboard updates
-    const subscriptions = [
-      // Listen for new reviews
-      supabase
-        .channel('dashboard-reviews')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'casino_reviews'
-        }, () => {
-          loadDashboardStats()
-        })
-        .subscribe(),
-      
-      // Listen for new reports
-      supabase
-        .channel('dashboard-reports')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'reports'
-        }, () => {
-          loadDashboardStats()
-        })
-        .subscribe(),
-      
-      // Listen for audit log changes
-      supabase
-        .channel('dashboard-audit')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'audit_logs'
-        }, () => {
-          loadDashboardStats()
-        })
-        .subscribe()
-    ]
-    
-    return () => {
-      subscriptions.forEach(sub => sub.unsubscribe())
-    }
-  }, [])
-
-  const loadDashboardStats = async () => {
+  const loadDashboardStats = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -121,19 +68,18 @@ function AdminDashboard() {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
       // Load analytics statistics
-      const supabaseClient = supabase()
       const [usersResult, casinosResult, bonusesResult, newsResult, reviewsResult, reportsResult, activitiesResult, dailyUsersResult, dailyLoginsResult, reviewsTodayResult, reviewsWeekResult] = await Promise.all([
-        supabaseClient.from('admin_users').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('casinos').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('bonuses').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('news').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('casino_reviews').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabaseClient.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(10),
-        supabaseClient.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_active'),
-        supabaseClient.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_login'),
-        supabaseClient.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', today),
-        supabaseClient.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo)
+        supabase.from('admin_users').select('id', { count: 'exact', head: true }),
+        supabase.from('casinos').select('id', { count: 'exact', head: true }),
+        supabase.from('bonuses').select('id', { count: 'exact', head: true }),
+        supabase.from('news').select('id', { count: 'exact', head: true }),
+        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }),
+        supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(10),
+        supabase.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_active'),
+        supabase.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_login'),
+        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', today),
+        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo)
       ])
 
       setStats({
@@ -154,9 +100,74 @@ function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await adminAuth.getCurrentUser()
+        if (currentUser) {
+          setUser(currentUser)
+          await loadDashboardStats()
+        }
+      } catch (error) {
+        console.error('Error loading user:', error)
+      }
+    }
 
+    loadUser()
+
+    // Set up real-time subscriptions for dashboard updates
+    const subscriptions = [
+      supabase
+        .channel('dashboard-users')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'admin_users'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-casinos')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'casinos'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-reviews')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'casino_reviews'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-audit')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'audit_logs'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe()
+    ]
+    
+    return () => {
+      subscriptions.forEach(sub => sub.unsubscribe())
+    }
+  }, [adminAuth, loadDashboardStats, supabase])
 
   const handleSignOut = async () => {
     await adminAuth.signOut()

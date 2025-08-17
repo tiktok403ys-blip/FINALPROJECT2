@@ -30,7 +30,7 @@ export default function TermsPage() {
                 <h2 className="text-2xl font-bold text-[#00ff88]">1. Acceptance of Terms</h2>
               </div>
               <p className="text-gray-300 leading-relaxed mb-4">
-                By accessing and using GuruSingapore ("the Website"), you accept and agree to be bound by the terms and
+                By accessing and using GuruSingapore (&quot;the Website&quot;), you accept and agree to be bound by the terms and
                 provision of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
               <p className="text-gray-300 leading-relaxed">
@@ -66,7 +66,7 @@ export default function TermsPage() {
                 <h2 className="text-2xl font-bold text-[#00ff88]">3. Disclaimer</h2>
               </div>
               <p className="text-gray-300 leading-relaxed mb-4">
-                The materials on GuruSingapore are provided on an 'as is' basis. GuruSingapore makes no warranties,
+                The materials on GuruSingapore are provided on an &apos;as is&apos; basis. GuruSingapore makes no warranties,
                 expressed or implied, and hereby disclaims and negates all other warranties including without
                 limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or
                 non-infringement of intellectual property or other violation of rights.
@@ -115,7 +115,7 @@ export default function TermsPage() {
                 contents of any such linked site. The inclusion of any link does not imply endorsement by GuruSingapore
                 of the site.
               </p>
-              <p className="text-gray-300 leading-relaxed">Use of any such linked website is at the user's own risk.</p>
+              <p className="text-gray-300 leading-relaxed">Use of any such linked website is at the user&apos;s own risk.</p>
             </section>
 
             <section className="mb-12">

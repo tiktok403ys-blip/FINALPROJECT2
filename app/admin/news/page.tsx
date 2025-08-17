@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { ProtectedRoute } from '@/components/admin/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -522,9 +523,11 @@ function NewsContentPage() {
             </CardHeader>
             <CardContent>
               {article.featured_image && (
-                <img
+                <Image
                   src={article.featured_image}
                   alt={article.title}
+                  width={400}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
               )}

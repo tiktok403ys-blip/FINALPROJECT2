@@ -421,7 +421,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
           <div className="text-center py-16">
             <Gift className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-4">No Bonuses Available</h3>
-            <p className="text-gray-400 text-lg">We're working on adding exclusive bonus offers for you.</p>
+            <p className="text-gray-400 text-lg">We&apos;re working on adding exclusive bonus offers for you.</p>
           </div>
         )}
 

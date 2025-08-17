@@ -80,8 +80,13 @@ export default async function NewsDetailPage({ params }: PageProps) {
 
         {article.image_url && (
           <div className="w-full h-64 sm:h-80 bg-white/5 rounded-xl overflow-hidden border border-white/10 mb-8">
-            {/* Using img to avoid next/image domain config issues at this stage */}
-            <img src={article.image_url || "/placeholder.svg"} alt={article.title} className="w-full h-full object-cover" />
+            <Image 
+              src={article.image_url || "/placeholder.svg"} 
+              alt={article.title} 
+              width={768}
+              height={320}
+              className="w-full h-full object-cover" 
+            />
           </div>
         )}
 

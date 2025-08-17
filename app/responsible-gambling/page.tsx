@@ -60,7 +60,7 @@ export default function ResponsibleGamblingPage() {
                   <h3 className="text-xl font-bold">Set Time Limits</h3>
                 </div>
                 <p className="text-gray-300 leading-relaxed">
-                  Set a time limit for your gambling sessions and stick to it. Take regular breaks and don't let
+                  Set a time limit for your gambling sessions and stick to it. Take regular breaks and don&apos;t let
                   gambling interfere with your daily responsibilities.
                 </p>
               </div>
@@ -73,8 +73,8 @@ export default function ResponsibleGamblingPage() {
                   <h3 className="text-xl font-bold">Keep It Fun</h3>
                 </div>
                 <p className="text-gray-300 leading-relaxed">
-                  Gambling should be entertaining, not a way to make money. If you're not having fun or feeling
-                  stressed, it's time to stop.
+                  Gambling should be entertaining, not a way to make money. If you&apos;re not having fun or feeling
+                  stressed, it&apos;s time to stop.
                 </p>
               </div>
 
@@ -111,7 +111,7 @@ export default function ResponsibleGamblingPage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-[#00ff88] rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-gray-300">Have you tried to cut back on gambling but couldn't?</p>
+                  <p className="text-gray-300">Have you tried to cut back on gambling but couldn&apos;t?</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-[#00ff88] rounded-full mt-2 flex-shrink-0"></div>
@@ -123,7 +123,7 @@ export default function ResponsibleGamblingPage() {
                 </div>
               </div>
               <p className="text-yellow-400 mt-6 font-medium text-center">
-                If you answered "yes" to any of these questions, consider seeking help.
+                If you answered &quot;yes&quot; to any of these questions, consider seeking help.
               </p>
             </div>
           </section>
@@ -195,7 +195,7 @@ export default function ResponsibleGamblingPage() {
           <div className="bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-lg p-6 text-center">
             <h3 className="text-xl font-bold text-[#00ff88] mb-4">Remember</h3>
             <p className="text-gray-300 leading-relaxed">
-              Gambling should never be seen as a solution to financial problems. If you're struggling with gambling,
+              Gambling should never be seen as a solution to financial problems. If you&apos;re struggling with gambling,
               seeking help is a sign of strength, not weakness. Support is available, and recovery is possible.
             </p>
           </div>

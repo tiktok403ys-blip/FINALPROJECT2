@@ -26,7 +26,7 @@ export function AdminTopbar({ onToggleSidebar }: AdminTopbarProps) {
       setIsSuperAdmin(adminAuth.isSuperAdmin())
     }
     loadUser()
-  }, [])
+  }, [adminAuth])
 
   useEffect(() => {
     let timer: any

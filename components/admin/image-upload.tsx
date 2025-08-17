@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 interface ImageUploadProps {
   value?: string
@@ -69,9 +70,11 @@ export function ImageUpload({ value, onChange, bucket, className, label }: Image
       
       {value ? (
         <div className="relative">
-          <img
+          <Image
             src={value}
             alt="Uploaded image"
+            width={128}
+            height={128}
             className="w-32 h-32 object-cover rounded-lg border border-white/20"
           />
           <Button

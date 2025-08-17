@@ -1,9 +1,20 @@
+import { headers } from 'next/headers'
+
 export default function Robots() {
-  const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
-  return `User-agent: *
-Allow: /
-Disallow: /admin
-Sitemap: https://${host}/sitemap.xml`
+  const headersList = headers()
+  const host = headersList.get('host') || process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'
+  
+  // Ensure we use https for production domains
+  const protocol = host.includes('localhost') ? 'http' : 'https'
+  
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: '/admin',
+    },
+    sitemap: `${protocol}://${host}/sitemap.xml`,
+  }
 }
 
 

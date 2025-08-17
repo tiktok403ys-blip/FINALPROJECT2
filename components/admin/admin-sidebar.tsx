@@ -87,7 +87,7 @@ export function AdminSidebar() {
       setUser(currentUser)
     }
     loadUser()
-  }, [])
+  }, [adminAuth])
 
   useEffect(() => {
     const checkMobile = () => {

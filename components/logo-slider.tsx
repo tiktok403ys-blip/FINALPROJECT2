@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import Image from "next/image"
 
@@ -16,11 +16,7 @@ export function LogoSlider() {
   const [partners, setPartners] = useState<Partner[]>([])
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchPartners()
-  }, [])
-
-  const fetchPartners = async () => {
+  const fetchPartners = useCallback(async () => {
     const { data } = await supabase
       .from("partners")
       .select("*")
@@ -30,7 +26,11 @@ export function LogoSlider() {
     if (data) {
       setPartners(data)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchPartners()
+  }, [fetchPartners])
 
   if (!partners.length) return null
 

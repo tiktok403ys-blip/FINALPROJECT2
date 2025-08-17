@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { Star, TrendingUp, Trophy, Users, Shield, Award } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { LogoSlider } from "@/components/logo-slider"
 import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components/content-sections"
@@ -81,9 +82,11 @@ export default async function HomePage() {
                 <div className="text-center">
                   <div className="w-full h-16 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden px-4">
                     {casino.logo_url ? (
-                      <img
+                      <Image
                         src={casino.logo_url || "/placeholder.svg"}
                         alt={`${casino.name} logo`}
+                        width={64}
+                        height={64}
                         className="max-w-full max-h-full object-contain"
                       />
                     ) : (
@@ -137,9 +140,11 @@ export default async function HomePage() {
                 <div className="flex items-start gap-4">
                   <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {bonus.casinos?.logo_url ? (
-                      <img
+                      <Image
                         src={bonus.casinos.logo_url || "/placeholder.svg"}
                         alt={`${bonus.casinos.name} logo`}
+                        width={64}
+                        height={64}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -203,9 +208,11 @@ export default async function HomePage() {
                 </div>
                 {article.image_url && (
                   <div className="w-full h-40 bg-white/10 rounded-lg mb-4 overflow-hidden">
-                    <img
+                    <Image
                       src={article.image_url || "/placeholder.svg"}
                       alt={article.title}
+                      width={320}
+                      height={160}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -246,9 +253,11 @@ export default async function HomePage() {
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden">
                       {review.casinos?.logo_url ? (
-                        <img
+                        <Image
                           src={review.casinos.logo_url || "/placeholder.svg"}
                           alt={`${review.casinos.name} logo`}
+                          width={48}
+                          height={48}
                           className="w-full h-full object-cover"
                         />
                       ) : (

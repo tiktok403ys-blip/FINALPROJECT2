@@ -29,6 +29,7 @@ import {
   Ban,
   CheckCircle
 } from 'lucide-react'
+import Image from 'next/image'
 
 interface AdminUser {
   id: string
@@ -522,9 +523,11 @@ function UsersManagementPage() {
                 <div className="flex items-start space-x-4">
                   <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center overflow-hidden">
                     {user.avatar_url ? (
-                      <img 
+                      <Image 
                         src={user.avatar_url} 
                         alt={user.full_name}
+                        width={48}
+                        height={48}
                         className="w-full h-full object-cover"
                       />
                     ) : (

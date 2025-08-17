@@ -2,6 +2,7 @@
 
 import { ChevronRight, User } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 interface BreadcrumbItem {
@@ -57,9 +58,11 @@ export function PageHeader({ title, description, breadcrumbs = [], author, class
             <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground bg-background/50 rounded-lg px-3 py-2 md:px-4 md:py-3 border">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#00ff88]/20 flex items-center justify-center flex-shrink-0">
                 {author.avatar ? (
-                  <img
+                  <Image
                     src={author.avatar || "/placeholder.svg"}
                     alt={author.name}
+                    width={32}
+                    height={32}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (

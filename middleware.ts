@@ -1,102 +1,122 @@
-import { createServerClient } from "@supabase/ssr"
-import { NextResponse, type NextRequest } from "next/server"
-import { AdminAuth } from "./lib/auth/admin-auth"
+import { NextRequest, NextResponse } from 'next/server';
+import { adminSecurityMiddleware, createCORSPreflightResponse, getSecurityHeaders } from './lib/security/admin-security-middleware';
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
-        },
-      },
-    },
-  )
-
-  // Handle subdomain routing for admin panel
-  const hostname = request.headers.get("host") || ""
-  const url = request.nextUrl.clone()
-  const adminSubdomain = process.env.ADMIN_SUBDOMAIN || "sg44admin.gurusingapore.com"
-
-  // Check if this is the admin subdomain
-  if (hostname === adminSubdomain) {
-    // Validate admin session and role for admin subdomain access
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      // Redirect to login if not authenticated
-      const loginUrl = new URL("/login", request.url)
-      return NextResponse.redirect(loginUrl)
-    }
-
-    // Check if user has admin role
-    const adminAuth = AdminAuth.getInstance()
-    await adminAuth.getCurrentUser() // Initialize admin auth with current user
-    const isAdmin = adminAuth.isAdmin()
-    
-    if (!isAdmin) {
-      // Return 403 if user is not admin
-      console.log(`🚫 Non-admin user ${user.email} attempted to access admin subdomain`)
-      return new NextResponse("Forbidden: Admin access required", { status: 403 })
-    }
-
-    // Log admin access
-    await adminAuth.logAdminAction(
-      'admin_subdomain_access',
-      'middleware',
-      undefined,
-      {
-        hostname,
-        pathname: url.pathname,
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    )
-
-    // Only rewrite the root path "/" to "/admin".
-    // Keep requests to existing "/admin/*", "/api/*", etc. unchanged.
-    if (url.pathname === "/") {
-      url.pathname = "/admin"
-      return NextResponse.rewrite(url)
-    }
-  }
-
-  // STRICT: Block ANY direct access to /admin on main domain with 404 (no redirect)
-  if (
-    hostname !== adminSubdomain &&
-    url.pathname.startsWith("/admin")
-  ) {
-    console.log("🚫 Direct admin path on main domain blocked with 404")
-    return new NextResponse(null, { status: 404 })
-  }
-
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser()
-
-  return supabaseResponse
+/**
+ * Check if request is from admin subdomain
+ * @param request - NextRequest object
+ * @returns boolean
+ */
+function isAdminDomain(request: NextRequest): boolean {
+  const host = request.headers.get('host') || '';
+  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'admin.localhost:3000';
+  const adminHost = adminUrl.replace(/^https?:\/\//, '');
+  
+  return host === adminHost || host.startsWith('admin.');
 }
 
+/**
+ * Validate admin subdomain access for admin routes
+ * @param request - NextRequest object
+ * @returns boolean
+ */
+function validateAdminSubdomainAccess(request: NextRequest): boolean {
+  const { pathname } = request.nextUrl;
+  
+  // Admin routes should only be accessible from admin subdomain
+  if (pathname.startsWith('/api/admin/') || pathname.startsWith('/admin')) {
+    return isAdminDomain(request);
+  }
+  
+  return true;
+}
+
+/**
+ * Global middleware for handling security and CORS
+ * @param request - NextRequest object
+ * @returns NextResponse
+ */
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const isFromAdminDomain = isAdminDomain(request);
+  
+  // Validate admin subdomain access
+  if (!validateAdminSubdomainAccess(request)) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Access denied: Admin routes require admin subdomain' }),
+      { 
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getSecurityHeaders(false)
+        }
+      }
+    );
+  }
+  
+  // Handle CORS preflight requests for admin API
+  if (request.method === 'OPTIONS' && pathname.startsWith('/api/admin/')) {
+    return createCORSPreflightResponse(request);
+  }
+  
+  // Apply security middleware to admin API endpoints
+  if (pathname.startsWith('/api/admin/')) {
+    const securityResult = await adminSecurityMiddleware(request);
+    
+    if (!securityResult.allowed) {
+      // Security check failed, return the error response
+      return securityResult.response || new NextResponse(
+        JSON.stringify({ error: 'Security check failed' }),
+        { 
+          status: 403,
+          headers: {
+            'Content-Type': 'application/json',
+            ...getSecurityHeaders(isFromAdminDomain)
+          }
+        }
+      );
+    }
+    
+    // Security check passed, create response with security headers
+    const response = NextResponse.next();
+    
+    // Add comprehensive security headers
+    const securityHeaders = getSecurityHeaders(isFromAdminDomain);
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    // Add additional headers from security result
+    if (securityResult.headers) {
+      Object.entries(securityResult.headers).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+    }
+    
+    return response;
+  }
+  
+  // For all other routes, apply basic security headers
+  const response = NextResponse.next();
+  const basicSecurityHeaders = getSecurityHeaders(isFromAdminDomain);
+  
+  Object.entries(basicSecurityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  
+  return response;
+}
+
+/**
+ * Middleware configuration
+ */
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Match all routes except static files and internal Next.js routes
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)',
+    // Specifically include admin routes
+    '/admin/:path*',
+    '/api/admin/:path*',
+    // Include API routes for security headers
+    '/api/:path*'
   ],
-}
+};

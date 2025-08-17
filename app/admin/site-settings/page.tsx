@@ -43,7 +43,7 @@ export default function SiteSettingsPage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [supabase])
 
   const save = async () => {
     if (!row) return

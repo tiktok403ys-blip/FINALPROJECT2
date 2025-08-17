@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
+import { adminSecurityMiddleware, logSecurityEvent, getSecurityHeaders } from '@/lib/security/admin-security-middleware';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -13,6 +14,13 @@ interface PinVerifyRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Security middleware check - very strict for PIN verification
+    const securityResult = await adminSecurityMiddleware(request);
+    if (!securityResult.allowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED', request, { endpoint: 'pin-verify' });
+      return securityResult.response!;
+    }
+
     const body: PinVerifyRequest = await request.json();
     const { pin } = body;
 
@@ -47,11 +55,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isValidPin) {
-      // Log failed attempt
+      // Log failed attempt with security event
+      logSecurityEvent('UNAUTHORIZED_ACCESS', request, { 
+        reason: 'invalid_pin', 
+        userEmail: user.email,
+        endpoint: 'pin-verify'
+      });
       console.warn(`Failed PIN attempt for user: ${user.email}`);
       return NextResponse.json(
         { error: 'Invalid PIN' },
-        { status: 403 }
+        { 
+          status: 403,
+          headers: getSecurityHeaders()
+        }
       );
     }
 
@@ -64,10 +80,18 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (adminError || !adminUser) {
+      logSecurityEvent('UNAUTHORIZED_ACCESS', request, { 
+        reason: 'non_admin_user', 
+        userEmail: user.email,
+        endpoint: 'pin-verify'
+      });
       console.warn(`Non-admin user attempted PIN verification: ${user.email}`);
       return NextResponse.json(
         { error: 'Access denied' },
-        { status: 403 }
+        { 
+          status: 403,
+          headers: getSecurityHeaders()
+        }
       );
     }
 
@@ -101,6 +125,11 @@ export async function POST(request: NextRequest) {
         id: adminUser.id,
         role: adminUser.role,
         permissions: adminUser.permissions
+      }
+    }, {
+      headers: {
+        ...getSecurityHeaders(),
+        ...securityResult.headers
       }
     });
 

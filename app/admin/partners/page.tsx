@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { GlassCard } from "@/components/glass-card"
 import { PaginationControls } from "@/components/admin/pagination"
 import { Button } from "@/components/ui/button"
@@ -41,23 +41,7 @@ export default function AdminPartnersPage() {
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchPartners()
-  }, [page])
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("partners-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "partners" }, () => {
-        fetchPartners()
-      })
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
-  const fetchPartners = async () => {
+  const fetchPartners = useCallback(async () => {
     const from = (page - 1) * pageSize
     const to = from + pageSize - 1
     const { data } = await supabase
@@ -69,7 +53,23 @@ export default function AdminPartnersPage() {
     if (data) {
       setPartners(data)
     }
-  }
+  }, [page, pageSize, supabase])
+
+  useEffect(() => {
+    fetchPartners()
+  }, [page, fetchPartners])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("partners-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "partners" }, () => {
+        fetchPartners()
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [fetchPartners, supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

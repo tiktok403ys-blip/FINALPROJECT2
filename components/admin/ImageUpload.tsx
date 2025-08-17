@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 interface ImageUploadProps {
   value?: string
@@ -103,9 +104,11 @@ export default function ImageUpload({
       {value ? (
         <div className="relative group">
           <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
-            <img
+            <Image
               src={value}
               alt="Uploaded image"
+              width={400}
+              height={192}
               className="w-full h-48 object-cover"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">

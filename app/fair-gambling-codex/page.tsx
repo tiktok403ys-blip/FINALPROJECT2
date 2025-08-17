@@ -8,7 +8,7 @@ import Link from "next/link"
 
 export const metadata = {
   title: "Fair Gambling Codex | GuruSingapore",
-  description: "Learn about GuruSingapore's Fair Gambling Codex - our commitment to promoting fair, transparent, and responsible online gambling practices in Singapore.",
+  description: "Learn about GuruSingapore&apos;s Fair Gambling Codex - our commitment to promoting fair, transparent, and responsible online gambling practices in Singapore.",
   keywords: "fair gambling, codex, responsible gambling, casino standards, GuruSingapore, CGSG",
 }
 
@@ -35,7 +35,7 @@ export default function FairGamblingCodexPage() {
                   <h2 className="text-3xl font-bold text-white">What is the Fair Gambling Codex?</h2>
                 </div>
                 <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                  The Fair Gambling Codex is GuruSingapore's comprehensive set of principles and standards that define what we consider to be fair and acceptable practices in the online gambling industry. As part of the Casino Guru Singapore Group (CGSG), we are committed to creating a safer and more transparent gambling environment for all players.
+                  The Fair Gambling Codex is GuruSingapore&apos;s comprehensive set of principles and standards that define what we consider to be fair and acceptable practices in the online gambling industry. As part of the Casino Guru Singapore Group (CGSG), we are committed to creating a safer and more transparent gambling environment for all players.
                 </p>
                 <p className="text-gray-300 text-lg leading-relaxed">
                   Our codex serves as a benchmark against which we evaluate online casinos, ensuring that players have access to fair games, transparent terms, and reliable customer service. We believe that every player deserves to gamble in an environment free from unfair practices and deceptive terms.
@@ -138,7 +138,7 @@ export default function FairGamblingCodexPage() {
                   As part of the Casino Guru Singapore Group, we are committed to maintaining the highest standards of integrity in our casino reviews and recommendations. Our team of experts evaluates each casino against our Fair Gambling Codex to ensure that we only recommend operators that meet our strict criteria.
                 </p>
                 <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                  We believe that transparency is key to building trust with our users. That's why we publish detailed reviews that explain exactly how each casino measures up against our standards, including any areas where they may fall short.
+                  We believe that transparency is key to building trust with our users. That&apos;s why we publish detailed reviews that explain exactly how each casino measures up against our standards, including any areas where they may fall short.
                 </p>
                 <p className="text-gray-300 text-lg leading-relaxed">
                   Our goal is to create a gambling environment where players can enjoy their favorite games with confidence, knowing that they are playing at casinos that operate fairly and transparently.
@@ -166,7 +166,7 @@ export default function FairGamblingCodexPage() {
                   <h3 className="text-xl font-bold text-white">Comprehensive Research</h3>
                 </div>
                 <p className="text-gray-300 leading-relaxed">
-                  We conduct thorough research on each casino's background, licensing, and operational history to ensure they meet our standards.
+                  We conduct thorough research on each casino&apos;s background, licensing, and operational history to ensure they meet our standards.
                 </p>
               </div>
 
@@ -206,13 +206,13 @@ export default function FairGamblingCodexPage() {
           </div>
         </section>
 
-        {/* GuruSingapore's Commitment */}
+        {/* GuruSingapore&apos;s Commitment */}
         <section className="py-16">
           <div className="container mx-auto px-4 lg:px-6">
             <div className="max-w-4xl mx-auto">
               <div className="bg-black border border-[#00ff88]/30 rounded-xl p-8">
                   <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-white mb-4">GuruSingapore's Commitment</h2>
+                    <h2 className="text-3xl font-bold text-white mb-4">GuruSingapore&apos;s Commitment</h2>
                     <p className="text-gray-400 text-lg">
                       As part of the Casino Guru Singapore Group (CGSG), we are dedicated to upholding the highest standards in the industry
                     </p>
@@ -369,7 +369,7 @@ export default function FairGamblingCodexPage() {
                   <h2 className="text-3xl font-bold text-white">Join Our Mission</h2>
                 </div>
                 <p className="text-gray-300 text-lg leading-relaxed mb-8">
-                  Help us create a safer gambling environment for everyone. Whether you're a player, operator, or industry professional, you can contribute to promoting fair gambling practices.
+                  Help us create a safer gambling environment for everyone. Whether you&apos;re a player, operator, or industry professional, you can contribute to promoting fair gambling practices.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Link href="/casinos">

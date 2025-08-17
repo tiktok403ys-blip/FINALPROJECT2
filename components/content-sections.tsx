@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -42,7 +42,7 @@ export function WhyChooseUs() {
             Why Choose GuruSingapore?
           </h2>
           <p className="text-gray-400 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto leading-tight sm:leading-normal">
-            We're committed to providing you with the most comprehensive and trustworthy casino information
+            We&apos;re committed to providing you with the most comprehensive and trustworthy casino information
           </p>
         </div>
 
@@ -81,11 +81,7 @@ export function LiveStats() {
   })
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     const [casinosCount, bonusesCount, reviewsCount] = await Promise.all([
       supabase.from("casinos").select("*", { count: "exact", head: true }),
       supabase.from("bonuses").select("*", { count: "exact", head: true }),
@@ -98,7 +94,11 @@ export function LiveStats() {
       users: 1250, // This would come from auth.users in a real app
       reviews: reviewsCount.count || 0,
     })
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
 
   const statItems = [
     { label: "Casinos Reviewed", value: stats.casinos, icon: Star },
@@ -169,7 +169,7 @@ export function HowItWorks() {
             {/* Description - Mobile Compact, Desktop Spacious */}
             <p className="text-gray-300 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl leading-tight sm:leading-normal md:leading-relaxed mb-3 sm:mb-4 md:mb-6 lg:mb-8">
               Many of our efforts revolve around turning online gambling into a fairer 
-              and safer activity. This includes reading and evaluating the casinos' Terms 
+              and safer activity. This includes reading and evaluating the casinos&apos; Terms 
               and Conditions as part of our casino review process and doing everything 
               we can to persuade casinos to remove or alter unfair or questionable 
               clauses in accordance with our{" "}
@@ -212,7 +212,7 @@ export function HowItWorks() {
               
               {/* Description - Mobile Tiny, Desktop Normal */}
               <p className="text-gray-300 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg leading-tight sm:leading-normal">
-                changed their T&Cs because of our efforts
+                changed their T&amp;Cs because of our efforts
               </p>
             </div>
           </div>
@@ -227,11 +227,7 @@ export function RecentActivity() {
   const [recentNews, setRecentNews] = useState<any[]>([])
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchRecentActivity()
-  }, [])
-
-  const fetchRecentActivity = async () => {
+  const fetchRecentActivity = useCallback(async () => {
     const [casinos, news] = await Promise.all([
       supabase.from("casinos").select("name, rating, created_at").order("created_at", { ascending: false }).limit(3),
       supabase
@@ -244,7 +240,11 @@ export function RecentActivity() {
 
     if (casinos.data) setRecentCasinos(casinos.data)
     if (news.data) setRecentNews(news.data)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchRecentActivity()
+  }, [fetchRecentActivity])
 
   return (
     <section className="py-4 sm:py-6 md:py-10 lg:py-16 xl:py-20">

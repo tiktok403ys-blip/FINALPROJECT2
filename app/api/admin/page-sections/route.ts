@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminAuth } from '@/lib/auth/admin-middleware'
+import { adminSecurityMiddleware, logSecurityEvent, getSecurityHeaders } from '@/lib/security/admin-security-middleware'
 
 export async function GET(request: NextRequest) {
   try {
+    // Security middleware check
+    const securityResult = await adminSecurityMiddleware(request);
+    if (!securityResult.allowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED', request);
+      return securityResult.response!;
+    }
+
     // Validate admin authentication
     const authResult = await validateAdminAuth(request, ['read_content']);
     if (authResult instanceof NextResponse) {
@@ -38,7 +46,12 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    return NextResponse.json({ data })
+    return NextResponse.json({ data }, {
+      headers: {
+        ...getSecurityHeaders(),
+        ...securityResult.headers
+      }
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json(
@@ -50,6 +63,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Security middleware check
+    const securityResult = await adminSecurityMiddleware(request);
+    if (!securityResult.allowed) {
+      logSecurityEvent('CSRF_VALIDATION_FAILED', request);
+      return securityResult.response!;
+    }
+
     // Validate admin authentication with create permissions
     const authResult = await validateAdminAuth(request, ['create_content']);
     if (authResult instanceof NextResponse) {
@@ -89,7 +109,13 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    return NextResponse.json({ data }, { status: 201 })
+    return NextResponse.json({ data }, { 
+      status: 201,
+      headers: {
+        ...getSecurityHeaders(),
+        ...securityResult.headers
+      }
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json(
@@ -101,6 +127,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Security middleware check
+    const securityResult = await adminSecurityMiddleware(request);
+    if (!securityResult.allowed) {
+      logSecurityEvent('CSRF_VALIDATION_FAILED', request);
+      return securityResult.response!;
+    }
+
     // Validate admin authentication with update permissions
     const authResult = await validateAdminAuth(request, ['update_content']);
     if (authResult instanceof NextResponse) {
@@ -142,7 +175,12 @@ export async function PUT(request: NextRequest) {
       )
     }
     
-    return NextResponse.json({ data })
+    return NextResponse.json({ data }, {
+      headers: {
+        ...getSecurityHeaders(),
+        ...securityResult.headers
+      }
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json(
@@ -154,6 +192,13 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Security middleware check
+    const securityResult = await adminSecurityMiddleware(request);
+    if (!securityResult.allowed) {
+      logSecurityEvent('CSRF_VALIDATION_FAILED', request);
+      return securityResult.response!;
+    }
+
     // Validate admin authentication with delete permissions
     const authResult = await validateAdminAuth(request, ['delete_content']);
     if (authResult instanceof NextResponse) {
@@ -185,7 +230,12 @@ export async function DELETE(request: NextRequest) {
       )
     }
     
-    return NextResponse.json({ message: 'Page section deleted successfully' })
+    return NextResponse.json({ message: 'Page section deleted successfully' }, {
+      headers: {
+        ...getSecurityHeaders(),
+        ...securityResult.headers
+      }
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json(

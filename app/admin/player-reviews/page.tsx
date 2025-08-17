@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { GlassCard } from "@/components/glass-card"
@@ -41,21 +41,7 @@ export default function AdminPlayerReviewsPage() {
   const adminAuth = AdminAuth.getInstance()
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchRows()
-  }, [page])
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("player-reviews-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "player_reviews" }, () => fetchRows())
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
-  const fetchRows = async () => {
+  const fetchRows = useCallback(async () => {
     setLoading(true)
     const from = (page - 1) * pageSize
     const to = from + pageSize - 1
@@ -66,7 +52,21 @@ export default function AdminPlayerReviewsPage() {
       .range(from, to)
     setRows(data || [])
     setLoading(false)
-  }
+  }, [page, pageSize, supabase])
+
+  useEffect(() => {
+    fetchRows()
+  }, [page, fetchRows])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("player-reviews-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "player_reviews" }, () => fetchRows())
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [fetchRows, supabase])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()

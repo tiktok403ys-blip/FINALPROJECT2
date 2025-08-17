@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -52,28 +52,7 @@ export function NavbarFixed() {
   // Check if we're on home page
   const isHomePage = pathname === "/"
 
-  useEffect(() => {
-    mountedRef.current = true
-    
-    // Reset profile when user changes
-    if (!user) {
-      setProfile(null)
-      setProfileError(null)
-      profileFetchedRef.current = false
-      return
-    }
-    
-    // Fetch profile only when user exists and not already fetched
-    if (user && !profileFetchedRef.current) {
-      fetchUserProfile(user)
-    }
-
-    return () => {
-      mountedRef.current = false
-    }
-  }, [user])
-
-  const fetchUserProfile = async (currentUser: SupabaseUser) => {
+  const fetchUserProfile = useCallback(async (currentUser: SupabaseUser) => {
     if (!currentUser || profileFetchedRef.current || !mountedRef.current) return
 
     try {
@@ -157,7 +136,28 @@ export function NavbarFixed() {
         setProfileError("Using fallback profile data")
       }
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    mountedRef.current = true
+    
+    // Reset profile when user changes
+    if (!user) {
+      setProfile(null)
+      setProfileError(null)
+      profileFetchedRef.current = false
+      return
+    }
+    
+    // Fetch profile only when user exists and not already fetched
+    if (user && !profileFetchedRef.current) {
+      fetchUserProfile(user)
+    }
+
+    return () => {
+      mountedRef.current = false
+    }
+  }, [user, fetchUserProfile])
 
   // Scroll visibility effect for home page
   useEffect(() => {

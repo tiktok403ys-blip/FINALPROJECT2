@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -49,6 +49,91 @@ export function Navbar() {
 
   // Check if we're on home page
   const isHomePage = pathname === "/"
+
+  const fetchUserProfile = useCallback(async (currentUser: SupabaseUser) => {
+    if (!currentUser || profileFetchedRef.current) return
+
+    try {
+      console.log("🔄 Fetching profile for:", currentUser.email)
+      profileFetchedRef.current = true
+      setProfileError(null)
+
+      const { data: profileData, error } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_url, role, admin_pin")
+        .eq("id", currentUser.id)
+        .single()
+
+      if (error) {
+        console.error("❌ Profile fetch error:", error)
+
+        if (error.code === "PGRST116") {
+          console.log("🔄 Creating new profile...")
+          const newProfile = {
+            id: currentUser.id,
+            email: currentUser.email ?? null,
+            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+            role: "user",
+            admin_pin: null,
+          }
+
+          const { data: createdProfile, error: createError } = await supabase
+            .from("profiles")
+            .insert([newProfile])
+            .select()
+            .single()
+
+          if (createError) {
+            console.error("❌ Error creating profile:", createError)
+            if (mountedRef.current) {
+              setProfile(newProfile)
+            }
+          } else {
+            console.log("✅ Profile created successfully")
+            if (mountedRef.current) {
+              setProfile(createdProfile)
+            }
+          }
+        } else {
+          const fallbackProfile: Profile = {
+            id: currentUser.id,
+            email: currentUser.email ?? null,
+            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+            role: "user",
+            admin_pin: null,
+          }
+
+          if (mountedRef.current) {
+            setProfile(fallbackProfile)
+            setProfileError("Using cached profile data")
+          }
+        }
+      } else {
+        console.log("✅ Profile loaded successfully:", profileData)
+        if (mountedRef.current) {
+          setProfile(profileData)
+        }
+      }
+    } catch (error) {
+      console.error("❌ Unexpected error fetching profile:", error)
+
+      const fallbackProfile: Profile = {
+        id: currentUser.id,
+        email: currentUser.email ?? null,
+        full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+        avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+        role: "user",
+        admin_pin: null,
+      }
+
+      if (mountedRef.current) {
+        setProfile(fallbackProfile)
+        setProfileError("Using fallback profile data")
+      }
+    }
+  }, [supabase])
 
   useEffect(() => {
     mountedRef.current = true
@@ -130,92 +215,7 @@ export function Navbar() {
       mountedRef.current = false
       subscription.unsubscribe()
     }
-  }, [])
-
-  const fetchUserProfile = async (currentUser: SupabaseUser) => {
-    if (!currentUser || profileFetchedRef.current) return
-
-    try {
-      console.log("🔄 Fetching profile for:", currentUser.email)
-      profileFetchedRef.current = true
-      setProfileError(null)
-
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url, role, admin_pin")
-        .eq("id", currentUser.id)
-        .single()
-
-      if (error) {
-        console.error("❌ Profile fetch error:", error)
-
-        if (error.code === "PGRST116") {
-          console.log("🔄 Creating new profile...")
-          const newProfile = {
-            id: currentUser.id,
-            email: currentUser.email ?? null,
-            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "super_admin" : "user",
-            admin_pin: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "1234" : null,
-          }
-
-          const { data: createdProfile, error: createError } = await supabase
-            .from("profiles")
-            .insert([newProfile])
-            .select()
-            .single()
-
-          if (createError) {
-            console.error("❌ Error creating profile:", createError)
-            if (mountedRef.current) {
-              setProfile(newProfile)
-            }
-          } else {
-            console.log("✅ Profile created successfully")
-            if (mountedRef.current) {
-              setProfile(createdProfile)
-            }
-          }
-        } else {
-          const fallbackProfile: Profile = {
-            id: currentUser.id,
-            email: currentUser.email ?? null,
-            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "super_admin" : "user",
-            admin_pin: null,
-          }
-
-          if (mountedRef.current) {
-            setProfile(fallbackProfile)
-            setProfileError("Using cached profile data")
-          }
-        }
-      } else {
-        console.log("✅ Profile loaded successfully:", profileData)
-        if (mountedRef.current) {
-          setProfile(profileData)
-        }
-      }
-    } catch (error) {
-      console.error("❌ Unexpected error fetching profile:", error)
-
-      const fallbackProfile: Profile = {
-        id: currentUser.id,
-        email: currentUser.email ?? null,
-        full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-        avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-        role: (currentUser.email ?? "") === "casinogurusg404@gmail.com" ? "super_admin" : "user",
-        admin_pin: null,
-      }
-
-      if (mountedRef.current) {
-        setProfile(fallbackProfile)
-        setProfileError("Using fallback profile data")
-      }
-    }
-  }
+  }, [fetchUserProfile, supabase.auth])
 
   // Scroll visibility effect for home page
   useEffect(() => {

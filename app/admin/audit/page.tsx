@@ -51,7 +51,7 @@ export default function AuditLogsPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [supabase])
 
   const filtered = logs.filter((l) => {
     const q = search.toLowerCase()
