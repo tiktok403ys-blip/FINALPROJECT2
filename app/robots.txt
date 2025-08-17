@@ -10,12 +10,12 @@ export default function Robots() {
   // Check if this is admin subdomain
   const isAdminSubdomain = host.startsWith('admin.') || host.includes('admin.')
   
-  // For admin subdomain, allow all access including /admin
-  // For main site, disallow /admin to prevent indexing
+  // For admin subdomain, disallow all access to prevent indexing
+  // For main site, allow all but disallow /admin
   const rules = isAdminSubdomain 
     ? {
         userAgent: '*',
-        allow: '/',
+        disallow: '/',
       }
     : {
         userAgent: '*',

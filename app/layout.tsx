@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
 import { NavbarFixed } from "@/components/navbar-fixed"
 import { CookieConsent } from "@/components/cookie-consent"
+import { WebVitals } from "@/components/web-vitals"
 import { headers } from "next/headers"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -53,6 +54,7 @@ export default async function RootLayout({
               {!isAdminSubdomain && <NavbarFixed />}
               <main>{children}</main>
               {!isAdminSubdomain && <CookieConsent />}
+              <WebVitals />
             </div>
           </AuthProvider>
         </ThemeProvider>
