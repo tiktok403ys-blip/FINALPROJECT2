@@ -36,61 +36,8 @@ CREATE POLICY "Admins can view all profiles" ON profiles
         )
     );
 
--- Function to verify admin PIN
-CREATE OR REPLACE FUNCTION verify_admin_pin(user_email TEXT, input_pin TEXT)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    stored_pin TEXT;
-    user_role TEXT;
-BEGIN
-    -- Get user's PIN and role
-    SELECT p.admin_pin, p.role INTO stored_pin, user_role
-    FROM profiles p
-    WHERE p.email = user_email;
-    
-    -- Check if user is admin and PIN matches
-    IF user_role IN ('admin', 'super_admin') AND stored_pin = input_pin THEN
-        -- Log successful admin access
-        -- DEPRECATED: use admin_actions instead of admin_logs
-        -- INSERT INTO admin_logs (user_email, action, timestamp)
-        VALUES (user_email, 'PIN_VERIFIED', NOW());
-        
-        RETURN TRUE;
-    ELSE
-        -- Log failed attempt
-        -- DEPRECATED: use admin_actions instead of admin_logs
-        -- INSERT INTO admin_logs (user_email, action, timestamp)
-        VALUES (user_email, 'PIN_FAILED', NOW());
-        
-        RETURN FALSE;
-    END IF;
-END;
-$$;
-
--- Function to set admin PIN
-CREATE OR REPLACE FUNCTION set_admin_pin(user_email TEXT, new_pin TEXT)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    UPDATE profiles 
-    SET admin_pin = new_pin, updated_at = NOW()
-    WHERE email = user_email AND role IN ('admin', 'super_admin');
-    
-    IF FOUND THEN
-        -- DEPRECATED: use admin_actions instead of admin_logs
-        -- INSERT INTO admin_logs (user_email, action, timestamp)
-        VALUES (user_email, 'PIN_UPDATED', NOW());
-        RETURN TRUE;
-    END IF;
-    
-    RETURN FALSE;
-END;
-$$;
+-- DEPRECATED: PIN verification functions removed
+-- PIN validation now uses environment variable ADMIN_PIN in API layer
 
 -- DEPRECATED: admin_logs is not used. Use admin_actions for activity tracking.
 
@@ -111,10 +58,7 @@ BEGIN
             WHEN NEW.email = 'casinogurusg404@gmail.com' THEN 'super_admin'
             ELSE 'user'
         END,
-        CASE 
-            WHEN NEW.email = 'casinogurusg404@gmail.com' THEN '1234'
-            ELSE NULL
-        END
+        NULL  -- PIN will be validated using environment variable
     );
     RETURN NEW;
 END;
@@ -148,17 +92,16 @@ SELECT
     'casinogurusg404@gmail.com',
     'Super Admin',
     'super_admin',
-    '1234'
+    NULL  -- PIN will be validated using environment variable
 FROM auth.users au
 WHERE au.email = 'casinogurusg404@gmail.com'
 ON CONFLICT (id) DO UPDATE SET
     role = 'super_admin',
-    admin_pin = '1234',
+    admin_pin = NULL,
     updated_at = NOW();
 
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON profiles TO anon, authenticated;
 -- DEPRECATED: admin_logs grants removed
-GRANT EXECUTE ON FUNCTION verify_admin_pin TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION set_admin_pin TO anon, authenticated;
+-- DEPRECATED: PIN function grants removed - using environment variable

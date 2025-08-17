@@ -339,10 +339,7 @@ BEGIN
         WHEN new.email = 'casinogurusg404@gmail.com' THEN 'super_admin'
         ELSE 'user'
     END,
-    CASE 
-        WHEN new.email = 'casinogurusg404@gmail.com' THEN '1234'
-        ELSE NULL
-    END
+    NULL  -- PIN will be validated using environment variable
   );
   RETURN new;
 EXCEPTION

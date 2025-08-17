@@ -42,17 +42,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify PIN using Supabase RPC
-    const { data: isValidPin, error: pinError } = await supabase
-      .rpc('verify_admin_pin', { input_pin: pin });
-
-    if (pinError) {
-      console.error('PIN verification error:', pinError);
+    // Verify PIN using environment variable
+    const adminPin = process.env.ADMIN_PIN;
+    
+    if (!adminPin) {
+      console.error('ADMIN_PIN environment variable not configured');
       return NextResponse.json(
-        { error: 'PIN verification failed' },
+        { error: 'Server configuration error' },
         { status: 500 }
       );
     }
+
+    const isValidPin = pin === adminPin;
 
     if (!isValidPin) {
       // Log failed attempt with security event
