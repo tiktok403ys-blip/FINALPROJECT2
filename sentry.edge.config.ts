@@ -3,8 +3,15 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   
-  // Production-optimized sample rate
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  // Production-optimized sample rate with environment variable override
+  tracesSampleRate: process.env.NODE_ENV === 'production' 
+    ? parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.05') 
+    : 1.0,
+  
+  // Performance profiling sample rate
+  profilesSampleRate: process.env.NODE_ENV === 'production' 
+    ? parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || '0.01') 
+    : 0.1,
   
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: process.env.NODE_ENV === 'development',
@@ -16,7 +23,8 @@ Sentry.init({
       ...event.tags,
       environment: process.env.NODE_ENV,
       deployment: process.env.VERCEL_ENV || 'local',
-      runtime: 'edge'
+      runtime: 'edge',
+      release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'development'
     };
     
     // Remove any potential PII from user context

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -27,6 +27,32 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
   const [isVerifying, setIsVerifying] = useState(false)
   const [error, setError] = useState("")
   const [showPin, setShowPin] = useState(false)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+
+  // Fetch CSRF token when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCSRFToken()
+    }
+  }, [isOpen])
+
+  const fetchCSRFToken = async () => {
+    try {
+      const response = await fetch('/api/admin/csrf-token', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setCsrfToken(data.token)
+      } else {
+        console.warn('Failed to fetch CSRF token')
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,17 +62,23 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
       return
     }
 
+    if (!csrfToken) {
+      setError("Security token not available. Please try again.")
+      return
+    }
+
     setIsVerifying(true)
     setError("")
 
     try {
       console.log("🔐 Verifying admin PIN for:", userEmail)
 
-      // Call the server-side PIN verification endpoint
+      // Call the server-side PIN verification endpoint with CSRF token
       const response = await fetch('/api/admin/pin-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-csrf-token': csrfToken,
         },
         body: JSON.stringify({ pin }),
         credentials: 'include', // Include cookies
@@ -87,6 +119,7 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
     setPin("")
     setError("")
     setShowPin(false)
+    setCsrfToken(null)
     onClose()
   }
 

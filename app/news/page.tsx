@@ -6,6 +6,11 @@ import Link from "next/link"
 import { Input, Button } from "@/components/ui"
 import type { News } from "@/lib/types"
 
+export const metadata = {
+  title: "Latest Casino News | GuruSingapore",
+  description: "Stay updated with the latest developments in the online gambling industry. Breaking news, regulatory updates, and industry insights from GuruSingapore.",
+}
+
 // Revalidate every 30 minutes for news content
 export const revalidate = 1800
 

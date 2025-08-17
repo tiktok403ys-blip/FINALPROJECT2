@@ -8,6 +8,11 @@ import { ReportDialog } from "@/components/report-dialog"
 import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass } from "lucide-react"
 import { Footer } from "@/components/footer"
 
+export const metadata = {
+  title: "Casino Reports & Complaints | GuruSingapore",
+  description: "Report casino issues and complaints. Our expert team investigates every complaint and works to resolve disputes between players and casinos.",
+}
+
 export default function ReportsPage() {
   const [timeLeft, setTimeLeft] = useState({
     days: 10,

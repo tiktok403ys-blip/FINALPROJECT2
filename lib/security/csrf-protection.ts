@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 
 // CSRF configuration
 interface CSRFConfig {
@@ -31,23 +30,33 @@ const DEFAULT_CONFIG: CSRFConfig = {
   excludeMethods: ['GET', 'HEAD', 'OPTIONS']
 }
 
-// Generate cryptographically secure random token
+// Generate cryptographically secure random token (Edge-compatible)
 function generateCSRFToken(length: number = 32): string {
-  return crypto.randomBytes(length).toString('hex')
+  // Use Web Crypto API for Edge Runtime compatibility
+  const array = new Uint8Array(length)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-// Validate CSRF token timing-safe comparison
+// Validate CSRF token timing-safe comparison (Edge-compatible)
 function validateCSRFToken(token1: string, token2: string): boolean {
   if (!token1 || !token2 || token1.length !== token2.length) {
     return false
   }
   
-  // Use crypto.timingSafeEqual for timing attack protection
-  const buffer1 = Buffer.from(token1, 'hex')
-  const buffer2 = Buffer.from(token2, 'hex')
-  
+  // Use Web Crypto API for timing-safe comparison
   try {
-    return crypto.timingSafeEqual(buffer1, buffer2)
+    const encoder = new TextEncoder()
+    const data1 = encoder.encode(token1)
+    const data2 = encoder.encode(token2)
+    
+    // Simple timing-safe comparison for Edge Runtime
+    let result = 0
+    for (let i = 0; i < data1.length; i++) {
+      result |= data1[i] ^ data2[i]
+    }
+    
+    return result === 0
   } catch {
     return false
   }
