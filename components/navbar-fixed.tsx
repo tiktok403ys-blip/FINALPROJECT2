@@ -165,7 +165,7 @@ export function NavbarFixed() {
     
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       console.log("NavbarFixed - Auth state changed:", event, session?.user?.email)
       
       if (event === "SIGNED_IN" && session?.user) {
