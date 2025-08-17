@@ -159,6 +159,34 @@ export function NavbarFixed() {
     }
   }, [user, fetchUserProfile])
 
+  // Listen for auth state changes to ensure proper synchronization
+  useEffect(() => {
+    const supabase = createClient()
+    
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("NavbarFixed - Auth state changed:", event, session?.user?.email)
+      
+      if (event === "SIGNED_IN" && session?.user) {
+        // Reset profile fetch flag to allow refetching for new user
+        profileFetchedRef.current = false
+        // Profile will be fetched by the user effect above
+      } else if (event === "SIGNED_OUT") {
+        // Clear all local state
+        setProfile(null)
+        setProfileError(null)
+        profileFetchedRef.current = false
+        setShowUserMenu(false)
+        setIsSigningOut(false)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
   // Scroll visibility effect for home page
   useEffect(() => {
     if (!isHomePage) {
