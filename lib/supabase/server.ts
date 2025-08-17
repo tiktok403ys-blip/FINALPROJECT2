@@ -5,7 +5,7 @@ function resolveCookieDomainFromEnv(): string | undefined {
   const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
   if (explicit && explicit.trim().length > 0) return explicit.trim()
   // Fallback to apex domain used in production
-  return process.env.NODE_ENV === "production" ? "gurusingapore.com" : undefined
+  return process.env.NODE_ENV === "production" ? (process.env.NEXT_PUBLIC_SITE_DOMAIN || "gurusingapore.com") : undefined
 }
 
 export async function createClient() {

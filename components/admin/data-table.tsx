@@ -156,7 +156,7 @@ export function DataTable<T extends CrudItem>({
     }
 
     if (value instanceof Date) {
-      return <span className="text-white/80">{value.toLocaleDateString()}</span>
+      return <span className="text-white/80">{(value as Date).toLocaleDateString()}</span>
     }
 
     if (typeof value === 'string' && value.startsWith('http')) {

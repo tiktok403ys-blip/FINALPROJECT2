@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase as createSupabaseClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
 interface QueryOptions {
@@ -77,7 +77,8 @@ export function useOptimizedQuery<T = any>(options: QueryOptions): QueryResult<T
       }
 
       // Build query
-      let query = supabase
+      const supabase = createSupabaseClient()
+      let query: any = supabase
         .from(options.table)
         .select(options.select || '*', { count: 'exact' })
 
@@ -150,7 +151,8 @@ export function useOptimizedQuery<T = any>(options: QueryOptions): QueryResult<T
 
     // Set up real-time subscription if enabled
     if (options.enableRealtime) {
-      subscriptionRef.current = supabase
+      const supabaseForRealtime = createSupabaseClient()
+      subscriptionRef.current = supabaseForRealtime
         .channel(`optimized-query-${options.table}`)
         .on('postgres_changes', {
           event: '*',
@@ -202,7 +204,8 @@ export function useOptimizedMutation<T = any>(options: {
       setLoading(true)
       setError(null)
 
-      let query
+      const supabase = createSupabaseClient()
+      let query: any
       switch (operation) {
         case 'insert':
           query = supabase.from(options.table).insert(data).select()

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import {
   Star,
@@ -58,7 +58,8 @@ function ReviewsContentPage() {
   const loadReviews = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const supabaseClient = supabase()
+      const { data, error } = await supabaseClient
         .from('reviews')
         .select('*')
         .order('created_at', { ascending: false })
@@ -82,7 +83,8 @@ function ReviewsContentPage() {
 
       if (editingId && editingId !== 'new') {
         // Update existing review
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('reviews')
           .update({
             ...formData,
@@ -94,7 +96,8 @@ function ReviewsContentPage() {
         toast.success('Review updated successfully')
       } else {
         // Create new review
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('reviews')
           .insert([formData])
 
@@ -127,7 +130,8 @@ function ReviewsContentPage() {
     if (!confirm('Are you sure you want to delete this review?')) return
 
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('reviews')
         .delete()
         .eq('id', id)
@@ -143,7 +147,8 @@ function ReviewsContentPage() {
 
   const updateStatus = async (id: string, status: 'pending' | 'approved' | 'rejected') => {
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('reviews')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id)
@@ -159,9 +164,10 @@ function ReviewsContentPage() {
 
   const toggleFeatured = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .update({ is_featured: !currentStatus })
+      const supabaseClient = supabase()
+       const { error } = await supabaseClient
+         .from('reviews')
+         .update({ is_featured: !currentStatus })
         .eq('id', id)
 
       if (error) throw error

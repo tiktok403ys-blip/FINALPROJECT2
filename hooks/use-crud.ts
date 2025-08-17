@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/auth/admin-auth'
-import { useAdminAuth } from './use-admin-auth'
+import { supabase as createSupabaseClient } from '@/lib/supabase'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 import { toast } from 'sonner'
 
 export interface CrudConfig {
@@ -66,7 +66,16 @@ export interface CrudActions<T extends CrudItem> {
 export function useCrud<T extends CrudItem>(
   config: CrudConfig
 ): [CrudState<T>, CrudActions<T>] {
-  const { user } = useAdminAuth()
+  const adminAuth = AdminAuth.getInstance()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await adminAuth.getCurrentUser()
+      setUser(currentUser)
+    }
+    loadUser()
+  }, [])
   
   const [state, setState] = useState<CrudState<T>>({
     items: [],
@@ -86,6 +95,7 @@ export function useCrud<T extends CrudItem>(
 
   // Build query with filters, search, and pagination
   const buildQuery = useCallback(() => {
+    const supabase = createSupabaseClient()
     let query = supabase
       .from(config.table)
       .select(config.columns || '*', { count: 'exact' })
@@ -152,6 +162,7 @@ export function useCrud<T extends CrudItem>(
   // Create item
   const createItem = useCallback(async (data: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T | null> => {
     try {
+      const supabase = createSupabaseClient()
       const { data: newItem, error } = await supabase
         .from(config.table)
         .insert([data])
@@ -162,7 +173,8 @@ export function useCrud<T extends CrudItem>(
       
       // Log activity
       if (user) {
-        await supabase.rpc('log_admin_activity', {
+        const supabaseForRpc = createSupabaseClient()
+        await supabaseForRpc.rpc('log_admin_activity', {
           p_admin_id: user.id,
           p_action: 'CREATE',
           p_table_name: config.table,
@@ -183,6 +195,7 @@ export function useCrud<T extends CrudItem>(
   // Update item
   const updateItem = useCallback(async (id: string, data: Partial<T>): Promise<T | null> => {
     try {
+      const supabase = createSupabaseClient()
       const { data: updatedItem, error } = await supabase
         .from(config.table)
         .update(data)
@@ -194,7 +207,8 @@ export function useCrud<T extends CrudItem>(
       
       // Log activity
       if (user) {
-        await supabase.rpc('log_admin_activity', {
+        const supabaseForRpc = createSupabaseClient()
+        await supabaseForRpc.rpc('log_admin_activity', {
           p_admin_id: user.id,
           p_action: 'UPDATE',
           p_table_name: config.table,
@@ -215,6 +229,7 @@ export function useCrud<T extends CrudItem>(
   // Delete item
   const deleteItem = useCallback(async (id: string): Promise<boolean> => {
     try {
+      const supabase = createSupabaseClient()
       const { error } = await supabase
         .from(config.table)
         .delete()
@@ -224,7 +239,8 @@ export function useCrud<T extends CrudItem>(
       
       // Log activity
       if (user) {
-        await supabase.rpc('log_admin_activity', {
+        const supabaseForRpc = createSupabaseClient()
+        await supabaseForRpc.rpc('log_admin_activity', {
           p_admin_id: user.id,
           p_action: 'DELETE',
           p_table_name: config.table,
@@ -245,6 +261,7 @@ export function useCrud<T extends CrudItem>(
   // Delete multiple items
   const deleteItems = useCallback(async (ids: string[]): Promise<boolean> => {
     try {
+      const supabase = createSupabaseClient()
       const { error } = await supabase
         .from(config.table)
         .delete()
@@ -254,8 +271,9 @@ export function useCrud<T extends CrudItem>(
       
       // Log activity for each deleted item
       if (user) {
+        const supabaseForRpc = createSupabaseClient()
         for (const id of ids) {
-          await supabase.rpc('log_admin_activity', {
+          await supabaseForRpc.rpc('log_admin_activity', {
             p_admin_id: user.id,
             p_action: 'DELETE',
             p_table_name: config.table,
@@ -359,6 +377,7 @@ export function useCrud<T extends CrudItem>(
   // Setup realtime subscription
   useEffect(() => {
     if (config.realtime) {
+      const supabase = createSupabaseClient()
       const subscription = supabase
         .channel(`${config.table}_changes`)
         .on(

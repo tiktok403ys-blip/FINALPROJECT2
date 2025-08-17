@@ -6,17 +6,18 @@ import { Calendar, ArrowLeft } from "lucide-react"
 import { GlassCard } from "@/components/glass-card"
 
 interface PageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: PageProps) {
+  const { id } = await params
   const supabase = await createClient()
-  const { data } = await supabase.from("news").select("title, excerpt, image_url").eq("id", params.id).single()
+  const { data } = await supabase.from("news").select("title, excerpt, image_url").eq("id", id).single()
   const title = data?.title ? `${data.title} - News` : "News"
   const description = data?.excerpt || "Latest casino industry news."
   const images = data?.image_url ? [data.image_url] : []
   const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
-  const canonical = `https://${host}/news/${params.id}`
+  const canonical = `https://${host}/news/${id}`
   return {
     title,
     description,
@@ -36,8 +37,9 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function NewsDetailPage({ params }: PageProps) {
+  const { id } = await params
   const supabase = await createClient()
-  const { data: article } = await supabase.from("news").select("*").eq("id", params.id).eq("published", true).single()
+  const { data: article } = await supabase.from("news").select("*").eq("id", id).eq("published", true).single()
 
   if (!article) notFound()
 

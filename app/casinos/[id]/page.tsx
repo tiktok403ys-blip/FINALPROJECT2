@@ -9,16 +9,17 @@ import { createClient } from "@/lib/supabase/server"
 import { ContentSections } from "@/components/content-sections"
 
 interface CasinoPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function CasinoPage({ params }: CasinoPageProps) {
+  const { id } = await params
   const supabase = createClient()
 
   const supabaseClient = await supabase
-  const { data: casino, error } = await supabaseClient.from("casinos").select("*").eq("id", params.id).single()
+  const { data: casino, error } = await supabaseClient.from("casinos").select("*").eq("id", id).single()
 
   if (error || !casino) {
     notFound()

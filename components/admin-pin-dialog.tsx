@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { createClient } from "@/lib/supabase/client"
 import { Shield, Eye, EyeOff, Lock } from "lucide-react"
 
 interface AdminPinDialogProps {
@@ -28,15 +27,6 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
   const [isVerifying, setIsVerifying] = useState(false)
   const [error, setError] = useState("")
   const [showPin, setShowPin] = useState(false)
-  const supabase = createClient()
-
-  const getApexDomain = (hostname: string): string | undefined => {
-    // Do not set domain on localhost or IP addresses
-    if (!hostname || hostname === "localhost" || /\d+\.\d+\.\d+\.\d+/.test(hostname)) return undefined
-    const parts = hostname.split(".")
-    if (parts.length < 2) return undefined
-    return `${parts[parts.length - 2]}.${parts[parts.length - 1]}`
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,34 +42,28 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
     try {
       console.log("🔐 Verifying admin PIN for:", userEmail)
 
-      // Call the database function to verify PIN
-      const { data, error } = await supabase.rpc("verify_admin_pin", {
-        user_email: userEmail,
-        input_pin: pin,
+      // Call the server-side PIN verification endpoint
+      const response = await fetch('/api/admin/pin-verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pin }),
+        credentials: 'include', // Include cookies
       })
 
-      if (error) {
-        console.error("❌ PIN verification error:", error)
-        setError("Failed to verify PIN. Please try again.")
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error("❌ PIN verification error:", result.error)
+        setError(result.error || "Failed to verify PIN. Please try again.")
+        setPin("")
         return
       }
 
-      if (data === true) {
+      if (result.success) {
         console.log("✅ PIN verified successfully")
-
-        // Store verification in cookie (apex domain) so it is readable on subdomains
-        try {
-          const apex = "gurusingapore.com"
-          const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "Secure; " : ""
-          const domainPart = apex ? `Domain=${apex}; ` : ""
-          document.cookie = `admin_pin_verified=1; Max-Age=3600; Path=/; ${domainPart}${secure}SameSite=Lax`
-        } catch (_) {}
-
-        // Keep sessionStorage as local fallback (1 hour)
-        const expirationTime = Date.now() + 60 * 60 * 1000
-        sessionStorage.setItem("admin_pin_verified", "true")
-        sessionStorage.setItem("admin_pin_timestamp", expirationTime.toString())
-
+        
         // Clear form
         setPin("")
         setError("")

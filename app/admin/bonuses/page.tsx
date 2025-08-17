@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import {
   Gift,
@@ -23,7 +23,7 @@ import {
   Percent,
   DollarSign
 } from 'lucide-react'
-import { ImageUpload } from '@/components/admin/ImageUpload'
+import { ImageUpload } from '@/components/admin/image-upload'
 
 interface Bonus {
   id: string
@@ -95,7 +95,8 @@ function BonusesContentPage() {
   const loadBonuses = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const supabaseClient = supabase()
+      const { data, error } = await supabaseClient
         .from('bonuses')
         .select('*')
         .order('created_at', { ascending: false })
@@ -119,7 +120,8 @@ function BonusesContentPage() {
 
       if (editingId && editingId !== 'new') {
         // Update existing bonus
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('bonuses')
           .update({
             ...formData,
@@ -131,7 +133,8 @@ function BonusesContentPage() {
         toast.success('Bonus updated successfully')
       } else {
         // Create new bonus
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('bonuses')
           .insert([formData])
 
@@ -175,7 +178,8 @@ function BonusesContentPage() {
     if (!confirm('Are you sure you want to delete this bonus?')) return
 
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('bonuses')
         .delete()
         .eq('id', id)
@@ -191,7 +195,8 @@ function BonusesContentPage() {
 
   const toggleStatus = async (id: string, field: 'is_active' | 'is_featured' | 'is_exclusive', currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('bonuses')
         .update({ [field]: !currentStatus })
         .eq('id', id)
@@ -222,6 +227,7 @@ function BonusesContentPage() {
       terms_conditions: '',
       valid_from: '',
       valid_until: '',
+      image_url: '',
       is_exclusive: false,
       is_featured: false,
       is_active: true

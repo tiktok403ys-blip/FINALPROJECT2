@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Shield, LogOut, Menu, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAdminSecurity } from "@/components/admin-security-provider"
+import { AdminAuth } from "@/lib/auth/admin-auth"
 import { useEffect, useState } from "react"
 
 interface AdminTopbarProps {
@@ -13,9 +13,20 @@ interface AdminTopbarProps {
 
 export function AdminTopbar({ onToggleSidebar }: AdminTopbarProps) {
   const pathname = usePathname()
-  const { user, signOut, isSuperAdmin } = useAdminSecurity()
+  const adminAuth = AdminAuth.getInstance()
+  const [user, setUser] = useState<any>(null)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [pendingCount, setPendingCount] = useState<number>(0)
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const { user, profile } = await adminAuth.getCurrentUser()
+      setUser(user)
+      setIsSuperAdmin(adminAuth.isSuperAdmin())
+    }
+    loadUser()
+  }, [])
 
   useEffect(() => {
     let timer: any
@@ -35,8 +46,8 @@ export function AdminTopbar({ onToggleSidebar }: AdminTopbarProps) {
     if (signingOut) return
     setSigningOut(true)
     try {
-      await signOut()
-      // Redirect is handled in provider
+      await adminAuth.signOut()
+      window.location.href = '/admin/login'
     } finally {
       setSigningOut(false)
     }
@@ -91,5 +102,3 @@ export function AdminTopbar({ onToggleSidebar }: AdminTopbarProps) {
     </header>
   )
 }
-
-

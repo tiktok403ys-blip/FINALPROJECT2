@@ -69,7 +69,7 @@ export default async function CasinosPage() {
         fallbackTitle="Best Online Casinos for December 2024 - Expert Picks You Can Trust"
         fallbackDescription="We've reviewed more than 7,000 online casinos to bring you the TOP 10 for December. Each is rated using our unique Safety Index - developed by experts, grounded in real casino data, and shaped by insights from our active community. Find the best online casino for you."
         breadcrumbs={[{ label: "Best online casinos" }]}
-        author="GuruSingapore Team"
+        author={{ name: "GuruSingapore Team" }}
         date="10 Dec 2024"
       />
 

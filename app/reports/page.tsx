@@ -94,7 +94,7 @@ export default function ReportsPage() {
         fallbackTitle="Casino Reports & Complaints for December 2024 - Player Protection"
         fallbackDescription="Report casino issues and complaints. Our expert team investigates every complaint and works to resolve disputes between players and casinos. Help us maintain a safe and fair gambling environment for everyone."
         breadcrumbs={[{ label: "Casino Reports" }]}
-        author="GuruSingapore Protection Team"
+        author={{ name: "GuruSingapore Protection Team" }}
         date="10 Dec 2024"
       />
 

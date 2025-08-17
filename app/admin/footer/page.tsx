@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import {
   Layout,
@@ -85,7 +85,8 @@ function FooterContentPage() {
   const loadFooterItems = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const supabaseClient = supabase()
+      const { data, error } = await supabaseClient
         .from('footer_content')
         .select('*')
         .order('section', { ascending: true })
@@ -110,7 +111,8 @@ function FooterContentPage() {
 
       if (editingId && editingId !== 'new') {
         // Update existing footer item
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('footer_content')
           .update({
             ...formData,
@@ -122,7 +124,8 @@ function FooterContentPage() {
         toast.success('Footer item updated successfully')
       } else {
         // Create new footer item
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('footer_content')
           .insert([formData])
 
@@ -156,7 +159,8 @@ function FooterContentPage() {
     if (!confirm('Are you sure you want to delete this footer item?')) return
 
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('footer_content')
         .delete()
         .eq('id', id)
@@ -172,7 +176,8 @@ function FooterContentPage() {
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('footer_content')
         .update({ is_active: !currentStatus })
         .eq('id', id)

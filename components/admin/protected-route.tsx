@@ -1,8 +1,8 @@
 'use client'
 
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 import { AdminRole } from '@/lib/auth/admin-auth'
 import { Loader2 } from 'lucide-react'
 
@@ -21,8 +21,19 @@ export function ProtectedRoute({
   fallback,
   redirectTo = '/admin/login'
 }: ProtectedRouteProps) {
-  const { user, loading, hasRole, hasPermission } = useAdminAuth()
+  const adminAuth = AdminAuth.getInstance()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await adminAuth.getCurrentUser()
+      setUser(currentUser)
+      setLoading(false)
+    }
+    loadUser()
+  }, [])
 
   useEffect(() => {
     if (!loading) {
@@ -33,7 +44,7 @@ export function ProtectedRoute({
       }
 
       // Check role requirement
-      if (requiredRole && !hasRole(requiredRole)) {
+      if (requiredRole && !adminAuth.hasRole(requiredRole)) {
         router.push('/admin/unauthorized')
         return
       }
@@ -41,7 +52,7 @@ export function ProtectedRoute({
       // Check permission requirements
       if (requiredPermissions.length > 0) {
         const hasAllPermissions = requiredPermissions.every(permission => 
-          hasPermission(permission)
+          adminAuth.hasPermission(permission)
         )
         
         if (!hasAllPermissions) {
@@ -50,7 +61,7 @@ export function ProtectedRoute({
         }
       }
     }
-  }, [user, loading, requiredRole, requiredPermissions, hasRole, hasPermission, router, redirectTo])
+  }, [user, loading, requiredRole, requiredPermissions, router, redirectTo])
 
   // Show loading state
   if (loading) {
@@ -76,7 +87,7 @@ export function ProtectedRoute({
   }
 
   // Check role requirement
-  if (requiredRole && !hasRole(requiredRole)) {
+  if (requiredRole && !adminAuth.hasRole(requiredRole)) {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="text-center">
@@ -90,7 +101,7 @@ export function ProtectedRoute({
   // Check permission requirements
   if (requiredPermissions.length > 0) {
     const hasAllPermissions = requiredPermissions.every(permission => 
-      hasPermission(permission)
+      adminAuth.hasPermission(permission)
     )
     
     if (!hasAllPermissions) {
@@ -147,18 +158,18 @@ export function RoleGuard({
   fallback = null,
   requireAll = true
 }: RoleGuardProps) {
-  const { hasRole, hasPermission } = useAdminAuth()
+  const adminAuth = AdminAuth.getInstance()
 
   // Check role requirement
-  if (role && !hasRole(role)) {
+  if (role && !adminAuth.hasRole(role)) {
     return <>{fallback}</>
   }
 
   // Check permission requirements
   if (permissions.length > 0) {
     const checkPermissions = requireAll
-      ? permissions.every(permission => hasPermission(permission))
-      : permissions.some(permission => hasPermission(permission))
+      ? permissions.every(permission => adminAuth.hasPermission(permission))
+      : permissions.some(permission => adminAuth.hasPermission(permission))
     
     if (!checkPermissions) {
       return <>{fallback}</>

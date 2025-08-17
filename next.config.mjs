@@ -2,10 +2,10 @@
 const nextConfig = {
   serverExternalPackages: ['@supabase/ssr'],
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     domains: ['localhost', 'via.placeholder.com', 'images.unsplash.com', 'picsum.photos'],

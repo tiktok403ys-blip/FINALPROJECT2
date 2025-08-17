@@ -28,7 +28,7 @@ export default async function NewsPage() {
           { label: 'Home', href: '/' },
           { label: 'News', href: '/news' }
         ]}
-        author="Casino Guru Team"
+        author={{ name: "Casino Guru Team" }}
         date="Updated daily"
       />
       <div className="container mx-auto px-4 py-16">

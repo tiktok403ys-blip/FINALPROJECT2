@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://gurusingapore.com",
+    url: `https://${process.env.NEXT_PUBLIC_SITE_DOMAIN}`,
     title: "GuruSingapore - Ultimate Casino Guide",
     description:
       "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming.",
@@ -43,7 +43,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const host = (await headers()).get("host") || ""
-  const isAdminSubdomain = host === "sg44admin.gurusingapore.com"
+  const isAdminSubdomain = host === process.env.ADMIN_SUBDOMAIN
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

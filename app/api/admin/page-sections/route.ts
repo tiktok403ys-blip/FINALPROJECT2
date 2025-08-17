@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { validateAdminAuth } from '@/lib/auth/admin-middleware'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    // Validate admin authentication
+    const authResult = await validateAdminAuth(request, ['read_content']);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
     
+    const { supabase } = authResult;
     const { searchParams } = new URL(request.url)
     const pageName = searchParams.get('page_name')
     const sectionType = searchParams.get('section_type')
@@ -47,17 +50,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
-    
-    // Check if user is admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // Validate admin authentication with create permissions
+    const authResult = await validateAdminAuth(request, ['create_content']);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    
+    const { supabase } = authResult;
     
     const body = await request.json()
     const { page_name, section_type, heading, content, display_order = 0, is_active = true } = body
@@ -102,17 +101,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
-    
-    // Check if user is admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // Validate admin authentication with update permissions
+    const authResult = await validateAdminAuth(request, ['update_content']);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    
+    const { supabase } = authResult;
     
     const body = await request.json()
     const { id, page_name, section_type, heading, content, display_order, is_active } = body
@@ -159,17 +154,13 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
-    
-    // Check if user is admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // Validate admin authentication with delete permissions
+    const authResult = await validateAdminAuth(request, ['delete_content']);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    
+    const { supabase } = authResult;
     
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

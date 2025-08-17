@@ -7,7 +7,7 @@ import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PaginationControls } from "@/components/admin/pagination"
-import { useAdminSecurity } from "@/components/admin-security-provider"
+import { AdminAuth } from "@/lib/auth/admin-auth"
 import { Eye, EyeOff, Search, Trash2, User, Star, ExternalLink } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -38,7 +38,7 @@ export default function AdminPlayerReviewsPage() {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "pending">("newest")
   const [page, setPage] = useState(1)
   const pageSize = 12
-  const { logAdminAction } = useAdminSecurity()
+  const adminAuth = AdminAuth.getInstance()
   const { toast } = useToast()
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function AdminPlayerReviewsPage() {
     if (ids.length === 0) return
     const { error } = await supabase.from("player_reviews").update({ is_approved: true }).in("id", ids)
     if (!error) {
-      await logAdminAction("batch_approve", "player_reviews", "*", { count: ids.length })
+      await adminAuth.logAdminAction("batch_approve", "player_reviews", "*", { count: ids.length })
       toast({ title: "Approved pending reviews", description: `${ids.length} review(s) approved` })
       fetchRows()
     }
@@ -101,7 +101,7 @@ export default function AdminPlayerReviewsPage() {
   const toggleApproved = async (row: PlayerReviewRow) => {
     const { error } = await supabase.from("player_reviews").update({ is_approved: !row.is_approved }).eq("id", row.id)
     if (!error) {
-      await logAdminAction("toggle_approved", "player_reviews", row.id, { is_approved: !row.is_approved })
+      await adminAuth.logAdminAction("toggle_approved", "player_reviews", row.id, { is_approved: !row.is_approved })
       toast({ title: row.is_approved ? "Review hidden" : "Review approved", description: row.title })
       fetchRows()
     }
@@ -111,7 +111,7 @@ export default function AdminPlayerReviewsPage() {
     if (!confirm("Delete this player review?")) return
     const { error } = await supabase.from("player_reviews").delete().eq("id", row.id)
     if (!error) {
-      await logAdminAction("delete", "player_reviews", row.id, {})
+      await adminAuth.logAdminAction("delete", "player_reviews", row.id, {})
       toast({ title: "Review deleted", description: row.title })
       fetchRows()
     }

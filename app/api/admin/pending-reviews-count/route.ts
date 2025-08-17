@@ -1,8 +1,15 @@
-import { createClient as createSupabaseServerClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from 'next/server'
+import { validateAdminAuth } from '@/lib/auth/admin-middleware'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient()
+    // Validate admin authentication
+    const authResult = await validateAdminAuth(request, ['read_reviews']);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    
+    const { supabase } = authResult;
     const { count, error } = await supabase
       .from("player_reviews")
       .select("*", { count: "exact", head: true })

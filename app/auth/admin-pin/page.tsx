@@ -15,7 +15,7 @@ export default function AdminPinPage() {
   }, [loading, user])
 
   const onSuccess = () => {
-    window.location.href = "https://sg44admin.gurusingapore.com"
+    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN || 'sg44admin.gurusingapore.com'}`
   }
 
   return (

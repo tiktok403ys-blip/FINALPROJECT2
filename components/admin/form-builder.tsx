@@ -336,7 +336,7 @@ export function FormBuilder<T extends FieldValues>({
                               if (checked) {
                                 controllerField.onChange([...currentValues, option.value])
                               } else {
-                                controllerField.onChange(currentValues.filter(v => v !== option.value))
+                                controllerField.onChange((currentValues as any[]).filter(v => v !== option.value))
                               }
                             }}
                             disabled={option.disabled || field.disabled || loading}

@@ -331,7 +331,7 @@ export function Navbar() {
 
   const handlePinSuccess = () => {
     console.log("✅ PIN verified, redirecting to admin panel...")
-    window.location.href = "https://sg44admin.gurusingapore.com"
+    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN || 'sg44admin.gurusingapore.com'}`
   }
 
   const getUserDisplayName = () => {

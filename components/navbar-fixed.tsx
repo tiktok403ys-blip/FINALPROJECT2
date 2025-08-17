@@ -97,8 +97,8 @@ export function NavbarFixed() {
             email: currentUser.email,
             full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
             avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: currentUser.email === "casinogurusg404@gmail.com" ? "super_admin" : "user",
-            admin_pin: currentUser.email === "casinogurusg404@gmail.com" ? "1234" : null,
+            role: "user", // Default role, admin roles managed server-side
+            admin_pin: null,
           }
 
           const { data: createdProfile, error: createError } = await supabase
@@ -124,7 +124,7 @@ export function NavbarFixed() {
             email: currentUser.email,
             full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
             avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: currentUser.email === "casinogurusg404@gmail.com" ? "super_admin" : "user",
+            role: "user", // Default role, admin roles managed server-side
             admin_pin: null,
           }
 
@@ -148,7 +148,7 @@ export function NavbarFixed() {
         email: currentUser.email,
         full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
         avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-        role: currentUser.email === "casinogurusg404@gmail.com" ? "super_admin" : "user",
+        role: "user", // Default role, admin roles managed server-side
         admin_pin: null,
       }
 
@@ -238,7 +238,7 @@ export function NavbarFixed() {
 
   const handlePinSuccess = () => {
     console.log("✅ PIN verified, redirecting to admin panel...")
-    window.location.href = "https://sg44admin.gurusingapore.com"
+    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN || 'sg44admin.gurusingapore.com'}`
   }
 
   const getUserDisplayName = () => {

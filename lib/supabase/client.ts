@@ -12,7 +12,7 @@ function resolveCookieDomain(): string | undefined {
 
   const host = window.location.hostname
   // Use apex domain in production to share cookies across subdomains
-  if (host.endsWith("gurusingapore.com")) return "gurusingapore.com"
+  if (host.endsWith(process.env.NEXT_PUBLIC_SITE_DOMAIN || "gurusingapore.com")) return process.env.NEXT_PUBLIC_SITE_DOMAIN || "gurusingapore.com"
   // For localhost or unknown hosts, fall back to host-only cookies
   return undefined
 }

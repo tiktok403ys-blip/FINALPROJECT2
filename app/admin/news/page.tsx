@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import {
   Newspaper,
@@ -23,7 +23,7 @@ import {
   User,
   Tag
 } from 'lucide-react'
-import { ImageUpload } from '@/components/admin/ImageUpload'
+import { ImageUpload } from '@/components/admin/image-upload'
 
 interface NewsArticle {
   id: string
@@ -80,7 +80,8 @@ function NewsContentPage() {
   const loadArticles = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const supabaseClient = supabase()
+      const { data, error } = await supabaseClient
         .from('news_articles')
         .select('*')
         .order('created_at', { ascending: false })
@@ -112,7 +113,8 @@ function NewsContentPage() {
 
       if (editingId && editingId !== 'new') {
         // Update existing article
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('news_articles')
           .update({
             ...dataToSave,
@@ -124,7 +126,8 @@ function NewsContentPage() {
         toast.success('Article updated successfully')
       } else {
         // Create new article
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('news_articles')
           .insert([dataToSave])
 
@@ -161,7 +164,8 @@ function NewsContentPage() {
     if (!confirm('Are you sure you want to delete this article?')) return
 
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('news_articles')
         .delete()
         .eq('id', id)
@@ -177,7 +181,8 @@ function NewsContentPage() {
 
   const toggleStatus = async (id: string, field: 'is_featured', currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('news_articles')
         .update({ [field]: !currentStatus })
         .eq('id', id)
@@ -202,7 +207,8 @@ function NewsContentPage() {
         updateData.published_at = new Date().toISOString()
       }
 
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('news_articles')
         .update(updateData)
         .eq('id', id)
@@ -392,8 +398,7 @@ function NewsContentPage() {
                 bucket="news-images"
                 value={formData.featured_image}
                 onChange={(url) => setFormData({ ...formData, featured_image: url })}
-                accept="image/*"
-                maxSize={5 * 1024 * 1024}
+                label="Upload featured image"
               />
             </div>
             <div>

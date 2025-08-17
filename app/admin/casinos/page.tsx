@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
-import ImageUpload from '@/components/admin/ImageUpload'
+import { ImageUpload } from '@/components/admin/image-upload'
 import {
   Building2,
   Plus,
@@ -101,27 +101,7 @@ function CasinosContentPage() {
     invalidateQueries: [`casinos-${searchTerm}-${statusFilter}`]
   })
 
-  useEffect(() => {
-    loadCasinos()
-  }, [])
-
-  const loadCasinos = async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('casinos')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setCasinos(data || [])
-    } catch (error) {
-      console.error('Error loading casinos:', error)
-      toast.error('Failed to load casinos')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Data is automatically loaded by useOptimizedQuery hook
 
   const handleSave = async () => {
     try {
@@ -138,7 +118,8 @@ function CasinosContentPage() {
 
       if (editingId && editingId !== 'new') {
         // Update existing casino
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('casinos')
           .update({
             ...dataToSave,
@@ -150,7 +131,8 @@ function CasinosContentPage() {
         toast.success('Casino updated successfully')
       } else {
         // Create new casino
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('casinos')
           .insert([dataToSave])
 
@@ -159,7 +141,7 @@ function CasinosContentPage() {
       }
 
       resetForm()
-      loadCasinos()
+      refetch()
     } catch (error) {
       console.error('Error saving casino:', error)
       toast.error('Failed to save casino')
@@ -190,14 +172,15 @@ function CasinosContentPage() {
     if (!confirm('Are you sure you want to delete this casino?')) return
 
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('casinos')
         .delete()
         .eq('id', id)
 
       if (error) throw error
       toast.success('Casino deleted successfully')
-      loadCasinos()
+      refetch()
     } catch (error) {
       console.error('Error deleting casino:', error)
       toast.error('Failed to delete casino')
@@ -206,14 +189,15 @@ function CasinosContentPage() {
 
   const toggleStatus = async (id: string, field: 'is_active' | 'is_featured', currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('casinos')
         .update({ [field]: !currentStatus })
         .eq('id', id)
 
       if (error) throw error
       toast.success(`${field === 'is_active' ? 'Status' : 'Featured'} updated successfully`)
-      loadCasinos()
+      refetch()
     } catch (error) {
       console.error('Error updating status:', error)
       toast.error('Failed to update status')
@@ -240,7 +224,7 @@ function CasinosContentPage() {
     setPaymentMethodsInput('')
   }
 
-  const filteredCasinos = casinos.filter(casino => {
+  const filteredCasinos = (casinos || []).filter(casino => {
     const matchesSearch = casino.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          casino.description.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || 
@@ -403,9 +387,7 @@ function CasinosContentPage() {
                 value={formData.logo_url}
                 onChange={(url) => setFormData({ ...formData, logo_url: url })}
                 bucket="casino-images"
-                folder="logos"
-                placeholder="Upload logo casino"
-                maxSize={2}
+                label="Upload logo casino"
               />
             </div>
             <div>

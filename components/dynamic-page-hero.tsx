@@ -62,9 +62,8 @@ export function DynamicPageHero({
       title={title}
       description={description}
       breadcrumbs={breadcrumbs}
-      author={author}
+      author={author?.name}
       date={date}
-      className={className}
     >
       {children}
     </PageHero>
@@ -125,10 +124,10 @@ export function SimpleDynamicHero({
 
 // Hook untuk mendapatkan multiple sections untuk satu halaman
 export function usePageSections(pageName: string) {
-  const { data, loading, error, refetch } = usePageSectionSingle(pageName, '')
+  const { section, loading, error, refetch } = usePageSectionSingle(pageName, '')
   
   return {
-    sections: data,
+    sections: section ? [section] : [],
     loading,
     error,
     refetch

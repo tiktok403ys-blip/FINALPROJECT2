@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 import {
   BarChart3,
   Home,
@@ -73,12 +73,21 @@ const navigationItems: NavigationItem[] = [
 ]
 
 export function AdminSidebar() {
-  const { user, signOut } = useAdminAuth()
+  const adminAuth = AdminAuth.getInstance()
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await adminAuth.getCurrentUser()
+      setUser(currentUser)
+    }
+    loadUser()
+  }, [])
 
   useEffect(() => {
     const checkMobile = () => {
@@ -94,7 +103,7 @@ export function AdminSidebar() {
   }, [])
 
   const handleSignOut = async () => {
-    await signOut()
+    await adminAuth.signOut()
     router.push('/admin/login')
   }
 

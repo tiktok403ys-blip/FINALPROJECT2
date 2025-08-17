@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 import { toast } from 'sonner'
 
 const loginSchema = z.object({
@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { signIn } = useAdminAuth()
+  const adminAuth = AdminAuth.getInstance()
 
   const {
     register,
@@ -38,9 +38,10 @@ export default function AdminLoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true)
-      const success = await signIn(data.email, data.password)
+      const success = await adminAuth.signIn(data.email, data.password)
       
       if (success) {
+        toast.success('Login successful!')
         router.push('/admin')
       } else {
         setError('root', {

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import {
   Home,
@@ -51,7 +51,8 @@ function HomeContentPage() {
   const loadHomeContents = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const supabaseClient = supabase()
+      const { data, error } = await supabaseClient
         .from('home_contents')
         .select('*')
         .order('created_at', { ascending: false })
@@ -75,7 +76,8 @@ function HomeContentPage() {
 
       if (editingId) {
         // Update existing content
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('home_contents')
           .update({
             ...formData,
@@ -87,7 +89,8 @@ function HomeContentPage() {
         toast.success('Home content updated successfully')
       } else {
         // Create new content
-        const { error } = await supabase
+        const supabaseClient = supabase()
+        const { error } = await supabaseClient
           .from('home_contents')
           .insert([formData])
 
@@ -118,7 +121,8 @@ function HomeContentPage() {
     if (!confirm('Are you sure you want to delete this content?')) return
 
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('home_contents')
         .delete()
         .eq('id', id)
@@ -134,7 +138,8 @@ function HomeContentPage() {
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const supabaseClient = supabase()
+      const { error } = await supabaseClient
         .from('home_contents')
         .update({ is_active: !currentStatus })
         .eq('id', id)

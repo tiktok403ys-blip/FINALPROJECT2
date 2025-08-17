@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/admin/protected-route'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
-import { supabase } from '@/lib/auth/admin-auth'
+import { AdminAuth } from '@/lib/auth/admin-auth'
+import { createClient } from '@/lib/supabase/client'
 import { 
   BarChart3, 
   Users, 
@@ -12,7 +12,7 @@ import {
   MessageSquare, 
   AlertTriangle,
   Settings,
-  Casino,
+  Dice6,
   Gift,
   LogOut,
   Shield,
@@ -41,7 +41,9 @@ interface DashboardStats {
 }
 
 function AdminDashboard() {
-  const { user, signOut } = useAdminAuth()
+  const [user, setUser] = useState<any>(null)
+  const adminAuth = AdminAuth.getInstance()
+  const supabase = createClient()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -59,6 +61,12 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Load current user
+    const loadUser = async () => {
+      const currentUser = await adminAuth.getCurrentUser()
+      setUser(currentUser)
+    }
+    loadUser()
     loadDashboardStats()
     
     // Set up real-time subscriptions for dashboard updates
@@ -113,18 +121,19 @@ function AdminDashboard() {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
       // Load analytics statistics
+      const supabaseClient = supabase()
       const [usersResult, casinosResult, bonusesResult, newsResult, reviewsResult, reportsResult, activitiesResult, dailyUsersResult, dailyLoginsResult, reviewsTodayResult, reviewsWeekResult] = await Promise.all([
-        supabase.from('admin_users').select('id', { count: 'exact', head: true }),
-        supabase.from('casinos').select('id', { count: 'exact', head: true }),
-        supabase.from('bonuses').select('id', { count: 'exact', head: true }),
-        supabase.from('news').select('id', { count: 'exact', head: true }),
-        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }),
-        supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(10),
-        supabase.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_active'),
-        supabase.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_login'),
-        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', today),
-        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo)
+        supabaseClient.from('admin_users').select('id', { count: 'exact', head: true }),
+        supabaseClient.from('casinos').select('id', { count: 'exact', head: true }),
+        supabaseClient.from('bonuses').select('id', { count: 'exact', head: true }),
+        supabaseClient.from('news').select('id', { count: 'exact', head: true }),
+        supabaseClient.from('casino_reviews').select('id', { count: 'exact', head: true }),
+        supabaseClient.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabaseClient.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(10),
+        supabaseClient.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_active'),
+        supabaseClient.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_login'),
+        supabaseClient.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', today),
+        supabaseClient.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo)
       ])
 
       setStats({
@@ -150,7 +159,7 @@ function AdminDashboard() {
 
 
   const handleSignOut = async () => {
-    await signOut()
+    await adminAuth.signOut()
     router.push('/admin/login')
   }
 

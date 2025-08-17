@@ -7,7 +7,7 @@ import { DataTable, DataTableColumn, DataTableAction } from '@/components/admin/
 import { FormBuilder, FormSection } from '@/components/admin/form-builder'
 import { ProtectedRoute } from '@/components/admin/protected-route'
 import { useCrud } from '@/hooks/use-crud'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -47,7 +47,7 @@ interface Report {
   resolution_notes?: string
   resolution_time?: number // in hours
   attachments?: string[]
-  tags: string[]
+  tags?: string[]
   severity: 'minor' | 'moderate' | 'major' | 'critical'
   reproducible: boolean
   steps_to_reproduce?: string
@@ -104,7 +104,7 @@ const reportSchema = z.object({
   casino_id: z.string().optional(),
   assigned_to: z.string().optional(),
   resolution_notes: z.string().max(2000, 'Resolution notes too long').optional(),
-  tags: z.array(z.string()).max(10, 'Too many tags').default([]),
+  tags: z.array(z.string()).max(10, 'Too many tags').optional().default([]),
   severity: z.enum(['minor', 'moderate', 'major', 'critical'], {
     required_error: 'Severity is required'
   }),
@@ -128,7 +128,8 @@ const reportSchema = z.object({
 type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportsPage() {
-  const { hasPermission, user } = useAdminAuth()
+  const [user, setUser] = useState<any>(null)
+  const adminAuth = AdminAuth.getInstance()
   const [showForm, setShowForm] = useState(false)
   const [editingReport, setEditingReport] = useState<Report | null>(null)
   const [viewingReport, setViewingReport] = useState<Report | null>(null)
@@ -141,10 +142,9 @@ export default function ReportsPage() {
   const [loadingAdmins, setLoadingAdmins] = useState(false)
   const [loadingCasinos, setLoadingCasinos] = useState(false)
 
-  const crudState = useCrud<Report>({
+  const [crudState, crudActions] = useCrud<Report>({
     table: 'reports',
-    searchFields: ['title', 'description', 'reporter_name', 'reporter_email', 'casino_name'],
-    defaultSort: { field: 'created_at', order: 'desc' },
+    orderBy: { column: 'created_at', ascending: false },
     filters: {
       ...(statusFilter !== 'all' && { status: statusFilter }),
       ...(categoryFilter !== 'all' && { category: categoryFilter }),
@@ -152,6 +152,15 @@ export default function ReportsPage() {
       ...(severityFilter !== 'all' && { severity: severityFilter })
     }
   })
+
+  // Load current user
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await adminAuth.getCurrentUser()
+      setUser(currentUser)
+    }
+    loadUser()
+  }, [])
 
   // Load admins and casinos for selection
   useEffect(() => {
@@ -161,7 +170,8 @@ export default function ReportsPage() {
       
       try {
         // Load admins
-        const { data: adminData, error: adminError } = await supabase
+        const supabaseClient = supabase()
+        const { data: adminData, error: adminError } = await supabaseClient
           .from('admin_users')
           .select('id, name, email, role')
           .eq('status', 'active')
@@ -171,7 +181,7 @@ export default function ReportsPage() {
         setAdmins(adminData || [])
         
         // Load casinos
-        const { data: casinoData, error: casinoError } = await supabase
+        const { data: casinoData, error: casinoError } = await supabaseClient
           .from('casinos')
           .select('id, name, status')
           .eq('status', 'active')
@@ -261,8 +271,7 @@ export default function ReportsPage() {
           name: 'tags',
           label: 'Tags',
           type: 'tags',
-          placeholder: 'Add relevant tags (e.g., mobile, payment, ui)',
-          help: 'Add tags to help categorize and search for this report'
+          placeholder: 'Add relevant tags (e.g., mobile, payment, ui)'
         }
       ]
     },
@@ -289,8 +298,7 @@ export default function ReportsPage() {
           name: 'page_url',
           label: 'Page URL',
           type: 'url',
-          placeholder: 'https://example.com/page-where-issue-occurred',
-          help: 'URL where the issue occurred (if applicable)'
+          placeholder: 'https://example.com/page-where-issue-occurred'
         },
         {
           name: 'casino_id',
@@ -299,9 +307,7 @@ export default function ReportsPage() {
           options: casinos.map(casino => ({
             label: casino.name,
             value: casino.id
-          })),
-          loading: loadingCasinos,
-          help: 'Select if this report is related to a specific casino'
+          }))
         },
         {
           name: 'source',
@@ -324,7 +330,6 @@ export default function ReportsPage() {
       title: 'Technical Details',
       description: 'Technical information for bug reports and issues',
       collapsible: true,
-      condition: (values) => ['bug', 'technical'].includes(values.category),
       fields: [
         {
           name: 'reproducible',
@@ -339,7 +344,7 @@ export default function ReportsPage() {
           placeholder: '1. Go to...\n2. Click on...\n3. See error...',
           rows: 4,
           maxLength: 2000,
-          condition: (values) => values.reproducible
+          conditional: (values: any) => values.reproducible
         },
         {
           name: 'expected_behavior',
@@ -398,9 +403,7 @@ export default function ReportsPage() {
           options: admins.map(admin => ({
             label: `${admin.name} (${admin.role})`,
             value: admin.id
-          })),
-          loading: loadingAdmins,
-          help: 'Assign this report to an admin for handling'
+          }))
         },
         {
           name: 'resolution_notes',
@@ -409,7 +412,7 @@ export default function ReportsPage() {
           placeholder: 'Notes about how this issue was resolved...',
           rows: 3,
           maxLength: 2000,
-          condition: (values) => ['resolved', 'closed'].includes(values.status)
+          conditional: (values: any) => ['resolved', 'closed'].includes(values.status)
         },
         {
           name: 'follow_up_required',
@@ -421,7 +424,7 @@ export default function ReportsPage() {
           name: 'follow_up_date',
           label: 'Follow-up Date',
           type: 'date',
-          condition: (values) => values.follow_up_required
+          conditional: (values: any) => values.follow_up_required
         },
         {
           name: 'escalated',
@@ -434,7 +437,7 @@ export default function ReportsPage() {
           label: 'Escalated To',
           type: 'text',
           placeholder: 'Name or department escalated to',
-          condition: (values) => values.escalated
+          conditional: (values: any) => values.escalated
         }
       ]
     },
@@ -449,8 +452,7 @@ export default function ReportsPage() {
           type: 'textarea',
           placeholder: 'Internal notes for team members...',
           rows: 3,
-          maxLength: 2000,
-          help: 'These notes are only visible to admin team'
+          maxLength: 2000
         },
         {
           name: 'public_response',
@@ -458,8 +460,7 @@ export default function ReportsPage() {
           type: 'textarea',
           placeholder: 'Response to send to the reporter...',
           rows: 3,
-          maxLength: 1000,
-          help: 'This response may be sent to the reporter'
+          maxLength: 1000
         }
       ]
     }
@@ -501,8 +502,8 @@ export default function ReportsPage() {
           other: 'bg-indigo-500/20 text-indigo-300'
         }
         return (
-          <Badge className={categoryColors[value] || 'bg-gray-500/20 text-gray-300'}>
-            {value.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          <Badge className={categoryColors[value as keyof typeof categoryColors] || 'bg-gray-500/20 text-gray-300'}>
+            {value.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
           </Badge>
         )
       }
@@ -524,11 +525,11 @@ export default function ReportsPage() {
           high: AlertTriangle,
           critical: XCircle
         }
-        const Icon = priorityIcons[value]
+        const Icon = priorityIcons[value as keyof typeof priorityIcons]
         return (
           <div className="flex items-center gap-2">
             <Icon className="w-4 h-4" />
-            <Badge className={priorityColors[value] || 'bg-gray-500/20 text-gray-300'}>
+            <Badge className={priorityColors[value as keyof typeof priorityColors] || 'bg-gray-500/20 text-gray-300'}>
               {value.charAt(0).toUpperCase() + value.slice(1)}
             </Badge>
           </div>
@@ -555,12 +556,12 @@ export default function ReportsPage() {
           closed: Archive,
           rejected: XCircle
         }
-        const Icon = statusIcons[value]
+        const Icon = statusIcons[value as keyof typeof statusIcons]
         return (
           <div className="flex items-center gap-2">
             <Icon className="w-4 h-4" />
-            <Badge className={statusColors[value] || 'bg-gray-500/20 text-gray-300'}>
-              {value.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            <Badge className={statusColors[value as keyof typeof statusColors] || 'bg-gray-500/20 text-gray-300'}>
+              {value.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
             </Badge>
           </div>
         )
@@ -603,7 +604,7 @@ export default function ReportsPage() {
           critical: 'bg-red-500/20 text-red-300'
         }
         return (
-          <Badge className={severityColors[value] || 'bg-gray-500/20 text-gray-300'}>
+          <Badge className={severityColors[value as keyof typeof severityColors] || 'bg-gray-500/20 text-gray-300'}>
             {value.charAt(0).toUpperCase() + value.slice(1)}
           </Badge>
         )
@@ -663,9 +664,9 @@ export default function ReportsPage() {
     }
 
     if (editingReport) {
-      await crudState.actions.updateItem(editingReport.id, reportData)
+      await crudActions.updateItem(editingReport.id, reportData)
     } else {
-      await crudState.actions.createItem(reportData)
+      await crudActions.createItem(reportData)
     }
     setShowForm(false)
     setEditingReport(null)
@@ -678,7 +679,7 @@ export default function ReportsPage() {
 
   const handleAssign = async (report: Report, adminId: string) => {
     const admin = admins.find(a => a.id === adminId)
-    await crudState.actions.updateItem(report.id, {
+    await crudActions.updateItem(report.id, {
       assigned_to: adminId,
       assigned_admin_name: admin?.name,
       status: report.status === 'open' ? 'in_progress' : report.status
@@ -691,7 +692,7 @@ export default function ReportsPage() {
     const now = new Date()
     const resolutionTime = Math.round((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60))
     
-    await crudState.actions.updateItem(report.id, {
+    await crudActions.updateItem(report.id, {
       status: 'resolved',
       resolved_at: new Date().toISOString(),
       resolution_time: resolutionTime
@@ -700,7 +701,7 @@ export default function ReportsPage() {
   }
 
   const handleClose = async (report: Report) => {
-    await crudState.actions.updateItem(report.id, {
+    await crudActions.updateItem(report.id, {
       status: 'closed',
       closed_at: new Date().toISOString()
     })
@@ -708,7 +709,7 @@ export default function ReportsPage() {
   }
 
   const handleEscalate = async (report: Report) => {
-    await crudState.actions.updateItem(report.id, {
+    await crudActions.updateItem(report.id, {
       escalated: true,
       escalated_at: new Date().toISOString(),
       priority: report.priority === 'low' ? 'medium' : report.priority === 'medium' ? 'high' : 'critical'
@@ -726,25 +727,25 @@ export default function ReportsPage() {
       label: 'Edit',
       icon: Edit,
       onClick: handleEdit,
-      show: () => hasPermission('reports.update')
+      show: () => adminAuth.hasPermission('reports.update')
     },
     {
       label: 'Resolve',
       icon: CheckCircle,
       onClick: handleResolve,
-      show: (item) => hasPermission('reports.update') && !['resolved', 'closed'].includes(item.status)
+      show: (item) => adminAuth.hasPermission('reports.update') && !['resolved', 'closed'].includes(item.status)
     },
     {
       label: 'Close',
       icon: Archive,
       onClick: handleClose,
-      show: (item) => hasPermission('reports.update') && item.status !== 'closed'
+      show: (item) => adminAuth.hasPermission('reports.update') && item.status !== 'closed'
     },
     {
       label: 'Escalate',
       icon: Flag,
       onClick: handleEscalate,
-      show: (item) => hasPermission('reports.update') && !item.escalated
+      show: (item) => adminAuth.hasPermission('reports.update') && !item.escalated
     }
   ]
 
@@ -818,10 +819,10 @@ export default function ReportsPage() {
             title="Report Management"
             description="Manage user reports, bug reports, and feedback"
             columns={columns}
-            state={crudState.state}
-            actions={crudState.actions}
+            state={crudState}
+            actions={crudActions}
             itemActions={itemActions}
-            onCreateNew={hasPermission('reports.create') ? handleCreate : undefined}
+            onCreateNew={adminAuth.hasPermission('reports.create') ? handleCreate : undefined}
             filters={filters}
             emptyMessage="No reports found"
             emptyDescription="Start by creating your first report or wait for user submissions."
@@ -831,12 +832,15 @@ export default function ReportsPage() {
             title={editingReport ? 'Edit Report' : 'Create New Report'}
             description={editingReport ? 'Update report information and status' : 'Create a new report or issue'}
             sections={formSections}
-            schema={reportSchema}
-            defaultValues={editingReport || undefined}
+            schema={reportSchema as any}
+            defaultValues={editingReport ? {
+              ...editingReport,
+              tags: editingReport.tags || []
+            } : undefined}
             onSubmit={handleFormSubmit}
             onCancel={handleFormCancel}
             mode={editingReport ? 'edit' : 'create'}
-            loading={crudState.state.loading}
+            loading={crudState.loading}
           />
         )}
 
@@ -936,7 +940,7 @@ export default function ReportsPage() {
                       </div>
                     </div>
                     
-                    {viewingReport.tags.length > 0 && (
+                    {viewingReport.tags && viewingReport.tags.length > 0 && (
                       <div className="mt-4">
                         <span className="text-white/60">Tags:</span>
                         <div className="flex flex-wrap gap-2 mt-2">

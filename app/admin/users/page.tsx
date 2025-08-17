@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUpload } from '@/components/admin/image-upload'
-import { supabase } from '@/lib/auth/admin-auth'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
@@ -141,12 +141,14 @@ function UsersManagementPage() {
 
       if (editingId && editingId !== 'new') {
         // Update existing user
+        const supabaseClient = supabase()
         await mutate('update', {
           ...formData,
           updated_at: new Date().toISOString()
         }, { id: editingId })
       } else {
         // Create new user
+        const supabaseClient = supabase()
         await mutate('insert', {
           ...formData,
           created_at: new Date().toISOString(),
@@ -212,7 +214,7 @@ function UsersManagementPage() {
     })
   }
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = (users || []).filter(user => {
     const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.department?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -307,7 +309,7 @@ function UsersManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">Total Users</p>
-                <p className="text-2xl font-bold text-white">{users.length}</p>
+                <p className="text-2xl font-bold text-white">{users?.length || 0}</p>
               </div>
               <Users className="w-8 h-8 text-blue-400" />
             </div>
@@ -318,7 +320,7 @@ function UsersManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">Active Users</p>
-                <p className="text-2xl font-bold text-white">{users.filter(u => u.is_active).length}</p>
+                <p className="text-2xl font-bold text-white">{users?.filter(u => u.is_active).length || 0}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
@@ -329,7 +331,7 @@ function UsersManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">Super Admins</p>
-                <p className="text-2xl font-bold text-white">{users.filter(u => u.role === 'Super Admin').length}</p>
+                <p className="text-2xl font-bold text-white">{users?.filter(u => u.role === 'Super Admin').length || 0}</p>
               </div>
               <Crown className="w-8 h-8 text-purple-400" />
             </div>
@@ -340,7 +342,7 @@ function UsersManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">Inactive Users</p>
-                <p className="text-2xl font-bold text-white">{users.filter(u => !u.is_active).length}</p>
+                <p className="text-2xl font-bold text-white">{users?.filter(u => !u.is_active).length || 0}</p>
               </div>
               <Ban className="w-8 h-8 text-red-400" />
             </div>
@@ -465,7 +467,6 @@ function UsersManagementPage() {
               <label className="text-white/90 text-sm font-medium mb-2 block">Avatar</label>
               <ImageUpload
                 bucket="user-avatars"
-                folder="avatars"
                 value={formData.avatar_url}
                 onChange={(url) => setFormData({ ...formData, avatar_url: url })}
                 className="bg-white/5 border-white/20"
