@@ -13,6 +13,9 @@ export const metadata = {
     "Read comprehensive casino reviews from our experts and community. Get honest insights about online casinos.",
 }
 
+// ISR caching - revalidate every 30 minutes
+export const revalidate = 1800
+
 export default async function ReviewsPage() {
   const supabase = await createClient()
 
@@ -58,8 +61,79 @@ export default async function ReviewsPage() {
       .replace(/(^-|-$)/g, "")}`
   }
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://gurusingapore.com/#organization",
+        "name": "GuruSingapore",
+        "url": "https://gurusingapore.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://gurusingapore.com/logo.png"
+        },
+        "description": "Singapore's premier online casino review platform providing honest insights and expert analysis.",
+        "sameAs": [
+          "https://twitter.com/gurusingapore",
+          "https://facebook.com/gurusingapore"
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://gurusingapore.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Casino Reviews",
+            "item": "https://gurusingapore.com/reviews"
+          }
+        ]
+      },
+      {
+        "@type": "ItemList",
+        "name": "Casino Reviews",
+        "description": "Comprehensive casino reviews from verified players and experts",
+        "numberOfItems": totalReviews || 0,
+        "itemListElement": reviews?.slice(0, 10).map((review, index) => ({
+          "@type": "Review",
+          "position": index + 1,
+          "name": review.title,
+          "reviewBody": review.content,
+          "author": {
+            "@type": "Person",
+            "name": review.author_name || "GuruSingapore"
+          },
+          "datePublished": review.created_at,
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": review.rating,
+            "bestRating": 5,
+            "worstRating": 1
+          },
+          "itemReviewed": {
+            "@type": "Organization",
+            "name": review.casinos?.name,
+            "url": review.casinos?.website_url
+          }
+        })) || []
+      }
+    ]
+  }
+
   return (
     <div className="min-h-screen bg-black">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <DynamicPageHero
         pageName="reviews"
         sectionType="hero"

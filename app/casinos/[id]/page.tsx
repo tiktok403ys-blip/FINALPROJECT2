@@ -41,8 +41,80 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
     return "Poor"
   }
 
+  // Generate JSON-LD structured data for casino detail
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/#organization`,
+        "name": "GuruSingapore",
+        "url": process.env.NEXT_PUBLIC_SITE_URL,
+        "logo": `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
+        "description": "Expert casino reviews and gambling guides for Singapore players"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": process.env.NEXT_PUBLIC_SITE_URL
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Casinos",
+            "item": `${process.env.NEXT_PUBLIC_SITE_URL}/casinos`
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": casino.name,
+            "item": `${process.env.NEXT_PUBLIC_SITE_URL}/casinos/${casino.id}`
+          }
+        ]
+      },
+      {
+        "@type": "Organization",
+        "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/casinos/${casino.id}`,
+        "name": casino.name,
+        "url": casino.website_url,
+        "description": casino.description,
+        "logo": casino.logo_url,
+        "aggregateRating": casino.rating ? {
+          "@type": "AggregateRating",
+          "ratingValue": casino.rating,
+          "bestRating": 10,
+          "worstRating": 1,
+          "ratingCount": casino.player_rating_count || 1
+        } : undefined,
+        "review": {
+          "@type": "Review",
+          "author": {
+            "@type": "Organization",
+            "name": "GuruSingapore"
+          },
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": casino.rating,
+            "bestRating": 10,
+            "worstRating": 1
+          },
+          "reviewBody": casino.description
+        }
+      }
+    ]
+  }
+
   return (
     <div className="min-h-screen bg-black pt-28">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Link

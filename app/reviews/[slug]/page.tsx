@@ -30,6 +30,9 @@ interface PageProps {
   }>
 }
 
+// ISR caching - revalidate every 15 minutes for dynamic content
+export const revalidate = 900
+
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
   const supabase = await createClient()
@@ -155,8 +158,91 @@ export default async function ReviewsPage({ params }: PageProps) {
     return "Poor"
   }
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://gurusingapore.com/#organization",
+        "name": "GuruSingapore",
+        "url": "https://gurusingapore.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://gurusingapore.com/logo.png"
+        },
+        "description": "Singapore's premier online casino review platform providing honest insights and expert analysis."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://gurusingapore.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Casino Reviews",
+            "item": "https://gurusingapore.com/reviews"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": `${casino.name} Reviews`,
+            "item": `https://gurusingapore.com/reviews/${slug}`
+          }
+        ]
+      },
+      {
+        "@type": "Organization",
+        "name": casino.name,
+        "url": casino.website_url,
+        "description": casino.description,
+        "logo": casino.logo_url ? {
+          "@type": "ImageObject",
+          "url": casino.logo_url
+        } : undefined,
+        "aggregateRating": totalReviews > 0 ? {
+          "@type": "AggregateRating",
+          "ratingValue": averageRating,
+          "reviewCount": totalReviews,
+          "bestRating": 5,
+          "worstRating": 1
+        } : undefined
+      },
+      ...(reviews?.slice(0, 5).map((review) => ({
+        "@type": "Review",
+        "name": `Review of ${casino.name}`,
+        "reviewBody": review.review_text,
+        "author": {
+          "@type": "Person",
+          "name": review.player_name || "Anonymous Player"
+        },
+        "datePublished": review.created_at,
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": review.rating,
+          "bestRating": 5,
+          "worstRating": 1
+        },
+        "itemReviewed": {
+          "@type": "Organization",
+          "name": casino.name,
+          "url": casino.website_url
+        }
+      })) || [])
+    ]
+  }
+
   return (
     <div className="min-h-screen bg-black">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header with Back Button - Fixed navbar overlap */}
       <div className="pt-28 pb-8">
         <div className="container mx-auto px-4">

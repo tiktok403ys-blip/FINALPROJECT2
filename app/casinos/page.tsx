@@ -38,12 +38,13 @@ export const metadata = {
 // Revalidate every 2 hours for casino listings
 export const revalidate = 7200
 
-export default async function CasinosPage({ searchParams }: { searchParams?: { filter?: string } }) {
+export default async function CasinosPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
   const supabase = await createClient()
+  const resolvedSearchParams = await searchParams
 
   // Sanitize filter to known values
   const allowedFilters = new Set(['all', 'high-rated', 'new', 'live'])
-  const rawFilter = typeof searchParams?.filter === 'string' ? searchParams?.filter : undefined
+  const rawFilter = typeof resolvedSearchParams?.filter === 'string' ? resolvedSearchParams?.filter : undefined
   const filter = allowedFilters.has(rawFilter || '') ? (rawFilter as 'all' | 'high-rated' | 'new' | 'live') : 'all'
 
   let query = supabase.from("casinos").select("*")
@@ -94,8 +95,73 @@ export default async function CasinosPage({ searchParams }: { searchParams?: { f
     return { text: "Poor", color: "bg-red-500/20 text-red-400 border-red-500/30" }
   }
 
+  // Generate JSON-LD structured data
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/#organization`,
+        "name": "GuruSingapore",
+        "url": process.env.NEXT_PUBLIC_SITE_URL,
+        "logo": `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
+        "description": "Expert casino reviews and gambling guides for Singapore players",
+        "sameAs": [
+          "https://twitter.com/gurusingapore",
+          "https://facebook.com/gurusingapore"
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": process.env.NEXT_PUBLIC_SITE_URL
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Best Online Casinos",
+            "item": `${process.env.NEXT_PUBLIC_SITE_URL}/casinos`
+          }
+        ]
+      },
+      {
+        "@type": "ItemList",
+        "name": "Best Online Casinos",
+        "description": "Top-rated online casinos reviewed by experts",
+        "numberOfItems": casinos?.length || 0,
+        "itemListElement": casinos?.map((casino: Casino, index: number) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "item": {
+            "@type": "Organization",
+            "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/casinos/${casino.id}`,
+            "name": casino.name,
+            "url": casino.website_url,
+            "description": casino.description,
+            "aggregateRating": casino.rating ? {
+              "@type": "AggregateRating",
+              "ratingValue": casino.rating,
+              "bestRating": 10,
+              "worstRating": 1,
+              "ratingCount": casino.player_rating_count || 1
+            } : undefined
+          }
+        })) || []
+      }
+    ]
+  }
+
   return (
     <div className="min-h-screen bg-black">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <DynamicPageHero
         pageName="casinos"
         sectionType="hero"

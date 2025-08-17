@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
 // CSRF configuration
@@ -100,9 +99,8 @@ export function createCSRFProtection(config: Partial<CSRFConfig> = {}) {
       return null
     }
     
-    // Get CSRF token from cookie
-    const cookieStore = await cookies()
-    const cookieToken = cookieStore.get(finalConfig.cookieName)?.value
+    // Get CSRF token from cookie (edge-compatible)
+    const cookieToken = req.cookies.get(finalConfig.cookieName)?.value
     
     if (!cookieToken) {
       logCSRFViolation(req, 'Missing CSRF cookie')
@@ -194,21 +192,19 @@ export function generateAndSetCSRFToken(config: Partial<CSRFConfig> = {}): { tok
   return { token, cookie }
 }
 
-// Get current CSRF token from cookies
-export async function getCSRFToken(): Promise<string | null> {
+// Get current CSRF token from cookies (edge-compatible)
+export function getCSRFTokenFromRequest(request: NextRequest): string | null {
   try {
-    const cookieStore = await cookies()
-    return cookieStore.get(DEFAULT_CONFIG.cookieName)?.value || null
+    return request.cookies.get(DEFAULT_CONFIG.cookieName)?.value || null
   } catch {
     return null
   }
 }
 
-// Validate CSRF token from request
-export async function validateCSRFTokenFromRequest(req: NextRequest, token: string): Promise<boolean> {
+// Validate CSRF token from request (edge-compatible)
+export function validateCSRFTokenFromRequest(req: NextRequest, token: string): boolean {
   try {
-    const cookieStore = await cookies()
-    const cookieToken = cookieStore.get(DEFAULT_CONFIG.cookieName)?.value
+    const cookieToken = req.cookies.get(DEFAULT_CONFIG.cookieName)?.value
     
     if (!cookieToken || !token) {
       return false
