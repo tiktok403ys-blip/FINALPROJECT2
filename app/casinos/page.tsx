@@ -38,10 +38,40 @@ export const metadata = {
 // Revalidate every 2 hours for casino listings
 export const revalidate = 7200
 
-export default async function CasinosPage() {
+export default async function CasinosPage({ searchParams }: { searchParams?: { filter?: string } }) {
   const supabase = await createClient()
 
-  const { data: casinos } = await supabase.from("casinos").select("*").order("rating", { ascending: false })
+  // Sanitize filter to known values
+  const allowedFilters = new Set(['all', 'high-rated', 'new', 'live'])
+  const rawFilter = typeof searchParams?.filter === 'string' ? searchParams?.filter : undefined
+  const filter = allowedFilters.has(rawFilter || '') ? (rawFilter as 'all' | 'high-rated' | 'new' | 'live') : 'all'
+
+  let query = supabase.from("casinos").select("*")
+
+  // Apply filters based on query param
+  if (filter === 'high-rated') {
+    // Only include clearly high-rated casinos; null ratings are naturally excluded
+    query = query.gte('rating', 7)
+  } else if (filter === 'new') {
+    // Consider "new" as created within the last 3 months
+    const threeMonthsAgo = new Date()
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+    query = query.gte('created_at', threeMonthsAgo.toISOString())
+  } else if (filter === 'live') {
+    // Heuristic: match common fields for "live" support without relying on schema changes
+    // Matches description, bonus_info, or name containing "live" (case-insensitive)
+    // Example: "live dealer", "live casino", etc.
+    query = query.or('description.ilike.%live%,bonus_info.ilike.%live%,name.ilike.%live%')
+  }
+
+  // Ordering strategy per filter; push nulls last to avoid unstable ordering
+  if (filter === 'new') {
+    query = query.order('created_at', { ascending: false, nullsFirst: false })
+  } else {
+    query = query.order('rating', { ascending: false, nullsFirst: false })
+  }
+
+  const { data: casinos } = await query
 
   const createSlug = (name: string) => {
     return name
@@ -86,17 +116,37 @@ export default async function CasinosPage() {
                 <span className="font-semibold">Filter Casinos:</span>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline" size="sm" className="border-[#00ff88] text-[#00ff88] bg-transparent">
-                  All Casinos
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={filter === 'all' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
+                  asChild
+                >
+                  <Link href="/casinos">All Casinos</Link>
                 </Button>
-                <Button variant="outline" size="sm" className="border-gray-600 text-gray-400 bg-transparent">
-                  High Rated
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={filter === 'high-rated' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
+                  asChild
+                >
+                  <Link href="/casinos?filter=high-rated">High Rated</Link>
                 </Button>
-                <Button variant="outline" size="sm" className="border-gray-600 text-gray-400 bg-transparent">
-                  New Casinos
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={filter === 'new' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
+                  asChild
+                >
+                  <Link href="/casinos?filter=new">New Casinos</Link>
                 </Button>
-                <Button variant="outline" size="sm" className="border-gray-600 text-gray-400 bg-transparent">
-                  Live Casino
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={filter === 'live' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
+                  asChild
+                >
+                  <Link href="/casinos?filter=live">Live Casino</Link>
                 </Button>
               </div>
             </div>

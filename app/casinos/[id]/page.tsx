@@ -42,7 +42,7 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-28">
+    <div className="min-h-screen bg-black pt-28">
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Link
@@ -95,15 +95,17 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
                 </div>
                 <p className="text-gray-300 mb-6">{casino.description}</p>
                 <div className="flex flex-wrap gap-3">
-                  <Button
-                    className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold"
-                    asChild
-                  >
-                    <Link href={casino.affiliate_url} target="_blank" rel="noopener noreferrer">
-                      Visit Casino
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
+                  {(casino.affiliate_url || casino.website_url) && (
+                    <Button
+                      className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold"
+                      asChild
+                    >
+                      <Link href={(casino.affiliate_url || casino.website_url) as string} target="_blank" rel="noopener noreferrer">
+                        Visit Casino
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-black bg-transparent"
