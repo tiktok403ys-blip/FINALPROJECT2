@@ -59,11 +59,18 @@ export async function middleware(request: NextRequest) {
     const isPinVerified = await validatePinVerification(request);
     
     if (!isPinVerified) {
-      // Stay on admin subdomain; redirect to /admin with showPin=true to trigger dialog
-      const url = request.nextUrl.clone();
-      url.pathname = '/admin';
-      url.searchParams.set('showPin', 'true');
-      return NextResponse.redirect(url);
+      // Check if showPin parameter is already present to avoid redirect loop
+      const showPin = request.nextUrl.searchParams.get('showPin');
+      
+      if (!showPin) {
+        // Only redirect if showPin parameter is not present
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin';
+        url.searchParams.set('showPin', 'true');
+        return NextResponse.redirect(url);
+      }
+      // If showPin=true is already present, let the request continue to render the page
+      // The UI will handle showing the PIN dialog based on the parameter
     }
   }
   

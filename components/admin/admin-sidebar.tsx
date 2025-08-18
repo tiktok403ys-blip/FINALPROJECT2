@@ -103,8 +103,24 @@ export function AdminSidebar() {
   }, [])
 
   const handleSignOut = async () => {
-    await adminAuth.signOut()
-    router.push('/admin/login')
+    try {
+      // Sign out from Supabase
+      await adminAuth.signOut()
+      
+      // Clear admin PIN verification cookie
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      // Redirect to public site
+      const publicUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      window.location.href = publicUrl
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      // Fallback to admin login if something goes wrong
+      router.push('/admin/login')
+    }
   }
 
   const handleNavigation = (href: string) => {
