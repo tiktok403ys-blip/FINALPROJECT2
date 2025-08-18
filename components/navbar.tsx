@@ -58,62 +58,36 @@ export function Navbar() {
       profileFetchedRef.current = true
       setProfileError(null)
 
+      // Use profile_rpc_v5 to get unified profile data from admin_users as single source of truth
       const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url, role, admin_pin")
-        .eq("id", currentUser.id)
-        .single()
+        .rpc('profile_rpc_v5', { user_id_input: currentUser.id })
 
       if (error) {
         console.error("❌ Profile fetch error:", error)
+        
+        const fallbackProfile: Profile = {
+          id: currentUser.id,
+          email: currentUser.email ?? null,
+          full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+          avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+          role: "user",
+          admin_pin: null,
+        }
 
-        if (error.code === "PGRST116") {
-          console.log("🔄 Creating new profile...")
-          const newProfile = {
-            id: currentUser.id,
-            email: currentUser.email ?? null,
-            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: "user",
-            admin_pin: null,
-          }
-
-          const { data: createdProfile, error: createError } = await supabase
-            .from("profiles")
-            .insert([newProfile])
-            .select()
-            .single()
-
-          if (createError) {
-            console.error("❌ Error creating profile:", createError)
-            if (mountedRef.current) {
-              setProfile(newProfile)
-            }
-          } else {
-            console.log("✅ Profile created successfully")
-            if (mountedRef.current) {
-              setProfile(createdProfile)
-            }
-          }
-        } else {
-          const fallbackProfile: Profile = {
-            id: currentUser.id,
-            email: currentUser.email ?? null,
-            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-            role: "user",
-            admin_pin: null,
-          }
-
-          if (mountedRef.current) {
-            setProfile(fallbackProfile)
-            setProfileError("Using cached profile data")
-          }
+        if (mountedRef.current) {
+          setProfile(fallbackProfile)
+          setProfileError("Using fallback profile data")
+        }
+      } else if (profileData && profileData.length > 0) {
+        console.log("✅ Profile loaded successfully:", profileData[0])
+        if (mountedRef.current) {
+          setProfile(profileData[0])
         }
       } else {
-        console.log("✅ Profile loaded successfully:", profileData)
+        // Profile should be auto-created by handle_new_user trigger
+        console.log("⚠️ Profile not found")
         if (mountedRef.current) {
-          setProfile(profileData)
+          setProfileError("Profile not found")
         }
       }
     } catch (error) {
@@ -331,7 +305,7 @@ export function Navbar() {
 
   const handlePinSuccess = () => {
     console.log("✅ PIN verified, redirecting to admin panel...")
-    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN || 'sg44admin.gurusingapore.com'}`
+    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN}`
   }
 
   const getUserDisplayName = () => {

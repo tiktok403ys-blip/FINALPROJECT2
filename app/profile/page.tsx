@@ -46,61 +46,39 @@ export default function ProfilePage() {
 
         setUser(session.user)
 
-        // Try to get profile from database
+        // Use profile_rpc_v5 to get unified profile data from admin_users as single source of truth
         const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single()
+          .rpc('profile_rpc_v5', { user_id_input: session.user.id })
 
         if (profileError) {
-          if (profileError.code === "PGRST116") {
-            // Profile doesn't exist, create one
-            console.log("Creating new profile...")
-            const newProfile = {
-              id: session.user.id,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
-              avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
-              website: null,
-              role: "user",
-            }
-
-            const { data: createdProfile, error: createError } = await supabase
-              .from("profiles")
-              .insert([newProfile])
-              .select()
-              .single()
-
-            if (createError) {
-              console.error("Error creating profile:", createError)
-              setError("Failed to create profile. Using account data.")
-              // Use fallback profile
-              setProfile({
-                ...newProfile,
-                created_at: session.user.created_at,
-                updated_at: new Date().toISOString(),
-              })
-            } else {
-              setProfile(createdProfile)
-            }
-          } else {
-            console.error("Profile error:", profileError)
-            setError("Failed to load profile from database. Using account data.")
-            // Use fallback profile from user metadata
-            setProfile({
-              id: session.user.id,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
-              avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
-              website: null,
-              role: "user",
-              created_at: session.user.created_at,
-              updated_at: new Date().toISOString(),
-            })
-          }
+          console.error("Profile error:", profileError)
+          setError("Failed to load profile from database. Using account data.")
+          // Use fallback profile from user metadata
+          setProfile({
+            id: session.user.id,
+            email: session.user.email,
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
+            avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
+            website: null,
+            role: "user", // Read-only, will be overridden by RPC data
+            created_at: session.user.created_at,
+            updated_at: new Date().toISOString(),
+          })
+        } else if (profileData && profileData.length > 0) {
+          setProfile(profileData[0])
         } else {
-          setProfile(profileData)
+          // Profile should be auto-created by handle_new_user trigger
+          setError("Profile not found. Please contact support.")
+          setProfile({
+            id: session.user.id,
+            email: session.user.email,
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
+            avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
+            website: null,
+            role: "user",
+            created_at: session.user.created_at,
+            updated_at: new Date().toISOString(),
+          })
         }
       } catch (error) {
         console.error("Error loading profile:", error)
@@ -122,13 +100,14 @@ export default function ProfilePage() {
     setSuccess("")
 
     try {
+      // Only update allowed fields (exclude role for security)
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
         email: profile.email,
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
         website: profile.website,
-        role: profile.role || "user",
+        // role is excluded - managed only through admin_users table
         updated_at: new Date().toISOString(),
       })
 
