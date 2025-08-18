@@ -59,9 +59,11 @@ export async function middleware(request: NextRequest) {
     const isPinVerified = await validatePinVerification(request);
     
     if (!isPinVerified) {
-      // Redirect to main site with PIN dialog trigger
-      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gurusingapore.com';
-      return NextResponse.redirect(`${mainSiteUrl}?showPin=true`);
+      // Stay on admin subdomain; redirect to /admin with showPin=true to trigger dialog
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin';
+      url.searchParams.set('showPin', 'true');
+      return NextResponse.redirect(url);
     }
   }
   
