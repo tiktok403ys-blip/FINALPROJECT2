@@ -23,6 +23,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
   const [showSetPinDialog, setShowSetPinDialog] = useState(false)
   const [hasPinSet, setHasPinSet] = useState(false)
   const [checkingPinStatus, setCheckingPinStatus] = useState(true)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
 
   // Check if admin has PIN set when dialog opens
   useEffect(() => {
@@ -37,7 +38,19 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
       return
     }
 
-    checkPinStatus()
+    // Pre-fetch CSRF token for subsequent POST
+    ;(async () => {
+      try {
+        const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          setCsrfToken(data?.csrfToken || null)
+        }
+      } catch {}
+      finally {
+        checkPinStatus()
+      }
+    })()
   }, [open])
 
   const checkPinStatus = async () => {
@@ -83,6 +96,18 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
     setIsLoading(true)
 
     try {
+      // Ensure CSRF token
+      let token = csrfToken
+      if (!token) {
+        try {
+          const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
+          if (res.ok) {
+            const data = await res.json()
+            token = data?.csrfToken || null
+            setCsrfToken(token)
+          }
+        } catch {}
+      }
       const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
       const adminHost = adminUrl ? adminUrl.replace(/^https?:\/\//, "") : ""
       const currentHost = typeof window !== "undefined" ? window.location.host : ""
@@ -94,6 +119,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'x-admin-csrf-token': token } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({ pin })

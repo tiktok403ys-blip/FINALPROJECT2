@@ -24,11 +24,24 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
   const [error, setError] = useState("")
   const [hasPinSet, setHasPinSet] = useState(false)
   const [checkingPinStatus, setCheckingPinStatus] = useState(true)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
 
   // Check if admin already has PIN set
   useEffect(() => {
     if (open) {
-      checkPinStatus()
+      // Prefetch CSRF token for POST operations
+      ;(async () => {
+        try {
+          const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
+          if (res.ok) {
+            const data = await res.json()
+            setCsrfToken(data?.csrfToken || null)
+          }
+        } catch {}
+        finally {
+          checkPinStatus()
+        }
+      })()
     }
   }, [open])
 
@@ -94,6 +107,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken ? { 'x-admin-csrf-token': csrfToken } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({

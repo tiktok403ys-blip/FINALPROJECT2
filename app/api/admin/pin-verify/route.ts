@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { validateAdminAuth } from '@/lib/auth/admin-middleware'
-import { createHash, randomBytes } from 'crypto'
+import { SignJWT } from 'jose'
 
-const PIN_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+const PIN_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
 const PIN_TOKEN_EXPIRY = 60 * 60 * 1000 // 1 hour in milliseconds
 
 // Rate limiting for PIN verification attempts
@@ -49,20 +48,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Call the verify_admin_pin function with user ID
-    const { data, error } = await authResult.supabase.rpc('verify_admin_pin', {
-      input_pin: pin
-    })
+    // Call the verify_admin_pin function
+    // Prefer (user_id UUID, pin_text TEXT) signature; fallback to legacy (input_pin TEXT)
+    let isValid: boolean | null = null
+    let rpcError: any = null
+    try {
+      const res = await authResult.supabase.rpc('verify_admin_pin', {
+        user_id: authResult.user.id,
+        pin_text: pin,
+      })
+      if (res.error) rpcError = res.error
+      else if (typeof res.data === 'boolean') isValid = res.data
+      else if (Array.isArray(res.data) && res.data.length > 0 && typeof res.data[0]?.is_valid === 'boolean') {
+        isValid = res.data[0].is_valid
+      }
+    } catch (e: any) {
+      rpcError = e
+    }
 
-    if (error) {
-      console.error('PIN verification error:', error)
+    if (isValid === null) {
+      // Fallback to legacy signature
+      try {
+        const res2 = await authResult.supabase.rpc('verify_admin_pin', { input_pin: pin })
+        if (res2.error) rpcError = res2.error
+        else if (typeof res2.data === 'boolean') isValid = res2.data
+        else if (Array.isArray(res2.data) && res2.data.length > 0 && typeof res2.data[0]?.is_valid === 'boolean') {
+          isValid = res2.data[0].is_valid
+        }
+      } catch (e2: any) {
+        rpcError = e2
+      }
+    }
+
+    if (rpcError) {
+      console.error('PIN verification error:', rpcError)
       return NextResponse.json(
         { error: 'PIN verification failed' },
         { status: 500 }
       )
     }
 
-    if (!data) {
+    if (!isValid) {
       // Increment failed attempts
       const currentAttempts = pinAttempts.get(userId) || { count: 0, lastAttempt: 0 }
       pinAttempts.set(userId, {
@@ -84,20 +110,14 @@ export async function POST(request: NextRequest) {
     // Clear failed attempts on successful verification
     pinAttempts.delete(userId)
 
-    // Create secure token for PIN verification
-    const tokenData = {
-      userId: authResult.user.id,
-      email: authResult.user.email,
-      pinVerified: true,
-      exp: Date.now() + PIN_TOKEN_EXPIRY
-    }
-    
-    const tokenString = JSON.stringify(tokenData)
-    const signature = createHash('sha256')
-      .update(tokenString + PIN_SECRET)
-      .digest('hex')
-    
-    const pinToken = Buffer.from(tokenString + '.' + signature).toString('base64')
+    // Create secure JWT token for PIN verification
+    const expirationSeconds = Math.floor(PIN_TOKEN_EXPIRY / 1000)
+    const pinToken = await new SignJWT({ verified: true, email: authResult.user.email })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(authResult.user.id)
+      .setIssuedAt()
+      .setExpirationTime(`${expirationSeconds}s`)
+      .sign(PIN_SECRET)
 
     // Set secure cookie
     const response = NextResponse.json(
