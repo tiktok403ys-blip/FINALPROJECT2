@@ -43,9 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate PIN using database RPC function
-    const { data: pinValid, error: pinError } = await supabase
+    const { data: pinResult, error: pinError } = await supabase
       .rpc('verify_admin_pin', {
-        user_email: user.email,
         input_pin: pin
       });
 
@@ -65,7 +64,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!pinValid) {
+    // Check if PIN validation result is valid
+    const isValidPin = pinResult && pinResult.length > 0 && pinResult[0]?.is_valid;
+    
+    if (!isValidPin) {
       logSecurityEvent('INVALID_PIN_ATTEMPT', request, { 
         endpoint: 'pin-verify',
         userEmail: user.email 
@@ -79,16 +81,12 @@ export async function POST(request: NextRequest) {
         }
       );
     }
+    
+    // Get admin info from PIN verification result
+    const adminInfo = pinResult[0];
 
-    // Check if user is admin
-    const { data: adminUser, error: adminError } = await supabase
-      .from('admin_users')
-      .select('id, role, permissions')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .single();
-
-    if (adminError || !adminUser) {
+    // Admin info is already validated by verify_admin_pin function
+    if (!adminInfo.role) {
       logSecurityEvent('UNAUTHORIZED_ACCESS', request, { 
         reason: 'non_admin_user', 
         userEmail: user.email,
@@ -107,9 +105,9 @@ export async function POST(request: NextRequest) {
     // Create signed JWT token for PIN verification
     const token = await new SignJWT({
       userId: user.id,
-      adminId: adminUser.id,
-      role: adminUser.role,
-      permissions: adminUser.permissions,
+      adminUserId: adminInfo.user_id,
+      role: adminInfo.role,
+      permissions: adminInfo.permissions,
       verified: true,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 2) // 2 hours
     })
@@ -131,9 +129,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        id: adminUser.id,
-        role: adminUser.role,
-        permissions: adminUser.permissions
+        id: adminInfo.user_id,
+        role: adminInfo.role,
+        permissions: adminInfo.permissions
       }
     }, {
       headers: {
