@@ -298,14 +298,15 @@ export function Navbar() {
   }
 
   const handleAdminAccess = () => {
-    console.log("🔐 Admin access requested")
+    console.log("🔐 Admin access requested - redirecting to admin subdomain")
     setShowUserMenu(false)
-    setShowPinDialog(true)
+    // Redirect directly to admin subdomain with showPin query
+    window.location.href = `${process.env.NEXT_PUBLIC_ADMIN_URL}?showPin=true`
   }
 
   const handlePinSuccess = () => {
     console.log("✅ PIN verified, redirecting to admin panel...")
-    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN}`
+    window.location.href = `${process.env.NEXT_PUBLIC_ADMIN_URL}`
   }
 
   const getUserDisplayName = () => {
