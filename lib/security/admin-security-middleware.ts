@@ -237,7 +237,7 @@ export function getSecurityHeaders(isAdminDomain: boolean = false): Record<strin
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
       "img-src 'self' data: blob: https: http: https://localhost:* http://localhost:*",
       "media-src 'self' data: blob:",
-      "connect-src 'self' https://localhost:* http://localhost:* ws://localhost:* wss://localhost:* https://gzslsakmkoxfhcyifgtb.supabase.co https://*.supabase.co https://accounts.google.com https://*.googleapis.com",
+      "connect-src 'self' https://localhost:* http://localhost:* ws://localhost:* wss://localhost:* https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://*.googleapis.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self' https://gzslsakmkoxfhcyifgtb.supabase.co https://*.supabase.co https://accounts.google.com",

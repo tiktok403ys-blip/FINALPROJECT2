@@ -81,8 +81,13 @@ export async function middleware(request: NextRequest) {
   
   // Apply security middleware to admin API endpoints
   if (pathname.startsWith('/api/admin/')) {
-    // Skip PIN validation for PIN verification endpoint itself
-    if (!pathname.startsWith('/api/admin/pin-verify')) {
+    // Skip PIN validation for PIN-related endpoints that need to be accessible without verification
+    const skipPinValidation = 
+      pathname.startsWith('/api/admin/pin-verify') ||
+      pathname.startsWith('/api/admin/pin-status') ||
+      pathname.startsWith('/api/admin/set-pin');
+    
+    if (!skipPinValidation) {
       // Validate PIN verification first
       const isPinVerified = await validatePinVerification(request);
       
