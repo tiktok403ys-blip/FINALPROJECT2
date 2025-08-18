@@ -12,7 +12,27 @@ function isAdminDomain(request: NextRequest): boolean {
   const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'admin.localhost:3000';
   const adminHost = adminUrl.replace(/^https?:\/\//, '');
   
-  return host === adminHost || host.startsWith('admin.');
+  // Direct match with configured admin host
+  if (host === adminHost) {
+    return true;
+  }
+  
+  // Support standard admin.* pattern
+  if (host.startsWith('admin.')) {
+    return true;
+  }
+  
+  // Support custom admin subdomain patterns (e.g., sg44admin.gurusingapore.com)
+  // Check if host contains 'admin' and matches known admin domain patterns
+  if (host.includes('admin') && (
+    host.includes('gurusingapore.com') || 
+    host.includes('localhost') ||
+    host.includes('vercel.app')
+  )) {
+    return true;
+  }
+  
+  return false;
 }
 
 /**
