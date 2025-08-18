@@ -26,14 +26,30 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
 
   // Check if admin has PIN set when dialog opens
   useEffect(() => {
-    if (open) {
-      checkPinStatus()
+    if (!open) return
+    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
+    const adminHost = adminUrl ? adminUrl.replace(/^https?:\/\//, "") : ""
+    const currentHost = typeof window !== "undefined" ? window.location.host : ""
+
+    // If not on admin subdomain, redirect there and carry the intent
+    if (adminUrl && currentHost !== adminHost) {
+      window.location.href = `${adminUrl}?showPin=true`
+      return
     }
+
+    checkPinStatus()
   }, [open])
 
   const checkPinStatus = async () => {
     try {
       setCheckingPinStatus(true)
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
+      const adminHost = adminUrl ? adminUrl.replace(/^https?:\/\//, "") : ""
+      const currentHost = typeof window !== "undefined" ? window.location.host : ""
+      if (adminUrl && currentHost !== adminHost) {
+        window.location.href = `${adminUrl}?showPin=true`
+        return
+      }
       const response = await fetch('/api/admin/set-pin', {
         method: 'GET',
         credentials: 'include'
@@ -67,6 +83,13 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
     setIsLoading(true)
 
     try {
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
+      const adminHost = adminUrl ? adminUrl.replace(/^https?:\/\//, "") : ""
+      const currentHost = typeof window !== "undefined" ? window.location.host : ""
+      if (adminUrl && currentHost !== adminHost) {
+        window.location.href = `${adminUrl}?showPin=true`
+        return
+      }
       const response = await fetch('/api/admin/pin-verify', {
         method: 'POST',
         headers: {
