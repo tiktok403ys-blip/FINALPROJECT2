@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validatePinVerification } from '@/lib/auth/admin-middleware';
-import { createClient } from '@/lib/supabase/server';
+import { validatePinVerification, validateAdminAuth } from '@/lib/auth/admin-middleware';
 
 /**
  * GET /api/admin/pin-status
@@ -11,8 +10,13 @@ export async function GET(request: NextRequest) {
     // Check if PIN is currently verified
     const isPinVerified = await validatePinVerification(request);
     
-    // Check if admin has PIN set using Supabase function
-    const supabase = await createClient();
+    // Validate admin authentication before calling RPC
+    const auth = await validateAdminAuth(request);
+    if (auth instanceof NextResponse) {
+      return auth; // Return auth error response
+    }
+    
+    const { supabase } = auth;
     const { data: hasPinData, error: pinError } = await supabase
       .rpc('admin_has_pin_set');
     

@@ -49,8 +49,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const supabase = createClient()
-
     // Call the verify_admin_pin function with user ID
     const { data, error } = await authResult.supabase.rpc('verify_admin_pin', {
       input_pin: pin
