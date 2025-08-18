@@ -262,12 +262,14 @@ export function NavbarFixed() {
     console.log("🔐 Admin access requested - redirecting to admin subdomain")
     setShowUserMenu(false)
     // Redirect directly to admin subdomain with showPin query
-    window.location.href = `${process.env.NEXT_PUBLIC_ADMIN_URL}?showPin=true`
+    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
+    window.location.href = adminUrl ? `${adminUrl}/admin?showPin=true` : "/admin?showPin=true"
   }
 
   const handlePinSuccess = () => {
     console.log("✅ PIN verified, redirecting to admin panel...")
-    window.location.href = `${process.env.NEXT_PUBLIC_ADMIN_URL}`
+    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
+    window.location.href = adminUrl ? `${adminUrl}/admin` : "/admin"
   }
 
   const getUserDisplayName = () => {

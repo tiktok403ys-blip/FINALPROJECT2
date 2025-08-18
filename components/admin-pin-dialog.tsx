@@ -33,7 +33,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
 
     // If not on admin subdomain, redirect there and carry the intent
     if (adminUrl && currentHost !== adminHost) {
-      window.location.href = `${adminUrl}?showPin=true`
+      window.location.href = `${adminUrl}/admin?showPin=true`
       return
     }
 
@@ -47,7 +47,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
       const adminHost = adminUrl ? adminUrl.replace(/^https?:\/\//, "") : ""
       const currentHost = typeof window !== "undefined" ? window.location.host : ""
       if (adminUrl && currentHost !== adminHost) {
-        window.location.href = `${adminUrl}?showPin=true`
+        window.location.href = `${adminUrl}/admin?showPin=true`
         return
       }
       const response = await fetch('/api/admin/set-pin', {
@@ -87,7 +87,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
       const adminHost = adminUrl ? adminUrl.replace(/^https?:\/\//, "") : ""
       const currentHost = typeof window !== "undefined" ? window.location.host : ""
       if (adminUrl && currentHost !== adminHost) {
-        window.location.href = `${adminUrl}?showPin=true`
+        window.location.href = `${adminUrl}/admin?showPin=true`
         return
       }
       const response = await fetch('/api/admin/pin-verify', {
