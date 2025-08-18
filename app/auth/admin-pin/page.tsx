@@ -22,10 +22,9 @@ export default function AdminPinPage() {
     <div className="min-h-screen bg-black flex items-center justify-center">
       {user && (
         <AdminPinDialog
-          isOpen={open}
-          onClose={() => setOpen(false)}
+          open={open}
+          onOpenChange={setOpen}
           onSuccess={onSuccess}
-          userEmail={user.email || ""}
         />
       )}
     </div>

@@ -568,10 +568,9 @@ export function NavbarFixed() {
 
       {/* Admin PIN Dialog */}
       <AdminPinDialog
-        isOpen={showPinDialog}
-        onClose={() => setShowPinDialog(false)}
+        open={showPinDialog}
+        onOpenChange={setShowPinDialog}
         onSuccess={handlePinSuccess}
-        userEmail={user?.email || ""}
       />
     </>
   )

@@ -1,151 +1,127 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import { SignJWT, jwtVerify } from 'jose';
-import { adminSecurityMiddleware, logSecurityEvent, getSecurityHeaders } from '@/lib/security/admin-security-middleware';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { validateAdminAuth } from '@/lib/auth/admin-middleware'
+import { createHash, randomBytes } from 'crypto'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+const PIN_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+const PIN_TOKEN_EXPIRY = 60 * 60 * 1000 // 1 hour in milliseconds
 
-interface PinVerifyRequest {
-  pin: string;
-}
+// Rate limiting for PIN verification attempts
+const pinAttempts = new Map<string, { count: number; lastAttempt: number }>()
+const MAX_ATTEMPTS = 5
+const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
 
 export async function POST(request: NextRequest) {
   try {
-    // Security middleware check - very strict for PIN verification
-    const securityResult = await adminSecurityMiddleware(request);
-    if (!securityResult.allowed) {
-      logSecurityEvent('RATE_LIMIT_EXCEEDED', request, { endpoint: 'pin-verify' });
-      return securityResult.response!;
-    }
-
-    const body: PinVerifyRequest = await request.json();
-    const { pin } = body;
+    const { pin } = await request.json()
 
     if (!pin) {
       return NextResponse.json(
         { error: 'PIN is required' },
         { status: 400 }
-      );
+      )
     }
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Validate admin authentication first
+    const authResult = await validateAdminAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return the error response directly
     }
 
-    // Validate PIN using database RPC function
-    const { data: pinResult, error: pinError } = await supabase
-      .rpc('verify_admin_pin', {
-        input_pin: pin
-      });
+    const userId = authResult.user.id
+    const now = Date.now()
 
-    if (pinError) {
-      logSecurityEvent('PIN_VERIFICATION_ERROR', request, { 
-        endpoint: 'pin-verify',
-        userEmail: user.email,
-        error: pinError.message 
-      });
-      console.error('PIN verification error:', pinError);
+    // Check rate limiting
+    const userAttempts = pinAttempts.get(userId)
+    if (userAttempts) {
+      if (userAttempts.count >= MAX_ATTEMPTS) {
+        const timeSinceLastAttempt = now - userAttempts.lastAttempt
+        if (timeSinceLastAttempt < LOCKOUT_DURATION) {
+          const remainingTime = Math.ceil((LOCKOUT_DURATION - timeSinceLastAttempt) / 60000)
+          return NextResponse.json(
+            { error: `Too many failed attempts. Try again in ${remainingTime} minutes.` },
+            { status: 429 }
+          )
+        } else {
+          // Reset attempts after lockout period
+          pinAttempts.delete(userId)
+        }
+      }
+    }
+
+    const supabase = createClient()
+
+    // Call the verify_admin_pin function with user ID
+    const { data, error } = await authResult.supabase.rpc('verify_admin_pin', {
+      input_pin: pin
+    })
+
+    if (error) {
+      console.error('PIN verification error:', error)
       return NextResponse.json(
         { error: 'PIN verification failed' },
-        { 
-          status: 500,
-          headers: getSecurityHeaders()
-        }
-      );
+        { status: 500 }
+      )
     }
 
-    // Check if PIN validation result is valid
-    const isValidPin = pinResult && pinResult.length > 0 && pinResult[0]?.is_valid;
-    
-    if (!isValidPin) {
-      logSecurityEvent('INVALID_PIN_ATTEMPT', request, { 
-        endpoint: 'pin-verify',
-        userEmail: user.email 
-      });
-      console.warn(`Failed PIN attempt for user: ${user.email}`);
+    if (!data) {
+      // Increment failed attempts
+      const currentAttempts = pinAttempts.get(userId) || { count: 0, lastAttempt: 0 }
+      pinAttempts.set(userId, {
+        count: currentAttempts.count + 1,
+        lastAttempt: now
+      })
+
+      const remainingAttempts = MAX_ATTEMPTS - (currentAttempts.count + 1)
+      const errorMessage = remainingAttempts > 0 
+        ? `Invalid PIN. ${remainingAttempts} attempts remaining.`
+        : 'Invalid PIN. Account temporarily locked.'
+
       return NextResponse.json(
-        { error: 'Invalid PIN' },
-        { 
-          status: 403,
-          headers: getSecurityHeaders()
-        }
-      );
+        { error: errorMessage },
+        { status: 401 }
+      )
+    }
+
+    // Clear failed attempts on successful verification
+    pinAttempts.delete(userId)
+
+    // Create secure token for PIN verification
+    const tokenData = {
+      userId: authResult.user.id,
+      email: authResult.user.email,
+      pinVerified: true,
+      exp: Date.now() + PIN_TOKEN_EXPIRY
     }
     
-    // Get admin info from PIN verification result
-    const adminInfo = pinResult[0];
+    const tokenString = JSON.stringify(tokenData)
+    const signature = createHash('sha256')
+      .update(tokenString + PIN_SECRET)
+      .digest('hex')
+    
+    const pinToken = Buffer.from(tokenString + '.' + signature).toString('base64')
 
-    // Admin info is already validated by verify_admin_pin function
-    if (!adminInfo.role) {
-      logSecurityEvent('UNAUTHORIZED_ACCESS', request, { 
-        reason: 'non_admin_user', 
-        userEmail: user.email,
-        endpoint: 'pin-verify'
-      });
-      console.warn(`Non-admin user attempted PIN verification: ${user.email}`);
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { 
-          status: 403,
-          headers: getSecurityHeaders()
-        }
-      );
-    }
+    // Set secure cookie
+    const response = NextResponse.json(
+      { success: true, message: 'PIN verified successfully' },
+      { status: 200 }
+    )
 
-    // Create signed JWT token for PIN verification
-    const token = await new SignJWT({
-      userId: user.id,
-      adminUserId: adminInfo.user_id,
-      role: adminInfo.role,
-      permissions: adminInfo.permissions,
-      verified: true,
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 2) // 2 hours
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .sign(JWT_SECRET);
-
-    // Set HttpOnly cookie
-    const cookieStore = await cookies();
-    cookieStore.set('admin-pin-verified', token, {
+    response.cookies.set('admin-pin-verified', pinToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 2, // 2 hours
-      path: '/admin'
-    });
+      sameSite: 'lax',
+      maxAge: 60 * 60 // 1 hour
+    })
 
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: adminInfo.user_id,
-        role: adminInfo.role,
-        permissions: adminInfo.permissions
-      }
-    }, {
-      headers: {
-        ...getSecurityHeaders(),
-        ...securityResult.headers
-      }
-    });
+    return response
 
   } catch (error) {
-    console.error('PIN verification endpoint error:', error);
+    console.error('PIN verification error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }
 

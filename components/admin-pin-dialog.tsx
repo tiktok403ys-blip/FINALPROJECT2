@@ -1,117 +1,95 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Shield, Eye, EyeOff, Lock } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff, Shield, Settings } from "lucide-react"
+import { AdminSetPinDialog } from "./admin-set-pin-dialog"
 
 interface AdminPinDialogProps {
-  isOpen: boolean
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onSuccess: () => void
-  userEmail: string
 }
 
-export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminPinDialogProps) {
+export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialogProps) {
   const [pin, setPin] = useState("")
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [error, setError] = useState("")
   const [showPin, setShowPin] = useState(false)
-  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [showSetPinDialog, setShowSetPinDialog] = useState(false)
+  const [hasPinSet, setHasPinSet] = useState(false)
+  const [checkingPinStatus, setCheckingPinStatus] = useState(true)
 
-  // Fetch CSRF token when dialog opens
+  // Check if admin has PIN set when dialog opens
   useEffect(() => {
-    if (isOpen) {
-      fetchCSRFToken()
+    if (open) {
+      checkPinStatus()
     }
-  }, [isOpen])
+  }, [open])
 
-  const fetchCSRFToken = async () => {
+  const checkPinStatus = async () => {
     try {
-      const response = await fetch('/api/admin/csrf-token', {
+      setCheckingPinStatus(true)
+      const response = await fetch('/api/admin/set-pin', {
         method: 'GET',
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         const data = await response.json()
-        setCsrfToken(data.csrfToken)
-      } else {
-        console.warn('Failed to fetch CSRF token')
+        setHasPinSet(data.hasPinSet)
+        
+        // If no PIN is set, show set PIN dialog
+        if (!data.hasPinSet) {
+          setShowSetPinDialog(true)
+        }
       }
     } catch (error) {
-      console.error('Error fetching CSRF token:', error)
+      console.error('Failed to check PIN status:', error)
+    } finally {
+      setCheckingPinStatus(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!pin || pin.length < 4) {
-      setError("PIN must be at least 4 characters")
-      return
-    }
-
-    if (!csrfToken) {
-      setError("Security token not available. Please try again.")
-      return
-    }
-
-    setIsVerifying(true)
     setError("")
 
-    try {
-      console.log("🔐 Verifying admin PIN for:", userEmail)
+    if (!pin) {
+      setError("PIN is required")
+      return
+    }
 
-      // Call the server-side PIN verification endpoint with CSRF token
+    setIsLoading(true)
+
+    try {
       const response = await fetch('/api/admin/pin-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-csrf-token': csrfToken,
         },
-        body: JSON.stringify({ pin }),
-        credentials: 'include', // Include cookies
+        credentials: 'include',
+        body: JSON.stringify({ pin })
       })
 
-      const result = await response.json()
+      const data = await response.json()
 
-      if (!response.ok) {
-        console.error("❌ PIN verification error:", result.error)
-        setError(result.error || "Failed to verify PIN. Please try again.")
+      if (response.ok) {
         setPin("")
-        return
-      }
-
-      if (result.success) {
-        console.log("✅ PIN verified successfully")
-        
-        // Clear form
-        setPin("")
-        setError("")
-
-        // Call success callback
+        onOpenChange(false)
         onSuccess()
       } else {
-        console.log("❌ Invalid PIN")
-        setError("Invalid PIN. Please try again.")
-        setPin("")
+        setError(data.error || 'Invalid PIN')
       }
     } catch (error) {
-      console.error("❌ Unexpected error:", error)
-      setError("An unexpected error occurred. Please try again.")
+      console.error('PIN verification error:', error)
+      setError('Network error. Please try again.')
     } finally {
-      setIsVerifying(false)
+      setIsLoading(false)
     }
   }
 
@@ -119,95 +97,131 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
     setPin("")
     setError("")
     setShowPin(false)
-    setCsrfToken(null)
-    onClose()
+    onOpenChange(false)
+  }
+
+  const handleSetPinSuccess = () => {
+    setShowSetPinDialog(false)
+    setHasPinSet(true)
+    // Optionally close the main dialog or keep it open for immediate PIN entry
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-black/95 backdrop-blur-xl border border-red-500/30 text-white">
-        <DialogHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-            <Shield className="w-6 h-6 text-red-400" />
-          </div>
-          <DialogTitle className="text-xl font-bold text-red-400">Admin Access Required</DialogTitle>
-          <DialogDescription className="text-gray-300">
-            Enter your admin PIN to access the admin panel
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open && !showSetPinDialog} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-600" />
+              Admin PIN Verification
+            </DialogTitle>
+            <DialogDescription>
+              Enter your admin PIN to access admin features.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="pin" className="text-sm font-medium text-gray-300">
-              Admin PIN
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                id="pin"
-                type={showPin ? "text" : "password"}
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="Enter your PIN"
-                className="pl-10 pr-10 bg-gray-900/50 border-gray-700 text-white placeholder-gray-400 focus:border-red-500 focus:ring-red-500"
-                disabled={isVerifying}
-                autoComplete="off"
-                maxLength={30}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPin(!showPin)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                disabled={isVerifying}
+          {checkingPinStatus ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : !hasPinSet ? (
+            <div className="text-center py-6">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">No admin PIN has been set yet.</p>
+              <Button 
+                onClick={() => setShowSetPinDialog(true)}
+                className="flex items-center gap-2"
               >
-                {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+                <Settings className="h-4 w-4" />
+                Set Admin PIN
+              </Button>
             </div>
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
-            </div>
-          )}
-
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isVerifying}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white bg-transparent"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isVerifying || !pin}
-              className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-            >
-              {isVerifying ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4 mr-2" />
-                  Access Admin Panel
-                </>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
 
-        <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-          <p className="text-xs text-yellow-400">
-            <strong>Security Notice:</strong> Admin access is logged and monitored. Unauthorized access attempts will be
-            recorded.
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+              <div className="space-y-2">
+                <Label htmlFor="pin">Admin PIN</Label>
+                <div className="relative">
+                  <Input
+                    id="pin"
+                    type={showPin ? "text" : "password"}
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    placeholder="Enter your admin PIN"
+                    className="pr-10"
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPin(!showPin)}
+                    disabled={isLoading}
+                  >
+                    {showPin ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSetPinDialog(true)}
+                  disabled={isLoading}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  <Settings className="h-3 w-3 mr-1" />
+                  Change PIN
+                </Button>
+                
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClose}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !pin}
+                    className="min-w-[100px]"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Verifying...
+                      </div>
+                    ) : (
+                      "Verify PIN"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AdminSetPinDialog
+        open={showSetPinDialog}
+        onOpenChange={setShowSetPinDialog}
+        onSuccess={handleSetPinSuccess}
+      />
+    </>
   )
 }
