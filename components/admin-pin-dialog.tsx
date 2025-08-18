@@ -45,7 +45,7 @@ export function AdminPinDialog({ isOpen, onClose, onSuccess, userEmail }: AdminP
       
       if (response.ok) {
         const data = await response.json()
-        setCsrfToken(data.token)
+        setCsrfToken(data.csrfToken)
       } else {
         console.warn('Failed to fetch CSRF token')
       }

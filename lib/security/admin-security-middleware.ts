@@ -159,7 +159,7 @@ async function checkCSRFProtection(request: NextRequest): Promise<SecurityCheckR
  * @param details - Additional details
  */
 export function logSecurityEvent(
-  event: 'RATE_LIMIT_EXCEEDED' | 'CSRF_VALIDATION_FAILED' | 'UNAUTHORIZED_ACCESS',
+  event: 'RATE_LIMIT_EXCEEDED' | 'CSRF_VALIDATION_FAILED' | 'UNAUTHORIZED_ACCESS' | 'PIN_VERIFICATION_ERROR' | 'INVALID_PIN_ATTEMPT',
   request: NextRequest,
   details?: Record<string, any>
 ): void {

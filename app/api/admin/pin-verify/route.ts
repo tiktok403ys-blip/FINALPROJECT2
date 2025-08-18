@@ -42,25 +42,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify PIN using environment variable
-    const adminPin = process.env.ADMIN_PIN;
-    
-    if (!adminPin) {
-      console.error('ADMIN_PIN environment variable not configured');
+    // Validate PIN using database RPC function
+    const { data: pinValid, error: pinError } = await supabase
+      .rpc('verify_admin_pin', {
+        user_email: user.email,
+        input_pin: pin
+      });
+
+    if (pinError) {
+      logSecurityEvent('PIN_VERIFICATION_ERROR', request, { 
+        endpoint: 'pin-verify',
+        userEmail: user.email,
+        error: pinError.message 
+      });
+      console.error('PIN verification error:', pinError);
       return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500 }
+        { error: 'PIN verification failed' },
+        { 
+          status: 500,
+          headers: getSecurityHeaders()
+        }
       );
     }
 
-    const isValidPin = pin === adminPin;
-
-    if (!isValidPin) {
-      // Log failed attempt with security event
-      logSecurityEvent('UNAUTHORIZED_ACCESS', request, { 
-        reason: 'invalid_pin', 
-        userEmail: user.email,
-        endpoint: 'pin-verify'
+    if (!pinValid) {
+      logSecurityEvent('INVALID_PIN_ATTEMPT', request, { 
+        endpoint: 'pin-verify',
+        userEmail: user.email 
       });
       console.warn(`Failed PIN attempt for user: ${user.email}`);
       return NextResponse.json(
