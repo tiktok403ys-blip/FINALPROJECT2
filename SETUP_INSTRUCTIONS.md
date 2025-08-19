@@ -1,6 +1,6 @@
 # Setup Instructions - Step by Step
 
-## 🚀 Langkah-langkah Setup Database
+## 🚀 Langkah-langkah Setup Databasee
 
 ## 1. Buat Project Supabase Baru
 - Kunjungi [supabase.com](https://supabase.com)
