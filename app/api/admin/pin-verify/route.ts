@@ -54,9 +54,10 @@ export async function POST(request: NextRequest) {
     let isValid: boolean | null = null
     let rpcError: any = null
     try {
+      // Match function parameter names exactly: (p_user_id uuid, p_pin_text text)
       const res = await authResult.supabase.rpc('verify_admin_pin', {
-        user_id: authResult.user.id,
-        pin_text: pin,
+        p_user_id: authResult.user.id,
+        p_pin_text: pin,
       })
       if (res.error) rpcError = res.error
       else if (typeof res.data === 'boolean') isValid = res.data
