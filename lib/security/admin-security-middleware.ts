@@ -18,10 +18,16 @@ export async function adminSecurityMiddleware(request: NextRequest): Promise<Sec
   const method = request.method;
   const clientId = getClientIdentifier(request);
   
-  // 1. Rate Limiting Check
-  const rateLimitResult = await checkRateLimit(request, clientId, pathname, method);
-  if (!rateLimitResult.allowed) {
-    return rateLimitResult;
+  // 1. Rate Limiting Check (bisa dimatikan khusus pin-verify untuk QA)
+  const disablePinRateLimit = process.env.DISABLE_PIN_RATE_LIMIT === '1';
+  const isPinVerifyPath = pathname === '/api/admin/pin-verify';
+  let rateLimitHeaders: Record<string, string> = {};
+  if (!(disablePinRateLimit && isPinVerifyPath)) {
+    const rateLimitResult = await checkRateLimit(request, clientId, pathname, method);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResult;
+    }
+    rateLimitHeaders = rateLimitResult.headers || {};
   }
   
   // 2. CSRF Protection Check
@@ -36,7 +42,7 @@ export async function adminSecurityMiddleware(request: NextRequest): Promise<Sec
   return {
     allowed: true,
     headers: {
-      ...rateLimitResult.headers,
+      ...rateLimitHeaders,
       ...csrfResult.headers,
       ...getSecurityHeaders(isAdminDomain)
     }
