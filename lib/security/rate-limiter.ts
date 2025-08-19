@@ -255,8 +255,9 @@ export function withRateLimit(rateLimiter: ReturnType<typeof createRateLimiter>)
 export const RATE_LIMIT_CONFIGS = {
   PIN_VERIFICATION: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 attempts per 15 minutes
-    blockDuration: 30 * 60 * 1000 // 30 minutes block
+    // QA-friendly: lebih longgar; kembalikan ke nilai konservatif di production bila perlu
+    maxRequests: 15, // 15 attempts per 15 minutes
+    blockDuration: 5 * 60 * 1000 // 5 minutes block
   },
   ADMIN_LOGIN: {
     windowMs: 15 * 60 * 1000, // 15 minutes
