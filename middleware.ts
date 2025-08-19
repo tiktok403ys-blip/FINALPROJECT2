@@ -101,7 +101,8 @@ export async function middleware(request: NextRequest) {
     const skipPinValidation = 
       pathname.startsWith('/api/admin/pin-verify') ||
       pathname.startsWith('/api/admin/pin-status') ||
-      pathname.startsWith('/api/admin/set-pin');
+      pathname.startsWith('/api/admin/set-pin') ||
+      pathname.startsWith('/api/admin/csrf-token');
     
     if (!skipPinValidation) {
       // Validate PIN verification first
