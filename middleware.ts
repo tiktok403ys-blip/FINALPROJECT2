@@ -74,23 +74,19 @@ export async function middleware(request: NextRequest) {
     );
   }
   
-  // Validate PIN for admin page routes (not API routes, handled separately above)
+  // Validate PIN for admin page routes (not API routes)
   if (pathname.startsWith('/admin') && !pathname.startsWith('/api/admin/')) {
-    const isPinVerified = await validatePinVerification(request);
-    
-    if (!isPinVerified) {
-      // Check if showPin parameter is already present to avoid redirect loop
-      const showPin = request.nextUrl.searchParams.get('showPin');
-      
-      if (!showPin) {
-        // Only redirect if showPin parameter is not present
-        const url = request.nextUrl.clone();
-        url.pathname = '/admin';
-        url.searchParams.set('showPin', 'true');
-        return NextResponse.redirect(url);
+    // Dashboard root '/admin' tidak memerlukan PIN; section lain memerlukan
+    const isDashboard = pathname === '/admin' || pathname === '/admin/'
+    if (!isDashboard) {
+      const isPinVerified = await validatePinVerification(request)
+      if (!isPinVerified) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/admin'
+        url.searchParams.set('showPin', 'true')
+        url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+        return NextResponse.redirect(url)
       }
-      // If showPin=true is already present, let the request continue to render the page
-      // The UI will handle showing the PIN dialog based on the parameter
     }
   }
   

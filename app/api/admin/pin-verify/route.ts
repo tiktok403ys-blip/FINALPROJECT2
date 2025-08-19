@@ -3,7 +3,8 @@ import { validateAdminAuth } from '@/lib/auth/admin-middleware'
 import { SignJWT } from 'jose'
 
 const PIN_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
-const PIN_TOKEN_EXPIRY = 60 * 60 * 1000 // 1 hour in milliseconds
+// Reduce TTL to 15 minutes for better UX with per-section prompts
+const PIN_TOKEN_EXPIRY = 15 * 60 * 1000
 
 // Rate limiting for PIN verification attempts
 const pinAttempts = new Map<string, { count: number; lastAttempt: number }>()

@@ -19,6 +19,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const searchParams = useSearchParams()
+  const [pendingNext, setPendingNext] = useState<string | null>(null)
   const [showPinDialog, setShowPinDialog] = useState(false)
   const [showSetPinDialog, setShowSetPinDialog] = useState(false)
   const [pinStatus, setPinStatus] = useState<PinStatus | null>(null)
@@ -68,11 +69,13 @@ export default function AdminLayout({
   // Fallback: Check for showPin query parameter (for backward compatibility)
   useEffect(() => {
     const showPin = searchParams.get('showPin')
+    const next = searchParams.get('next')
+    if (next) setPendingNext(next)
     if (showPin === 'true' && pinStatus?.hasPinSet && !pinStatus?.verified) {
       setShowPinDialog(true)
-      // Clean up URL after opening dialog
       const url = new URL(window.location.href)
       url.searchParams.delete('showPin')
+      // biarkan `next` tetap ada sampai verifikasi sukses
       window.history.replaceState({}, '', url.toString())
     }
   }, [searchParams, pinStatus])
@@ -82,6 +85,12 @@ export default function AdminLayout({
     setShowPinDialog(false)
     // Update status to reflect successful verification
     setPinStatus(prev => prev ? { ...prev, verified: true } : null)
+    // redirect ke tujuan jika ada
+    if (pendingNext) {
+      const to = pendingNext
+      setPendingNext(null)
+      window.location.href = to
+    }
   }
 
   const handleSetPinSuccess = () => {

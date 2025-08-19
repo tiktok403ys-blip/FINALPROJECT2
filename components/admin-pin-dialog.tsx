@@ -136,10 +136,10 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
   return (
     <>
       <Dialog open={open && !showSetPinDialog} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-[#0B0F1A] text-white border-white/10">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-blue-600" />
+              <Shield className="h-5 w-5 text-[#00ff88]" />
               Admin PIN Verification
             </DialogTitle>
             <DialogDescription>
@@ -184,7 +184,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="pin">Admin PIN</Label>
+                <Label htmlFor="pin" className="text-white/90">Admin PIN</Label>
                 <div className="relative">
                   <Input
                     id="pin"
@@ -192,7 +192,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
                     value={pin}
                     onChange={(e) => setPin(e.target.value)}
                     placeholder="Enter your admin PIN"
-                    className="pr-10"
+                    className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     spellCheck={false}
@@ -205,7 +205,7 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/70"
                     onClick={() => setShowPin(!showPin)}
                     disabled={isLoading}
                   >
@@ -239,14 +239,14 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
                     variant="outline"
                     onClick={handleClose}
                     disabled={isLoading}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={isLoading || !pin}
-                    className="min-w-[100px] w-full sm:w-auto"
+                    className="min-w-[100px] w-full sm:w-auto bg-[#00ff88] text-black hover:bg-[#00e07a]"
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
