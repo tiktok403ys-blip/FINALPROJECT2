@@ -68,7 +68,24 @@ export async function POST(request: NextRequest) {
     }
 
     if (isValid === null) {
-      // Fallback to legacy signature
+      // Try legacy signature (user_email TEXT, input_pin TEXT)
+      try {
+        const resEmail = await authResult.supabase.rpc('verify_admin_pin', {
+          user_email: authResult.user.email,
+          input_pin: pin,
+        })
+        if (resEmail.error) rpcError = resEmail.error
+        else if (typeof resEmail.data === 'boolean') isValid = resEmail.data
+        else if (Array.isArray(resEmail.data) && resEmail.data.length > 0 && typeof resEmail.data[0]?.is_valid === 'boolean') {
+          isValid = resEmail.data[0].is_valid
+        }
+      } catch (e3: any) {
+        rpcError = e3
+      }
+    }
+
+    if (isValid === null) {
+      // Try legacy signature (input_pin TEXT)
       try {
         const res2 = await authResult.supabase.rpc('verify_admin_pin', { input_pin: pin })
         if (res2.error) rpcError = res2.error
