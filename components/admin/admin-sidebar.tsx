@@ -15,7 +15,8 @@ import {
   LogOut,
   Shield,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -80,6 +81,7 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [homeMenuOpen, setHomeMenuOpen] = useState(false)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -194,6 +196,48 @@ export function AdminSidebar() {
 
             const isActive = pathname === item.href
             const IconComponent = item.icon
+
+            // Special handling for Home Content dropdown behavior
+            if (item.href === '/admin/home') {
+              return (
+                <div key={item.href} className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-between text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                      (isActive || homeMenuOpen) && "bg-white/20 text-white",
+                      collapsed && "px-2"
+                    )}
+                    onClick={() => setHomeMenuOpen((v) => !v)}
+                  >
+                    <div className="flex items-center">
+                      <IconComponent className={cn("w-4 h-4", (!collapsed || isMobile) && "mr-3")} />
+                      {(!collapsed || isMobile) && (
+                        <span className="truncate">{item.title}</span>
+                      )}
+                    </div>
+                    {(!collapsed || isMobile) && <ChevronDown className={cn("w-4 h-4 transition-transform", homeMenuOpen && "rotate-180")} />}
+                  </Button>
+                  {homeMenuOpen && (!collapsed || isMobile) && (
+                    <div className="ml-7 space-y-1">
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/home/top-rated-casinos' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/home/top-rated-casinos')
+                          if (isMobile) setMobileMenuOpen(false)
+                        }}
+                      >
+                        Top Rated Casinos
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )
+            }
 
             return (
               <Button

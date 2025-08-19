@@ -8,6 +8,7 @@ import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { LogoSlider } from "@/components/logo-slider"
 import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components/content-sections"
+import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
 import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
 
@@ -20,8 +21,14 @@ export default async function HomePage() {
   // Site settings for hero/banner (optional row)
   const { data: settings } = await supabase.from("site_settings").select("*").limit(1).maybeSingle()
 
-  // Fetch top casinos with real data
-  const { data: topCasinos } = await supabase.from("casinos").select("*").order("rating", { ascending: false }).limit(6)
+  // Fetch curated Top Rated Casinos for Home (editorial)
+  const { data: topCasinos } = await supabase
+    .from("casinos")
+    .select("*")
+    .eq("is_featured_home", true)
+    .order("home_rank", { ascending: true, nullsFirst: false })
+    .order("rating", { ascending: false, nullsFirst: false })
+    .limit(6)
 
   // Fetch latest news with real data
   const { data: latestNews } = await supabase
@@ -61,6 +68,8 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Realtime refresh when casinos change */}
+      <RealtimeCasinosRefresher filterHomeFeatured={true} />
       <HeroBanner
         imageUrl={settings?.hero_image_url || undefined}
         title={settings?.hero_title || undefined}

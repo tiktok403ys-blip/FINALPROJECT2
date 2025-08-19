@@ -27,6 +27,7 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
+import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
 import type { Casino } from "@/lib/types"
 
 export const metadata = {
@@ -157,6 +158,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Realtime refresh when casinos change */}
+      <RealtimeCasinosRefresher />
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"

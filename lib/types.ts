@@ -10,6 +10,9 @@ export interface Casino {
   license?: string | null
   player_rating_avg?: number | null
   player_rating_count?: number | null
+  // Home curation fields
+  is_featured_home?: boolean | null
+  home_rank?: number | null
   created_at: string
   updated_at: string
 }
