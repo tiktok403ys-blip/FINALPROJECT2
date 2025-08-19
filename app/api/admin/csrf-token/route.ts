@@ -16,11 +16,14 @@ export async function GET(request: NextRequest) {
       return securityResult.response!;
     }
 
-    // Validate admin authentication
-    const authResult = await validateAdminAuth(request, ['read_admin']);
-    if (authResult instanceof NextResponse) {
-      return authResult;
-    }
+    // Optional: try to validate admin auth, but do not block token issuance
+    // CSRF token sendiri tidak sensitif dan tidak memberi akses tanpa sesi yang valid
+    try {
+      const authResult = await validateAdminAuth(request, ['read_admin']);
+      if (!(authResult instanceof NextResponse)) {
+        // proceed silently
+      }
+    } catch {}
 
     // Generate new CSRF token
     const { token, cookie } = createCSRFToken();

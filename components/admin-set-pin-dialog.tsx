@@ -146,10 +146,10 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#0B0F1A] text-white border-white/10">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
+            <Shield className="h-5 w-5 text-[#00ff88]" />
             {hasPinSet ? "Update Admin PIN" : "Set Admin PIN"}
           </DialogTitle>
           <DialogDescription>
@@ -173,7 +173,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="newPin">New PIN</Label>
+              <Label htmlFor="newPin" className="text-white/90">New PIN</Label>
               <div className="relative">
                 <Input
                   id="newPin"
@@ -181,7 +181,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
                   placeholder="Enter new PIN (4-20 characters)"
-                  className="pr-10"
+                  className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                   disabled={isLoading}
                   autoComplete="new-password"
                 />
@@ -189,7 +189,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/70"
                   onClick={() => setShowNewPin(!showNewPin)}
                   disabled={isLoading}
                 >
@@ -203,7 +203,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPin">Confirm PIN</Label>
+              <Label htmlFor="confirmPin" className="text-white/90">Confirm PIN</Label>
               <div className="relative">
                 <Input
                   id="confirmPin"
@@ -211,7 +211,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
                   value={confirmPin}
                   onChange={(e) => setConfirmPin(e.target.value)}
                   placeholder="Confirm new PIN"
-                  className="pr-10"
+                  className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                   disabled={isLoading}
                   autoComplete="new-password"
                 />
@@ -219,7 +219,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/70"
                   onClick={() => setShowConfirmPin(!showConfirmPin)}
                   disabled={isLoading}
                 >
@@ -232,12 +232,12 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
               </div>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="bg-white/5 border border-white/10 p-3 rounded-lg">
               <div className="flex items-start gap-2">
-                <Lock className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-800">
+                <Lock className="h-4 w-4 text-[#00ff88] mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-white/90">
                   <p className="font-medium mb-1">PIN Security Guidelines:</p>
-                  <ul className="text-xs space-y-1 text-blue-700">
+                  <ul className="text-xs space-y-1 text-white/70">
                     <li>• Use 4-20 characters</li>
                     <li>• Avoid sequential numbers (1234, 4321)</li>
                     <li>• Avoid repeated digits (1111, 2222)</li>
@@ -253,13 +253,14 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
                 variant="outline"
                 onClick={handleClose}
                 disabled={isLoading}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || !newPin || !confirmPin}
-                className="min-w-[100px]"
+                className="min-w-[100px] bg-[#00ff88] text-black hover:bg-[#00e07a]"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
