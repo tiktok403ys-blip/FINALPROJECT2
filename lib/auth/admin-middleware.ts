@@ -62,11 +62,15 @@ export async function validateAdminAuth(
 
     // Check if user has required permissions
     if (requiredPermissions && requiredPermissions.length > 0) {
-      const userPermissions = adminUser.permissions || [];
-      const hasRequiredPermissions = requiredPermissions.every(permission => 
-        userPermissions.includes(permission)
+      const userPermissions = (adminUser.permissions || []) as string[];
+      // Super admin or wildcard 'all' permission should pass any permission check
+      const isSuperAdmin = adminUser.role === 'super_admin';
+      const hasWildcardAll = userPermissions.includes('all');
+
+      const hasRequiredPermissions = requiredPermissions.every((permission) =>
+        isSuperAdmin || hasWildcardAll || userPermissions.includes(permission)
       );
-      
+
       if (!hasRequiredPermissions) {
         return NextResponse.json(
           { error: `Access denied - Required permissions: ${requiredPermissions.join(', ')}` },
