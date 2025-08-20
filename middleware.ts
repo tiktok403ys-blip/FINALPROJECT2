@@ -62,16 +62,11 @@ export async function middleware(request: NextRequest) {
   
   // Validate admin subdomain access
   if (!validateAdminSubdomainAccess(request)) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Access denied: Admin routes require admin subdomain' }),
-      { 
-        status: 403,
-        headers: {
-          'Content-Type': 'application/json',
-          ...getSecurityHeaders(false)
-        }
-      }
-    );
+    // Redirect to a friendly 404 page instead of exposing details
+    const url = request.nextUrl.clone();
+    url.pathname = '/404';
+    url.search = '';
+    return NextResponse.redirect(url, { status: 307 });
   }
   
   // Validate PIN for admin page routes (not API routes)
