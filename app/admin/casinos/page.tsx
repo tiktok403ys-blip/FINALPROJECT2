@@ -116,6 +116,9 @@ function CasinosContentPage() {
         features: featuresInput.split(',').map(f => f.trim()).filter(f => f),
         payment_methods: paymentMethodsInput.split(',').map(p => p.trim()).filter(p => p)
       }
+      // Map UI field 'license' to DB column 'license_info'
+      const { license: uiLicense, ...restForDb } = dataToSave as any
+      const payload = { ...restForDb, license_info: uiLicense }
 
       if (editingId && editingId !== 'new') {
         // Update existing casino
@@ -123,7 +126,7 @@ function CasinosContentPage() {
         const { error } = await supabaseClient
           .from('casinos')
           .update({
-            ...dataToSave,
+            ...payload,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingId)
@@ -150,7 +153,7 @@ function CasinosContentPage() {
         }
         const { error } = await supabaseClient
           .from('casinos')
-          .insert([{ slug, ...dataToSave }])
+          .insert([{ slug, ...payload }])
 
         if (error) throw error
         toast.success('Casino created successfully')
