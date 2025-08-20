@@ -133,9 +133,24 @@ function CasinosContentPage() {
       } else {
         // Create new casino
         const supabaseClient = supabase()
+        // Auto-generate slug from name; ensure uniqueness best-effort
+        const slugBase = formData.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '')
+          .slice(0, 80)
+        let slug = slugBase || `casino-${Date.now().toString(36)}`
+        const { data: existing } = await supabaseClient
+          .from('casinos')
+          .select('id')
+          .eq('slug', slug)
+          .limit(1)
+        if (existing && existing.length > 0) {
+          slug = `${slug}-${Date.now().toString(36).slice(-4)}`
+        }
         const { error } = await supabaseClient
           .from('casinos')
-          .insert([dataToSave])
+          .insert([{ slug, ...dataToSave }])
 
         if (error) throw error
         toast.success('Casino created successfully')
