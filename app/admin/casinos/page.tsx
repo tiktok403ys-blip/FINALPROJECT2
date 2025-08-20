@@ -30,14 +30,15 @@ import {
 interface Casino {
   id: string
   name: string
-  description: string
+  description: string | null
   website_url: string
   logo_url: string
-  rating: number
-  bonus_info: string
-  features: string[]
-  payment_methods: string[]
-  license: string
+  rating: number | null
+  bonus_info: string | null
+  features: any
+  payment_methods: any
+  license?: string | null
+  license_info?: string | null
   established_year: number
   is_featured: boolean
   is_active: boolean
@@ -65,6 +66,13 @@ function CasinosContentPage() {
   })
   const [featuresInput, setFeaturesInput] = useState('')
   const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
+
+  const toStringArray = (value: any): string[] => {
+    if (!value) return []
+    if (Array.isArray(value)) return value.map(v => String(v)).filter(Boolean)
+    if (typeof value === 'string') return value.split(',').map(s => s.trim()).filter(Boolean)
+    return []
+  }
 
   // Use optimized query hook
   const { 
@@ -171,20 +179,20 @@ function CasinosContentPage() {
     setEditingId(casino.id)
     setFormData({
       name: casino.name,
-      description: casino.description,
+      description: casino.description || '',
       website_url: casino.website_url,
       logo_url: casino.logo_url,
-      rating: casino.rating,
-      bonus_info: casino.bonus_info,
-      features: casino.features,
-      payment_methods: casino.payment_methods,
-      license: casino.license,
+      rating: (casino.rating ?? 5) as number,
+      bonus_info: casino.bonus_info || '',
+      features: toStringArray(casino.features),
+      payment_methods: toStringArray(casino.payment_methods),
+      license: casino.license_info ?? casino.license ?? '',
       established_year: casino.established_year,
       is_featured: casino.is_featured,
       is_active: casino.is_active
     })
-    setFeaturesInput(casino.features.join(', '))
-    setPaymentMethodsInput(casino.payment_methods.join(', '))
+    setFeaturesInput(toStringArray(casino.features).join(', '))
+    setPaymentMethodsInput(toStringArray(casino.payment_methods).join(', '))
   }
 
   const handleDelete = async (id: string) => {
@@ -245,7 +253,7 @@ function CasinosContentPage() {
 
   const filteredCasinos = (casinos || []).filter(casino => {
     const matchesSearch = casino.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         casino.description.toLowerCase().includes(searchTerm.toLowerCase())
+                         (casino.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'active' && casino.is_active) ||
                          (statusFilter === 'inactive' && !casino.is_active) ||
@@ -512,10 +520,10 @@ function CasinosContentPage() {
                     </CardTitle>
                     <CardDescription className="text-white/60 flex items-center mt-1">
                       <div className="flex items-center mr-4">
-                        {renderStars(casino.rating)}
+                        {renderStars(Math.round((casino.rating ?? 0)))}
                       </div>
                       <span className="mr-4">Est. {casino.established_year}</span>
-                      {casino.license && <span>{casino.license}</span>}
+                      {(casino.license_info || casino.license) && <span>{casino.license_info || casino.license}</span>}
                     </CardDescription>
                   </div>
                 </div>
@@ -557,7 +565,7 @@ function CasinosContentPage() {
             </CardHeader>
             <CardContent>
               <div className="text-white/80 text-sm mb-4">
-                {casino.description.length > 200 ? `${casino.description.substring(0, 200)}...` : casino.description}
+                {(casino.description || '').length > 200 ? `${(casino.description || '').substring(0, 200)}...` : (casino.description || '')}
               </div>
               {casino.bonus_info && (
                 <div className="bg-white/5 rounded-lg p-3 mb-4">
@@ -565,11 +573,11 @@ function CasinosContentPage() {
                   <p className="text-white/70 text-sm">{casino.bonus_info}</p>
                 </div>
               )}
-              {casino.features.length > 0 && (
+              {toStringArray(casino.features).length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-white/90 font-medium mb-2">Features</h4>
                   <div className="flex flex-wrap gap-2">
-                    {casino.features.map((feature, index) => (
+                    {toStringArray(casino.features).map((feature, index) => (
                       <Badge key={index} className="bg-blue-500/20 text-blue-400">
                         {feature}
                       </Badge>
@@ -577,11 +585,11 @@ function CasinosContentPage() {
                   </div>
                 </div>
               )}
-              {casino.payment_methods.length > 0 && (
+              {toStringArray(casino.payment_methods).length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-white/90 font-medium mb-2">Payment Methods</h4>
                   <div className="flex flex-wrap gap-2">
-                    {casino.payment_methods.map((method, index) => (
+                    {toStringArray(casino.payment_methods).map((method, index) => (
                       <Badge key={index} className="bg-green-500/20 text-green-400">
                         {method}
                       </Badge>
