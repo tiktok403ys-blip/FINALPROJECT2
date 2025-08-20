@@ -7,6 +7,7 @@ import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminPinDialog } from '@/components/admin-pin-dialog'
 import { AdminSetPinDialog } from '@/components/admin-set-pin-dialog'
 import ErrorBoundary from '@/components/admin/error-boundary'
+import '@/styles/admin.css'
 
 interface PinStatus {
   verified: boolean
@@ -104,9 +105,9 @@ export default function AdminLayout({
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-black admin-theme">
         <AdminSidebar />
-        <main className="lg:ml-64 md:ml-16 sm:ml-0 p-4 sm:p-6">
+        <main className="lg:ml-64 md:ml-16 sm:ml-0 p-3 sm:p-4 md:p-6 lg:p-8">
           {children}
         </main>
       </div>

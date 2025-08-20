@@ -1,0 +1,42 @@
+/* Admin global overrides - mobile-first compact design */
+
+.admin-theme {
+	/* Ensure pure black background across admin */
+	background-color: #000 !important;
+}
+
+/* Compact spacing for cards/headers on small screens */
+.admin-compact .card,
+.admin-compact .backdrop-blur-xl,
+.admin-compact .bg-white\/10 {
+	padding: 0.75rem !important;
+}
+
+/* Typography scale for mobile-first */
+@media (max-width: 640px) {
+	.admin-theme h1 { font-size: 1.375rem; }
+	.admin-theme h2 { font-size: 1.125rem; }
+	.admin-theme h3 { font-size: 1rem; }
+}
+
+/* Sidebar: keep compact width on tablets, slide on mobile */
+@media (max-width: 768px) {
+	.admin-theme .fixed.left-0.top-0 { width: 16rem; }
+}
+
+/* Grid gaps more compact on small devices */
+.admin-theme .gap-8 { gap: 1rem; }
+.admin-theme .gap-6 { gap: 0.75rem; }
+.admin-theme .gap-4 { gap: 0.5rem; }
+
+/* Cards: darker background to match full black theme */
+.admin-theme .bg-white\/10 { background-color: rgba(255,255,255,0.06) !important; }
+.admin-theme .border-white\/20 { border-color: rgba(255,255,255,0.15) !important; }
+.admin-theme .border-white\/10 { border-color: rgba(255,255,255,0.12) !important; }
+
+/* Buttons compact on small */
+@media (max-width: 640px) {
+	.admin-theme button { padding-top: 0.5rem; padding-bottom: 0.5rem; height: auto; }
+}
+
+
