@@ -110,22 +110,17 @@ export default async function HomePage() {
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="text-center">
-                  <div className="relative w-full h-16 sm:h-20 bg-gradient-to-br from-gray-900 to-black rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden px-4">
-                    {/* Overlay pattern like /casinos mobile card */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88]/20 to-transparent"></div>
-                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_40%,rgba(0,255,136,0.12),transparent_50%)]"></div>
-                    </div>
+                  <div className="w-full h-20 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden">
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
                         alt={`${casino.name} logo`}
                         width={64}
                         height={64}
-                        className="relative z-10 max-w-full max-h-full object-contain filter brightness-110"
+                        className="h-full w-auto object-contain"
                       />
                     ) : (
-                      <div className="relative z-10 w-full h-full rounded flex items-center justify-center">
+                      <div className="w-full h-full rounded flex items-center justify-center">
                         <span className="text-[#00ff88] font-bold text-lg">{casino.name.charAt(0)}</span>
                       </div>
                     )}
