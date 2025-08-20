@@ -106,11 +106,13 @@ export default async function HomePage() {
             <p className="text-gray-400 text-lg">Discover our highest-rated online casinos with verified reviews</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
-              <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                <div className="text-center">
-                  <div className="w-full h-16 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden px-4">
+              <GlassCard key={casino.id} className="p-5 sm:p-6 hover:border-[#00ff88]/30 transition-colors">
+                {/* Layout mengikuti gaya card di /casinos pada mobile */}
+                <div className="flex flex-col sm:block">
+                  {/* Logo container dengan tinggi tetap dan object-contain */}
+                  <div className="w-full h-16 bg-white/10 rounded-lg flex items-center justify-center mb-4 overflow-hidden px-4">
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
@@ -125,9 +127,10 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{casino.name}</h3>
-                  <p className="text-gray-400 mb-4 text-sm line-clamp-2">{casino.description}</p>
-                  <div className="flex items-center justify-center mb-4">
+
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{casino.name}</h3>
+                  <p className="text-gray-400 mb-3 sm:mb-4 text-sm line-clamp-2">{casino.description}</p>
+                  <div className="flex items-center sm:justify-center mb-3 sm:mb-4">
                     <Star className="w-5 h-5 text-[#00ff88] fill-current" />
                     <span className="text-white ml-1 font-semibold">{casino.rating || "N/A"}</span>
                   </div>
