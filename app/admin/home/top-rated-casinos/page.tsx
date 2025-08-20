@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
+import { DashboardSkeleton } from "@/components/admin/loading-skeleton"
 
 interface AdminCasinoItem {
   id: string
@@ -51,6 +52,14 @@ export default function TopRatedCasinosAdminPage() {
   const updateRank = async (casino: AdminCasinoItem, rank: number) => {
     const updated = await actions.updateItem(casino.id, { home_rank: rank })
     if (updated) toast.success("Rank updated")
+  }
+
+  if (state.loading && state.items.length === 0) {
+    return (
+      <div className="p-6">
+        <DashboardSkeleton />
+      </div>
+    )
   }
 
   return (
