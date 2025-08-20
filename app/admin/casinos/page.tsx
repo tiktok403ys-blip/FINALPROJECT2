@@ -288,11 +288,11 @@ function CasinosContentPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-4 md:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center">
             <Building2 className="w-8 h-8 mr-3" />
             Casinos Management
           </h1>
@@ -300,6 +300,7 @@ function CasinosContentPage() {
         </div>
         <Button
           onClick={() => setEditingId('new')}
+          size="sm"
           className="bg-white/10 border-white/20 text-white hover:bg-white/20"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -308,8 +309,8 @@ function CasinosContentPage() {
       </div>
 
       {/* Filters */}
-      <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
-        <CardContent className="p-4">
+      <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-4 md:mb-6">
+        <CardContent className="p-3 md:p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
@@ -337,8 +338,8 @@ function CasinosContentPage() {
 
       {/* Form */}
       {editingId && (
-        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
-          <CardHeader>
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-4 md:mb-6">
+          <CardHeader className="p-4 md:p-6">
             <CardTitle className="text-white flex items-center justify-between">
               {editingId === 'new' ? 'Add New Casino' : 'Edit Casino'}
               <Button
@@ -351,7 +352,7 @@ function CasinosContentPage() {
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Casino Name</label>
@@ -486,10 +487,10 @@ function CasinosContentPage() {
       )}
 
       {/* Casinos List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3 md:gap-4">
         {filteredCasinos.map((casino) => (
           <Card key={casino.id} className="backdrop-blur-xl bg-white/10 border-white/20">
-            <CardHeader>
+            <CardHeader className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {casino.logo_url && (
@@ -563,7 +564,7 @@ function CasinosContentPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6">
               <div className="text-white/80 text-sm mb-4">
                 {(casino.description || '').length > 200 ? `${(casino.description || '').substring(0, 200)}...` : (casino.description || '')}
               </div>
