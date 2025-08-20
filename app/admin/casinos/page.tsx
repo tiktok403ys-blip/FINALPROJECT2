@@ -39,6 +39,9 @@ interface Casino {
   payment_methods: any
   license?: string | null
   license_info?: string | null
+  website_languages?: number | null
+  live_chat_languages?: number | null
+  customer_support_languages?: number | null
   established_year: number
   is_featured: boolean
   is_active: boolean
@@ -60,6 +63,9 @@ function CasinosContentPage() {
     features: [] as string[],
     payment_methods: [] as string[],
     license: '',
+    website_languages: undefined as number | undefined,
+    live_chat_languages: undefined as number | undefined,
+    customer_support_languages: undefined as number | undefined,
     established_year: new Date().getFullYear(),
     is_featured: false,
     is_active: true
@@ -133,6 +139,10 @@ function CasinosContentPage() {
       if (!uiLicense?.trim?.()) delete payload.license_info
       if (!formData.bonus_info?.trim?.()) delete payload.bonus_info
       if (payload.established_year === null || Number.isNaN(payload.established_year)) delete payload.established_year
+      // Clean empty numeric optional fields
+      if (payload.website_languages === undefined || payload.website_languages === null || payload.website_languages === '') delete payload.website_languages
+      if (payload.live_chat_languages === undefined || payload.live_chat_languages === null || payload.live_chat_languages === '') delete payload.live_chat_languages
+      if (payload.customer_support_languages === undefined || payload.customer_support_languages === null || payload.customer_support_languages === '') delete payload.customer_support_languages
 
       if (editingId && editingId !== 'new') {
         // Update existing casino
@@ -193,6 +203,9 @@ function CasinosContentPage() {
       features: toStringArray(casino.features),
       payment_methods: toStringArray(casino.payment_methods),
       license: casino.license_info ?? casino.license ?? '',
+      website_languages: (casino.website_languages as any) ?? undefined,
+      live_chat_languages: (casino.live_chat_languages as any) ?? undefined,
+      customer_support_languages: (casino.customer_support_languages as any) ?? undefined,
       established_year: casino.established_year,
       is_featured: casino.is_featured,
       is_active: casino.is_active
@@ -249,6 +262,9 @@ function CasinosContentPage() {
       features: [],
       payment_methods: [],
       license: '',
+      website_languages: undefined,
+      live_chat_languages: undefined,
+      customer_support_languages: undefined,
       established_year: new Date().getFullYear(),
       is_featured: false,
       is_active: true
@@ -411,6 +427,38 @@ function CasinosContentPage() {
                   value={formData.license}
                   onChange={(e) => setFormData({ ...formData, license: e.target.value })}
                   placeholder="Malta Gaming Authority"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Website Languages</label>
+                <Input
+                  type="number"
+                  value={formData.website_languages ?? ''}
+                  onChange={(e) => setFormData({ ...formData, website_languages: e.target.value === '' ? undefined : (parseInt(e.target.value) || 0) })}
+                  placeholder="e.g., 51"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Live Chat Languages</label>
+                <Input
+                  type="number"
+                  value={formData.live_chat_languages ?? ''}
+                  onChange={(e) => setFormData({ ...formData, live_chat_languages: e.target.value === '' ? undefined : (parseInt(e.target.value) || 0) })}
+                  placeholder="e.g., 6"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Customer Support Languages</label>
+                <Input
+                  type="number"
+                  value={formData.customer_support_languages ?? ''}
+                  onChange={(e) => setFormData({ ...formData, customer_support_languages: e.target.value === '' ? undefined : (parseInt(e.target.value) || 0) })}
+                  placeholder="e.g., 6"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
               </div>

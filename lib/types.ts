@@ -8,6 +8,10 @@ export interface Casino {
   logo_url: string | null
   website_url: string | null
   license?: string | null
+  // Language coverage counts
+  website_languages?: number | null
+  live_chat_languages?: number | null
+  customer_support_languages?: number | null
   player_rating_avg?: number | null
   player_rating_count?: number | null
   // Home curation fields

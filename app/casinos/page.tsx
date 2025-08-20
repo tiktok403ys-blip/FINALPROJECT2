@@ -381,15 +381,15 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                         <div className="text-xs text-gray-500 space-y-1">
                           <div className="flex items-center gap-2">
                             <Globe className="w-3 h-3" />
-                            Website: 51 languages
+                            Website: {typeof (casino as any).website_languages === 'number' ? (casino as any).website_languages : 'N/A'} languages
                           </div>
                           <div className="flex items-center gap-2">
                             <MessageCircle className="w-3 h-3" />
-                            Live chat: 6 languages
+                            Live chat: {typeof (casino as any).live_chat_languages === 'number' ? (casino as any).live_chat_languages : 'N/A'} languages
                           </div>
                           <div className="flex items-center gap-2">
                             <Phone className="w-3 h-3" />
-                            Customer support: 6 languages
+                            Customer support: {typeof (casino as any).customer_support_languages === 'number' ? (casino as any).customer_support_languages : 'N/A'} languages
                           </div>
                         </div>
                       </div>
