@@ -179,8 +179,9 @@ export default async function HomePage() {
                         className="w-full h-full object-contain"
                       />
                     ) : (
-                      <div className="flex items-center justify-center w-full h-full">
-                        <div className="w-1 rounded bg-[#00ff88]/60 h-16" />
+                      <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88]">
+                        <Trophy className="w-8 h-8" />
+                        <span className="text-xs font-bold mt-1">BONUS</span>
                       </div>
                     )}
                   </div>
