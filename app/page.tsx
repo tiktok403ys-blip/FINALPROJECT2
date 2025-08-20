@@ -106,31 +106,33 @@ export default async function HomePage() {
             <p className="text-gray-400 text-lg">Discover our highest-rated online casinos with verified reviews</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
-              <GlassCard key={casino.id} className="p-5 sm:p-6 hover:border-[#00ff88]/30 transition-colors">
-                {/* Layout mengikuti gaya card di /casinos pada mobile */}
-                <div className="flex flex-col sm:block">
-                  {/* Logo container dengan tinggi tetap dan object-contain */}
-                  <div className="w-full h-16 bg-white/10 rounded-lg flex items-center justify-center mb-4 overflow-hidden px-4">
+              <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
+                <div className="text-center">
+                  <div className="relative w-full h-16 sm:h-20 bg-gradient-to-br from-gray-900 to-black rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden px-4">
+                    {/* Overlay pattern like /casinos mobile card */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88]/20 to-transparent"></div>
+                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_40%,rgba(0,255,136,0.12),transparent_50%)]"></div>
+                    </div>
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
                         alt={`${casino.name} logo`}
                         width={64}
                         height={64}
-                        className="max-w-full max-h-full object-contain"
+                        className="relative z-10 max-w-full max-h-full object-contain filter brightness-110"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-r from-[#00ff88]/20 to-[#00ff88]/10 rounded flex items-center justify-center">
+                      <div className="relative z-10 w-full h-full rounded flex items-center justify-center">
                         <span className="text-[#00ff88] font-bold text-lg">{casino.name.charAt(0)}</span>
                       </div>
                     )}
                   </div>
-
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{casino.name}</h3>
-                  <p className="text-gray-400 mb-3 sm:mb-4 text-sm line-clamp-2">{casino.description}</p>
-                  <div className="flex items-center sm:justify-center mb-3 sm:mb-4">
+                  <h3 className="text-xl font-bold text-white mb-2">{casino.name}</h3>
+                  <p className="text-gray-400 mb-4 text-sm line-clamp-2">{casino.description}</p>
+                  <div className="flex items-center justify-center mb-4">
                     <Star className="w-5 h-5 text-[#00ff88] fill-current" />
                     <span className="text-white ml-1 font-semibold">{casino.rating || "N/A"}</span>
                   </div>
