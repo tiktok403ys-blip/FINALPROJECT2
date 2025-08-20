@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer"
 import { LogoSlider } from "@/components/logo-slider"
 import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components/content-sections"
 import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
+import RealtimeHomeRefresher from "@/components/realtime-home-refresher"
 import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
 
@@ -29,6 +30,19 @@ export default async function HomePage() {
     .order("home_rank", { ascending: true, nullsFirst: false })
     .order("rating", { ascending: false, nullsFirst: false })
     .limit(6)
+  // Home hero from page_sections
+  const { data: hero } = await supabase
+    .from("page_sections")
+    .select("title, content, image_url")
+    .eq("page_name","home").eq("section_name","hero").limit(1).maybeSingle()
+
+  // Exclusive bonuses for home
+  const { data: homeBonuses } = await supabase
+    .from("bonuses")
+    .select(`*, casinos(name, logo_url, rating)`) // if FK exists; fallback to fields only
+    .eq("is_featured_home", true)
+    .order("home_rank", { ascending: true, nullsFirst: false })
+    .limit(4)
 
   // Fetch latest news with real data
   const { data: latestNews } = await supabase
@@ -68,12 +82,14 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Realtime refresh when home data changes */}
+      <RealtimeHomeRefresher />
       {/* Realtime refresh when casinos change */}
       <RealtimeCasinosRefresher filterHomeFeatured={true} />
       <HeroBanner
-        imageUrl={settings?.hero_image_url || undefined}
-        title={settings?.hero_title || undefined}
-        subtitle={settings?.hero_subtitle || undefined}
+        imageUrl={hero?.image_url || settings?.hero_image_url || undefined}
+        title={hero?.title || settings?.hero_title || undefined}
+        subtitle={hero?.content || settings?.hero_subtitle || undefined}
         ctaPrimaryText={settings?.hero_cta_primary_text || undefined}
         ctaPrimaryLink={settings?.hero_cta_primary_link || undefined}
         ctaSecondaryText={settings?.hero_cta_secondary_text || undefined}
@@ -147,7 +163,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {featuredBonuses?.map((bonus: Bonus & { casinos?: Casino }) => (
+            {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
               <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -183,7 +199,7 @@ export default async function HomePage() {
                         <div className="text-gray-400 text-xs">{bonus.casinos?.name}</div>
                       </div>
                       <Button size="sm" className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
-                        <Link href={bonus.claim_url || `/casinos/${bonus.casino_id}`}>Claim Now</Link>
+                        <Link href={bonus.home_link_override || bonus.claim_url || `/casinos/${bonus.casino_id}`}>Claim Now</Link>
                       </Button>
                     </div>
                   </div>

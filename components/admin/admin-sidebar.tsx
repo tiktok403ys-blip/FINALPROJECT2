@@ -233,6 +233,32 @@ export function AdminSidebar() {
                       >
                         Top Rated Casinos
                       </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/home/hero-banner' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/home/hero-banner')
+                          if (isMobile) setMobileMenuOpen(false)
+                        }}
+                      >
+                        Hero Banner
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/home/exclusive-bonuses' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/home/exclusive-bonuses')
+                          if (isMobile) setMobileMenuOpen(false)
+                        }}
+                      >
+                        Exclusive Bonuses
+                      </Button>
                     </div>
                   )}
                 </div>
