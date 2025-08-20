@@ -19,21 +19,25 @@ interface AdminCasinoItem {
 }
 
 export default function TopRatedCasinosAdminPage() {
-  const [state, actions]: UseCrudReturn<AdminCasinoItem> = useCrud<AdminCasinoItem>({
+  const config = useMemo(() => ({
     table: "casinos",
     columns: "id,name,logo_url,rating,is_featured_home,home_rank",
-    orderBy: { column: "home_rank", ascending: true },
+    orderBy: { column: "home_rank", ascending: true as const },
     realtime: true,
     pageSize: 50,
-  })
+  }), [])
+
+  const [state, actions]: UseCrudReturn<AdminCasinoItem> = useCrud<AdminCasinoItem>(config)
 
   // Derived lists
   const featured = useMemo(() => state.items.filter(c => c.is_featured_home).sort((a, b) => (a.home_rank ?? 999) - (b.home_rank ?? 999)), [state.items])
   const others = useMemo(() => state.items.filter(c => !c.is_featured_home), [state.items])
 
+  const { fetchItems } = actions
   useEffect(() => {
-    actions.fetchItems()
-  }, [actions])
+    void fetchItems()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const toggleFeatured = async (casino: AdminCasinoItem) => {
     const updated = await actions.updateItem(casino.id, {
