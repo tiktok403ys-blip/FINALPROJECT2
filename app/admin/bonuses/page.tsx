@@ -270,11 +270,11 @@ function BonusesContentPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-4 md:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center">
             <Gift className="w-8 h-8 mr-3" />
             Bonuses Management
           </h1>
@@ -290,9 +290,9 @@ function BonusesContentPage() {
       </div>
 
       {/* Filters */}
-      <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-4 md:mb-6">
+        <CardContent className="p-3 md:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
               <Input
@@ -331,7 +331,7 @@ function BonusesContentPage() {
 
       {/* Form */}
       {editingId && (
-        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-4 md:mb-6">
           <CardHeader>
             <CardTitle className="text-white flex items-center justify-between">
               {editingId === 'new' ? 'Add New Bonus' : 'Edit Bonus'}
@@ -345,8 +345,8 @@ function BonusesContentPage() {
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-3 md:space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Title</label>
                 <Input
@@ -370,7 +370,7 @@ function BonusesContentPage() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Casino Name</label>
                 <Input
@@ -390,7 +390,7 @@ function BonusesContentPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Bonus Amount ($)</label>
                 <Input
@@ -432,7 +432,7 @@ function BonusesContentPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Wagering Requirement (x)</label>
                 <Input
@@ -491,7 +491,7 @@ function BonusesContentPage() {
                 className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
               />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2 text-white/90">
                   <input
@@ -531,11 +531,11 @@ function BonusesContentPage() {
       )}
 
       {/* Bonuses List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3 md:gap-4">
         {filteredBonuses.map((bonus) => (
           <Card key={bonus.id} className="backdrop-blur-xl bg-white/10 border-white/20">
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div className="flex-1">
                   <CardTitle className="text-white flex items-center mb-2">
                     {bonus.title}
@@ -549,7 +549,7 @@ function BonusesContentPage() {
                       <Badge className="ml-2 bg-red-500/20 text-red-400">Expired</Badge>
                     )}
                   </CardTitle>
-                  <CardDescription className="text-white/60 flex items-center space-x-4">
+                  <CardDescription className="text-white/60 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                     <span>{bonus.casino_name}</span>
                     <span className="flex items-center">
                       <Gift className="w-4 h-4 mr-1" />
@@ -562,7 +562,7 @@ function BonusesContentPage() {
                     )}
                   </CardDescription>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 self-start sm:self-auto">
                   <Badge
                     variant={bonus.is_active ? "secondary" : "destructive"}
                     className={bonus.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}
@@ -599,7 +599,7 @@ function BonusesContentPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-3 md:mb-4">
                 {bonus.bonus_amount > 0 && (
                   <div className="bg-white/5 rounded-lg p-3">
                     <div className="flex items-center text-green-400 mb-1">
@@ -635,7 +635,7 @@ function BonusesContentPage() {
                   </div>
                 )}
               </div>
-              <div className="text-white/80 text-sm mb-4">
+              <div className="text-white/80 text-sm mb-3 md:mb-4 line-clamp-2 md:line-clamp-none">
                 {bonus.description.length > 200 ? `${bonus.description.substring(0, 200)}...` : bonus.description}
               </div>
               {bonus.terms_conditions && (
@@ -646,7 +646,7 @@ function BonusesContentPage() {
                   </p>
                 </div>
               )}
-              <div className="flex justify-between items-center text-xs text-white/50">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-white/50">
                 <div className="flex items-center space-x-4">
                   {bonus.valid_from && (
                     <span className="flex items-center">
