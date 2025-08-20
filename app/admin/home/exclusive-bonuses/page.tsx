@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { TableSkeleton } from "@/components/admin/loading-skeleton"
 
 interface BonusItem {
   id: string
@@ -75,8 +76,8 @@ export default function ExclusiveBonusesAdmin() {
           <CardTitle className="text-white">Exclusive Bonuses (Home)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {loading ? (
-            <div className="text-gray-400">Loading...</div>
+          {loading && rows.length === 0 ? (
+            <TableSkeleton rows={6} />
           ) : (
             <>
               <h3 className="text-white font-semibold">Featured on Home</h3>

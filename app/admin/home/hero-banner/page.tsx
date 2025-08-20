@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/admin/image-upload"
 import { toast } from "sonner"
+import { FormSkeleton } from "@/components/admin/loading-skeleton"
 
 interface HeroSection {
   id: string
@@ -76,8 +77,8 @@ export default function HeroBannerAdmin() {
           <CardTitle className="text-white">Hero Banner (Home)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {loading ? (
-            <div className="text-gray-400">Loading...</div>
+          {loading && !row ? (
+            <FormSkeleton />
           ) : (
             <>
               <div>
