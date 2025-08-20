@@ -66,7 +66,7 @@ export function ProtectedRoute({
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-white mx-auto mb-4" />
           <p className="text-white/70">Verifying authentication...</p>
@@ -78,7 +78,7 @@ export function ProtectedRoute({
   // Show fallback if not authenticated
   if (!user) {
     return fallback || (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <p className="text-white/70">Redirecting to login...</p>
         </div>
@@ -89,7 +89,7 @@ export function ProtectedRoute({
   // Check role requirement
   if (requiredRole && !adminAuth.hasRole(requiredRole)) {
     return fallback || (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
           <p className="text-white/70">You don&apos;t have the required role to access this page.</p>
@@ -106,7 +106,7 @@ export function ProtectedRoute({
     
     if (!hasAllPermissions) {
       return fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="min-h-screen flex items-center justify-center bg-black">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
             <p className="text-white/70">You don&apos;t have the required permissions to access this page.</p>
