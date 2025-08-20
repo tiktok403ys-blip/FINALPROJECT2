@@ -110,17 +110,18 @@ export default async function HomePage() {
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="text-center">
-                  <div className="w-full h-20 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                  <div className="relative w-full h-20 bg-white/10 rounded-lg mx-auto mb-4 overflow-hidden">
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
                         alt={`${casino.name} logo`}
-                        width={64}
-                        height={64}
-                        className="h-full w-auto object-contain"
+                        fill
+                        className="object-contain p-2"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        priority={false}
                       />
                     ) : (
-                      <div className="w-full h-full rounded flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-[#00ff88] font-bold text-lg">{casino.name.charAt(0)}</span>
                       </div>
                     )}
