@@ -110,7 +110,7 @@ export default async function HomePage() {
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="text-center">
-                  <div className="relative h-20 -mx-6 bg-white/10 rounded-t-lg mb-4 overflow-hidden">
+                  <div className="relative h-20 -mx-6 -mt-6 bg-white/10 rounded-t-lg mb-4 overflow-hidden">
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
