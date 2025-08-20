@@ -45,6 +45,10 @@ export interface Bonus {
   image_url?: string | null
   yes_count?: number | null
   no_count?: number | null
+  // Home curation fields (Exclusive Bonuses section)
+  is_featured_home?: boolean | null
+  home_rank?: number | null
+  home_link_override?: string | null
   created_at: string
   updated_at: string
   casinos?: Casino

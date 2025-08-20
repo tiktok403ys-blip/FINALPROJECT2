@@ -41,6 +41,7 @@ export default async function HomePage() {
     .from("bonuses")
     .select(`*, casinos(name, logo_url, rating)`) // if FK exists; fallback to fields only
     .eq("is_featured_home", true)
+    .eq("is_active", true)
     .order("home_rank", { ascending: true, nullsFirst: false })
     .limit(4)
 
@@ -63,6 +64,7 @@ export default async function HomePage() {
         rating
       )
     `)
+    .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(4)
 
@@ -162,7 +164,7 @@ export default async function HomePage() {
             <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
               <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="flex items-start gap-4">

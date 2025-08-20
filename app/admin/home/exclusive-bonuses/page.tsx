@@ -80,7 +80,7 @@ export default function ExclusiveBonusesAdmin() {
           ) : (
             <>
               <h3 className="text-white font-semibold">Featured on Home</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {featured.map(item => (
                   <div key={item.id} className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-3">
                     <div className="text-white font-semibold truncate" title={item.title}>{item.title}</div>
@@ -98,7 +98,7 @@ export default function ExclusiveBonusesAdmin() {
               </div>
 
               <h3 className="text-white font-semibold mt-4">Other Bonuses</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {others.map(item => (
                   <div key={item.id} className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-3">
                     <div className="text-white font-semibold truncate" title={item.title}>{item.title}</div>
