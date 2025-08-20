@@ -499,7 +499,7 @@ function CasinosContentPage() {
                       alt={casino.name}
                       width={48}
                       height={48}
-                      className="w-12 h-12 rounded-lg object-cover"
+                      className="w-9 h-9 md:w-12 md:h-12 rounded-lg object-cover"
                     />
                   )}
                   <div>
@@ -519,16 +519,16 @@ function CasinosContentPage() {
                         </Button>
                       )}
                     </CardTitle>
-                    <CardDescription className="text-white/60 flex items-center mt-1">
+                    <CardDescription className="text-white/60 flex items-center mt-1 text-sm md:text-base">
                       <div className="flex items-center mr-4">
                         {renderStars(Math.round((casino.rating ?? 0)))}
                       </div>
-                      <span className="mr-4">Est. {casino.established_year}</span>
+                      <span className="mr-4 hidden sm:inline">Est. {casino.established_year}</span>
                       {(casino.license_info || casino.license) && <span>{casino.license_info || casino.license}</span>}
                     </CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 md:space-x-2">
                   <Badge
                     variant={casino.is_active ? "secondary" : "destructive"}
                     className={casino.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}
@@ -539,7 +539,7 @@ function CasinosContentPage() {
                   </Badge>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     onClick={() => toggleStatus(casino.id, 'is_featured', casino.is_featured)}
                     className="text-yellow-400 hover:text-yellow-300"
                   >
@@ -547,7 +547,7 @@ function CasinosContentPage() {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     onClick={() => handleEdit(casino)}
                     className="text-white/70 hover:text-white"
                   >
@@ -555,7 +555,7 @@ function CasinosContentPage() {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     onClick={() => handleDelete(casino.id)}
                     className="text-red-400 hover:text-red-300"
                   >
@@ -565,7 +565,7 @@ function CasinosContentPage() {
               </div>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <div className="text-white/80 text-sm mb-4">
+              <div className="text-white/80 text-sm mb-3 md:mb-4 line-clamp-2 md:line-clamp-none">
                 {(casino.description || '').length > 200 ? `${(casino.description || '').substring(0, 200)}...` : (casino.description || '')}
               </div>
               {casino.bonus_info && (
@@ -577,7 +577,7 @@ function CasinosContentPage() {
               {toStringArray(casino.features).length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-white/90 font-medium mb-2">Features</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="hidden md:flex flex-wrap gap-2">
                     {toStringArray(casino.features).map((feature, index) => (
                       <Badge key={index} className="bg-blue-500/20 text-blue-400">
                         {feature}
@@ -589,7 +589,7 @@ function CasinosContentPage() {
               {toStringArray(casino.payment_methods).length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-white/90 font-medium mb-2">Payment Methods</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="hidden md:flex flex-wrap gap-2">
                     {toStringArray(casino.payment_methods).map((method, index) => (
                       <Badge key={index} className="bg-green-500/20 text-green-400">
                         {method}
