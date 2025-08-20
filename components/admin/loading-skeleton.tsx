@@ -30,7 +30,7 @@ export function DashboardSkeleton() {
       {/* Analytics Cards Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="backdrop-blur-xl bg-white/10 border-white/20">
+          <Card key={i} className="bg-white/5 border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-4" />
@@ -46,7 +46,7 @@ export function DashboardSkeleton() {
       {/* Weekly Analytics Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="backdrop-blur-xl bg-white/10 border-white/20">
+          <Card key={i} className="bg-white/5 border-white/10">
             <CardHeader>
               <Skeleton className="h-5 w-32" />
             </CardHeader>
@@ -66,7 +66,7 @@ export function DashboardSkeleton() {
       </div>
 
       {/* Recent Activities Skeleton */}
-      <Card className="backdrop-blur-xl bg-white/10 border-white/20">
+      <Card className="bg-white/5 border-white/10">
         <CardHeader>
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-48" />
@@ -107,7 +107,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
       </div>
 
       {/* Table */}
-      <Card className="backdrop-blur-xl bg-white/10 border-white/20">
+      <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0">
           <div className="space-y-3 p-6">
             {Array.from({ length: rows }).map((_, i) => (
@@ -135,7 +135,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 export function FormSkeleton() {
   return (
-    <Card className="backdrop-blur-xl bg-white/10 border-white/20">
+    <Card className="bg-white/5 border-white/10">
       <CardHeader>
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-4 w-48" />
