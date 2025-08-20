@@ -126,7 +126,13 @@ function CasinosContentPage() {
       }
       // Map UI field 'license' to DB column 'license_info'
       const { license: uiLicense, ...restForDb } = dataToSave as any
-      const payload = { ...restForDb, license_info: uiLicense }
+      const payload: any = { ...restForDb, license_info: uiLicense }
+      // Avoid overwriting existing values with empty placeholders on update
+      if (!featuresInput.trim()) delete payload.features
+      if (!paymentMethodsInput.trim()) delete payload.payment_methods
+      if (!uiLicense?.trim?.()) delete payload.license_info
+      if (!formData.bonus_info?.trim?.()) delete payload.bonus_info
+      if (payload.established_year === null || Number.isNaN(payload.established_year)) delete payload.established_year
 
       if (editingId && editingId !== 'new') {
         // Update existing casino
