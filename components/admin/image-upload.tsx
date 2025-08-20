@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,7 @@ interface ImageUploadProps {
 
 export function ImageUpload({ value, onChange, bucket, className, label }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {

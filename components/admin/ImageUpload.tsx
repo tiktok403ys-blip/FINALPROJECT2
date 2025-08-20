@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -30,7 +30,7 @@ export default function ImageUpload({
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   const uploadFile = async (file: File) => {
     if (file.size > maxSize * 1024 * 1024) {
