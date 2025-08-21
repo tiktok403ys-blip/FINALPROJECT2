@@ -168,18 +168,18 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
               <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className={`${bonus.casinos?.logo_url ? 'w-16 h-16' : 'w-12 h-20'} bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                <div className="flex items-stretch gap-4">
+                  <div className="w-20 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {bonus.casinos?.logo_url ? (
                       <Image
                         src={bonus.casinos.logo_url || "/placeholder.svg"}
                         alt={`${bonus.casinos.name} logo`}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-contain"
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-contain p-2"
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88]">
+                      <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88] p-2">
                         <Trophy className="w-8 h-8" />
                         <span className="text-xs font-bold mt-1">BONUS</span>
                       </div>
