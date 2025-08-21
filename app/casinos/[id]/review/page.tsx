@@ -124,17 +124,22 @@ export default async function CasinoReviewPage({ params }: ReviewPageProps) {
           <GlassCard className="p-8 mb-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               {/* Casino Logo */}
-              <div className="w-48 h-24 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div 
+                className="w-48 h-24 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+                style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}
+              >
                 {casino.logo_url ? (
                   <Image
                     src={casino.logo_url || "/placeholder.svg"}
                     alt={`${casino.name} logo`}
-                    width={200}
-                    height={80}
-                    className="max-w-full max-h-full object-contain"
+                    width={192}
+                    height={96}
+                    className="max-w-full max-h-full object-contain p-4"
                   />
                 ) : (
-                  <span className="text-white font-bold text-xl">{casino.name}</span>
+                  <div className="text-[#00ff88] font-bold text-2xl">
+                    {casino.name.charAt(0)}
+                  </div>
                 )}
               </div>
 

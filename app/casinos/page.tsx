@@ -253,7 +253,10 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                           className="max-w-full max-h-full object-contain filter brightness-110"
                         />
                       ) : (
-                        <div className="text-center">
+                        <div 
+                          className="text-center p-4 rounded-lg"
+                          style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}
+                        >
                           <div className="text-white font-bold text-2xl mb-1">
                             {casino.name
                               .split(" ")

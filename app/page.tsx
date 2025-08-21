@@ -110,7 +110,10 @@ export default async function HomePage() {
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                 <div className="text-center h-full flex flex-col">
-                  <div className="relative h-20 -mx-6 -mt-6 bg-white/10 rounded-t-lg mb-4 overflow-hidden">
+                  <div 
+                    className="relative h-20 -mx-6 -mt-6 rounded-t-lg mb-4 overflow-hidden"
+                    style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}
+                  >
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
@@ -171,7 +174,10 @@ export default async function HomePage() {
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
                              <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                                   <div className="flex items-stretch h-full">
-                   <div className="w-20 -ml-6 -mt-6 -mb-6 bg-white/10 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                   <div 
+                     className="w-20 -ml-6 -mt-6 -mb-6 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+                     style={{ backgroundColor: bonus.casinos?.placeholder_bg_color || '#1f2937' }}
+                   >
                      {bonus.casinos?.logo_url ? (
                        <Image
                          src={bonus.casinos.logo_url || "/placeholder.svg"}

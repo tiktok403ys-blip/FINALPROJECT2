@@ -194,7 +194,10 @@ export default async function ExpertReviewsPage() {
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
+                          <div 
+                            className="absolute inset-0 flex items-center justify-center"
+                            style={{ backgroundColor: review.casinos?.placeholder_bg_color || '#1f2937' }}
+                          >
                             <span className="text-[#00ff88] font-bold text-base sm:text-lg">{review.casinos?.name?.charAt(0) || "C"}</span>
                           </div>
                         )}

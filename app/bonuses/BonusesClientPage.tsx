@@ -317,7 +317,10 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   {/* Right Side - Casino Info & Actions */}
                   <div className="lg:w-1/3 bg-gradient-to-br from-gray-900 to-black p-6 flex flex-col">
                     {/* Casino Logo */}
-                    <div className="bg-black rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center">
+                    <div 
+                      className="rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center"
+                      style={{ backgroundColor: bonus.casinos?.placeholder_bg_color || '#000000' }}
+                    >
                       {bonus.casinos?.logo_url ? (
                         <Image
                           src={bonus.casinos.logo_url || "/placeholder.svg"}
@@ -327,7 +330,9 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           className="max-w-full max-h-16 object-contain mx-auto filter brightness-0 invert"
                         />
                       ) : (
-                        <div className="text-white font-bold text-2xl">{bonus.casinos?.name || "Casino"}</div>
+                        <div className="text-white font-bold text-xl">
+                          {bonus.casinos?.name?.charAt(0) || "B"}
+                        </div>
                       )}
                     </div>
 
