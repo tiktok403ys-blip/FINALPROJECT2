@@ -75,6 +75,11 @@ function CasinosContentPage() {
   const [featuresInput, setFeaturesInput] = useState('')
   const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
 
+  // Debug useEffect untuk memantau perubahan placeholder_bg_color
+  useEffect(() => {
+    console.log('formData.placeholder_bg_color changed to:', formData.placeholder_bg_color)
+  }, [formData.placeholder_bg_color])
+
   const toStringArray = (value: any): string[] => {
     if (!value) return []
     if (Array.isArray(value)) return value.map(v => String(v)).filter(Boolean)
@@ -486,13 +491,19 @@ function CasinosContentPage() {
                     <input
                       type="color"
                       value={formData.placeholder_bg_color}
-                      onChange={(e) => setFormData(prev => ({ ...prev, placeholder_bg_color: e.target.value }))}
+                      onChange={(e) => {
+                        console.log('Color picker changed to:', e.target.value)
+                        setFormData(prev => ({ ...prev, placeholder_bg_color: e.target.value }))
+                      }}
                       className="w-12 h-10 rounded-lg border border-white/20 bg-transparent cursor-pointer"
                     />
                     <input
                       type="text"
                       value={formData.placeholder_bg_color}
-                      onChange={(e) => setFormData(prev => ({ ...prev, placeholder_bg_color: e.target.value }))}
+                      onChange={(e) => {
+                        console.log('Text input changed to:', e.target.value)
+                        setFormData(prev => ({ ...prev, placeholder_bg_color: e.target.value }))
+                      }}
                       className="flex-1 px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="#1f2937"
                     />

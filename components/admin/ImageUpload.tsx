@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -34,7 +34,15 @@ export default function ImageUpload({
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Debug useEffect untuk memantau perubahan placeholderBgColor
+  useEffect(() => {
+    console.log('ImageUpload placeholderBgColor prop changed to:', placeholderBgColor)
+  }, [placeholderBgColor])
   const supabase = createClient()
+
+  // Debug logging untuk memverifikasi perubahan prop
+  console.log('ImageUpload re-rendered with placeholderBgColor:', placeholderBgColor)
 
   const uploadFile = async (file: File) => {
     if (file.size > maxSize * 1024 * 1024) {
