@@ -41,6 +41,7 @@ export function NavbarFixed() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
   const [showPinDialog, setShowPinDialog] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const pathname = usePathname()
   const mountedRef = useRef(true)
   const profileFetchedRef = useRef(false)
@@ -51,6 +52,25 @@ export function NavbarFixed() {
 
   // Check if we're on home page
   const isHomePage = pathname === "/"
+
+  // Close dropdown when pathname changes
+  useEffect(() => {
+    setActiveDropdown(null)
+  }, [pathname])
+
+  // Click outside handler untuk menutup dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeDropdown && !(event.target as Element).closest('.dropdown-container')) {
+        setActiveDropdown(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [activeDropdown])
 
   const fetchUserProfile = useCallback(async (currentUser: SupabaseUser) => {
     if (!currentUser || profileFetchedRef.current || !mountedRef.current) return
@@ -294,7 +314,16 @@ export function NavbarFixed() {
     { name: "Home", href: "/", icon: Home },
     { name: "Casinos", href: "/casinos", icon: Building2 },
     { name: "Bonuses", href: "/bonuses", icon: Gift },
-    { name: "Reviews", href: "/reviews", icon: Star },
+    { 
+      name: "Reviews", 
+      href: "/expert-reviews", // ✅ Default ke expert reviews
+      icon: Star,
+      hasDropdown: true,
+      dropdownItems: [
+        { name: "Expert Reviews", href: "/expert-reviews", icon: Star, description: "Professional analysis" },
+        { name: "Player Reviews", href: "/reviews", icon: User, description: "Community feedback" },
+      ]
+    },
     { name: "News", href: "/news", icon: Newspaper },
     { name: "Reports", href: "/reports", icon: FileText },
   ]
@@ -324,6 +353,56 @@ export function NavbarFixed() {
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+
+                if (item.hasDropdown) {
+                  return (
+                    <div key={item.name} className="relative dropdown-container">
+                      <button
+                        onClick={() => setActiveDropdown(activeDropdown === item.name ? null : item.name)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                          isActive
+                            ? "bg-[#00ff88]/20 text-[#00ff88] border border-[#00ff88]/30"
+                            : "text-gray-300 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="font-medium">{item.name}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.name ? "rotate-180" : ""}`} />
+                      </button>
+                      
+                      {/* Dropdown Menu - Click-based with proper state management */}
+                      {activeDropdown === item.name && (
+                        <div className="absolute top-full left-0 mt-2 w-64 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
+                          <div className="p-2">
+                            {item.dropdownItems.map((dropdownItem) => {
+                              const DropdownIcon = dropdownItem.icon
+                              const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))
+                              
+                              return (
+                                <Link
+                                  key={dropdownItem.name}
+                                  href={dropdownItem.href}
+                                  onClick={() => setActiveDropdown(null)}
+                                  className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
+                                    isDropdownActive
+                                      ? "bg-[#00ff88]/20 text-[#00ff88]"
+                                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                                  }`}
+                                >
+                                  <DropdownIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{dropdownItem.name}</div>
+                                    <div className="text-xs text-gray-400 mt-0.5">{dropdownItem.description}</div>
+                                  </div>
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
 
                 return (
                   <Link
@@ -473,6 +552,39 @@ export function NavbarFixed() {
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+
+                if (item.hasDropdown) {
+                  return (
+                    <div key={item.name} className="space-y-1">
+                      <div className="flex items-center gap-3 px-3 py-2 text-gray-300 text-sm">
+                        <Icon className="w-4 h-4" />
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                      <div className="ml-6 space-y-1">
+                        {item.dropdownItems.map((dropdownItem) => {
+                          const DropdownIcon = dropdownItem.icon
+                          const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))
+                          
+                          return (
+                            <Link
+                              key={dropdownItem.name}
+                              href={dropdownItem.href}
+                              onClick={() => setIsOpen(false)}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 text-sm ${
+                                isDropdownActive
+                                  ? "bg-[#00ff88]/20 text-[#00ff88] border border-[#00ff88]/30"
+                                  : "text-gray-300 hover:text-white hover:bg-white/10"
+                              }`}
+                            >
+                              <DropdownIcon className="w-4 h-4" />
+                              <span className="font-medium">{dropdownItem.name}</span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                }
 
                 return (
                   <Link
