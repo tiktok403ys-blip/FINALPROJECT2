@@ -66,9 +66,10 @@ function AdminDashboard() {
       
       const today = new Date().toISOString().split('T')[0]
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const todayStart = new Date().setHours(0,0,0,0)
       
       // Load analytics statistics
-      const [usersResult, casinosResult, bonusesResult, newsResult, reviewsResult, reportsResult, activitiesResult, dailyUsersResult, dailyLoginsResult, reviewsTodayResult, reviewsWeekResult] = await Promise.all([
+      const [usersResult, casinosResult, bonusesResult, newsResult, reviewsResult, reportsResult, activitiesResult, dailyActiveResult, dailyLoginsResult, reviewsTodayResult, reviewsWeekResult] = await Promise.all([
         supabase.from('admin_users').select('id', { count: 'exact', head: true }),
         supabase.from('casinos').select('id', { count: 'exact', head: true }),
         supabase.from('bonuses').select('id', { count: 'exact', head: true }),
@@ -76,10 +77,14 @@ function AdminDashboard() {
         supabase.from('casino_reviews').select('id', { count: 'exact', head: true }),
         supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(10),
-        supabase.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_active'),
-        supabase.from('audit_logs').select('id', { count: 'exact', head: true }).gte('timestamp', today).eq('action', 'user_login'),
-        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', today),
-        supabase.from('casino_reviews').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo)
+        // Daily Active Users - count profiles with last_seen today
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('last_seen', today),
+        // Daily Logins - count auth events (using profiles updated today as proxy)
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', today),
+        // Reviews Today - count player reviews created today
+        supabase.from('player_reviews').select('id', { count: 'exact', head: true }).gte('created_at', today),
+        // Reviews This Week - count player reviews from last 7 days
+        supabase.from('player_reviews').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo)
       ])
 
       setStats({
@@ -90,7 +95,7 @@ function AdminDashboard() {
         totalReviews: reviewsResult.count || 0,
         pendingReports: reportsResult.count || 0,
         recentActivities: activitiesResult.data || [],
-        dailyActiveUsers: dailyUsersResult.count || 0,
+        dailyActiveUsers: dailyActiveResult.count || 0,
         dailyLogins: dailyLoginsResult.count || 0,
         reviewsToday: reviewsTodayResult.count || 0,
         reviewsThisWeek: reviewsWeekResult.count || 0
@@ -153,11 +158,66 @@ function AdminDashboard() {
         .subscribe(),
       
       supabase
+        .channel('dashboard-player-reviews')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'player_reviews'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-profiles')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
         .channel('dashboard-audit')
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
           table: 'audit_logs'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-reports')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'reports'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-bonuses')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'bonuses'
+        }, () => {
+          loadDashboardStats()
+        })
+        .subscribe(),
+      
+      supabase
+        .channel('dashboard-news')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'news'
         }, () => {
           loadDashboardStats()
         })
