@@ -109,7 +109,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                <div className="text-center">
+                <div className="text-center h-full flex flex-col">
                   <div className="relative h-20 -mx-6 -mt-6 bg-white/10 rounded-t-lg mb-4 overflow-hidden">
                     {casino.logo_url ? (
                       <Image
@@ -126,8 +126,10 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{casino.name}</h3>
-                  <p className="text-gray-400 mb-4 text-sm line-clamp-2">{casino.description}</p>
+                  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem] flex items-center justify-center" title={casino.name}>
+                    {casino.name}
+                  </h3>
+                  <p className="text-gray-400 mb-4 text-sm line-clamp-2 flex-grow">{casino.description}</p>
                   <div className="flex items-center justify-center mb-4">
                     <Star className="w-5 h-5 text-[#00ff88] fill-current" />
                     <span className="text-white ml-1 font-semibold">{casino.rating || "N/A"}</span>
@@ -140,7 +142,7 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full" asChild>
+                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full mt-auto" asChild>
                     <Link href={`/casinos/${casino.id}`}>View Details</Link>
                   </Button>
                 </div>
@@ -168,7 +170,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
                              <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                                  <div className="flex items-stretch">
+                                  <div className="flex items-stretch h-full">
                    <div className="w-20 -ml-6 -mt-6 -mb-6 bg-white/10 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                      {bonus.casinos?.logo_url ? (
                        <Image
@@ -185,7 +187,7 @@ export default async function HomePage() {
                        </div>
                      )}
                    </div>
-                   <div className="flex-1 ml-4">
+                   <div className="flex-1 ml-4 flex flex-col">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-1 rounded text-xs font-semibold">
                         {bonus.bonus_type || "BONUS"}
@@ -197,9 +199,9 @@ export default async function HomePage() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">{bonus.title}</h3>
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">{bonus.description}</p>
-                    <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 min-h-[3rem]" title={bonus.title}>{bonus.title}</h3>
+                    <p className="text-gray-400 text-sm mb-3 line-clamp-2 flex-grow">{bonus.description}</p>
+                    <div className="flex items-center justify-between mt-auto">
                       <div>
                         <div className="text-[#00ff88] font-bold">{bonus.bonus_amount}</div>
                         <div className="text-gray-400 text-xs">{bonus.casinos?.name}</div>
@@ -236,28 +238,30 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {latestNews?.map((article: News) => (
               <GlassCard key={article.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                <div className="flex items-center mb-3">
-                  <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
-                  <span className="text-[#00ff88] text-sm font-semibold">{article.category}</span>
-                </div>
-                {article.image_url && (
-                  <div className="w-full h-40 bg-white/10 rounded-lg mb-4 overflow-hidden">
-                    <Image
-                      src={article.image_url || "/placeholder.svg"}
-                      alt={article.title}
-                      width={320}
-                      height={160}
-                      className="w-full h-full object-cover"
-                    />
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center mb-3">
+                    <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
+                    <span className="text-[#00ff88] text-sm font-semibold">{article.category}</span>
                   </div>
-                )}
-                <h3 className="text-lg font-bold text-white mb-3 line-clamp-2">{article.title}</h3>
-                <p className="text-gray-400 mb-4 text-sm line-clamp-3">{article.excerpt}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 text-xs">{new Date(article.created_at).toLocaleDateString()}</span>
-                  <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
-                    <Link href={`/news/${article.id}`}>Read More</Link>
-                  </Button>
+                  {article.image_url && (
+                    <div className="w-full h-40 bg-white/10 rounded-lg mb-4 overflow-hidden">
+                      <Image
+                        src={article.image_url || "/placeholder.svg"}
+                        alt={article.title}
+                        width={320}
+                        height={160}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 min-h-[3rem]" title={article.title}>{article.title}</h3>
+                  <p className="text-gray-400 mb-4 text-sm line-clamp-3 flex-grow">{article.excerpt}</p>
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="text-gray-500 text-xs">{new Date(article.created_at).toLocaleDateString()}</span>
+                    <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
+                      <Link href={`/news/${article.id}`}>Read More</Link>
+                    </Button>
+                  </div>
                 </div>
               </GlassCard>
             ))}
@@ -284,39 +288,41 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-3 gap-8">
               {recentReviews.map((review: any) => (
                 <GlassCard key={review.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden">
-                      {review.casinos?.logo_url ? (
-                        <Image
-                          src={review.casinos.logo_url || "/placeholder.svg"}
-                          alt={`${review.casinos.name} logo`}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Shield className="w-6 h-6 text-[#00ff88]" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="text-white font-semibold">{review.casinos?.name}</h4>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-[#00ff88] fill-current" />
-                        <span className="text-white text-sm ml-1">{review.rating}/5</span>
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden">
+                        {review.casinos?.logo_url ? (
+                          <Image
+                            src={review.casinos.logo_url || "/placeholder.svg"}
+                            alt={`${review.casinos.name} logo`}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Shield className="w-6 h-6 text-[#00ff88]" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-white font-semibold line-clamp-1" title={review.casinos?.name}>{review.casinos?.name}</h4>
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-[#00ff88] fill-current" />
+                          <span className="text-white text-sm ml-1">{review.rating}/5</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-3 line-clamp-2">{review.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-3">{review.content}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500 text-xs">By {review.author_name || "GuruSingapore"}</span>
-                    <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
-                      <Link
-                        href={`/expert-reviews/${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}-${review.casino_id}`}
-                      >
-                        Read Review
-                      </Link>
-                    </Button>
+                    <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 min-h-[3rem]" title={review.title}>{review.title}</h3>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-3 flex-grow">{review.content}</p>
+                    <div className="flex items-center justify-between mt-auto">
+                      <span className="text-gray-500 text-xs">By {review.author_name || "GuruSingapore"}</span>
+                      <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
+                        <Link
+                          href={`/expert-reviews/${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}-${review.casino_id}`}
+                        >
+                          Read Review
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </GlassCard>
               ))}

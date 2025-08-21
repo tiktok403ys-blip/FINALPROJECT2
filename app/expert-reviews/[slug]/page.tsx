@@ -21,6 +21,7 @@ import { Footer } from "@/components/footer"
 import { notFound } from "next/navigation"
 import type { CasinoReview } from "@/lib/types"
 import { ExpertReviewsRealtimeRefresher } from "@/components/reviews/expert-reviews-realtime-refresher"
+import { CasinoScreenshotsSection } from "@/components/casino-screenshots-section"
 
 interface PageProps {
   params: Promise<{
@@ -385,6 +386,14 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
                 )}
               </div>
             )}
+          </GlassCard>
+        </div>
+
+        {/* Casino Screenshots Section */}
+        <div className="mb-16">
+          <GlassCard className="p-8 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-6">Casino Screenshots & Visuals</h2>
+            <CasinoScreenshotsSection casinoId={casino.id} />
           </GlassCard>
         </div>
 

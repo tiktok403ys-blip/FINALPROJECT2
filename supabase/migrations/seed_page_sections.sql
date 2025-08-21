@@ -9,7 +9,10 @@ INSERT INTO page_sections (page_name, section_type, heading, content, display_or
 ('fair-gambling-codex', 'hero', 'Fair Gambling Codex', 'Our commitment to promoting fair, transparent, and responsible online gambling practices', 1, true),
 
 -- Reviews page
-('reviews', 'hero', 'Casino Reviews - Expert Analysis & Player Insights', 'Discover honest and comprehensive casino reviews from our team of experts. We test every aspect of online casinos to provide you with unbiased insights, helping you choose the best platforms for your gaming experience in Singapore.', 1, true),
+('reviews', 'hero', 'Casino Reviews - Expert Analysis & Player Insights', 'Discover honest and comprehensive casino reviews from our expert team and verified players. We test every aspect of online casinos to provide you with unbiased insights, helping you choose the best platforms for your gaming experience in Singapore.', 1, true),
+
+-- Expert Reviews page
+('expert-reviews', 'hero', 'Expert Casino Reviews - Professional Analysis & Ratings', 'Get comprehensive expert reviews of online casinos with detailed analysis, ratings, and professional insights. Our expert team evaluates every aspect of casinos to help you make informed decisions.', 1, true),
 
 -- News page
 ('news', 'hero', 'Latest Casino News & Industry Updates', 'Stay informed with the latest news from the online casino industry. Our team covers regulatory changes, new casino launches, game releases, and important updates that affect players in Singapore and beyond.', 1, true),

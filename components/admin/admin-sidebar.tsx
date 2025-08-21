@@ -16,7 +16,9 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Star,
+  Image as ImageIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -41,9 +43,19 @@ const navigationItems: NavigationItem[] = [
     icon: Home
   },
   {
-    title: 'Reviews Content',
+    title: 'Expert Reviews',
+    href: '/admin/expert-reviews',
+    icon: Star
+  },
+  {
+    title: 'Player Reviews',
     href: '/admin/reviews',
     icon: MessageSquare
+  },
+  {
+    title: 'Casino Screenshots',
+    href: '/admin/casino-screenshots',
+    icon: ImageIcon
   },
   {
     title: 'Casinos Content',
