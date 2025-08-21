@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
@@ -467,9 +468,11 @@ export default function AdminExpertReviewsPage() {
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
                         {row.casinos?.logo_url ? (
-                          <img 
+                          <Image 
                             src={row.casinos.logo_url} 
                             alt={row.casinos.name || "Casino"} 
+                            width={48}
+                            height={48}
                             className="w-12 h-12 object-contain"
                           />
                         ) : (

@@ -16,6 +16,7 @@ interface ImageUploadProps {
   className?: string
   placeholder?: string
   placeholderBgColor?: string
+  label?: string
 }
 
 export default function ImageUpload({
@@ -27,7 +28,8 @@ export default function ImageUpload({
   maxSize = 5,
   className = '',
   placeholder = 'Upload gambar',
-  placeholderBgColor = '#1f2937'
+  placeholderBgColor = '#1f2937',
+  label
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
@@ -166,7 +168,7 @@ export default function ImageUpload({
             
             <div className="space-y-2">
               <p className="text-white/90 font-medium">
-                {uploading ? 'Mengupload...' : placeholder}
+                {uploading ? 'Mengupload...' : (label || placeholder)}
               </p>
               <p className="text-white/60 text-sm">
                 Drag & drop atau klik untuk memilih file

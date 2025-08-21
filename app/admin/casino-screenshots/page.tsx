@@ -28,6 +28,7 @@ import {
   Grid3X3
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import Image from "next/image"
 
 interface CasinoScreenshotRow {
   id: string
@@ -339,9 +340,11 @@ export default function AdminCasinoScreenshotsPage() {
                     <div className="space-y-4">
                       {/* Image Preview */}
                       <div className="relative aspect-video bg-white/10 rounded-lg overflow-hidden">
-                        <img 
+                        <Image 
                           src={row.image_url} 
                           alt={row.title || "Casino screenshot"} 
+                          width={400}
+                          height={225}
                           className="w-full h-full object-cover"
                         />
                         {row.is_featured && (

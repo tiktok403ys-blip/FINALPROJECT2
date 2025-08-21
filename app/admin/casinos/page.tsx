@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
-import { ImageUpload } from '@/components/admin/image-upload'
+import ImageUpload from '@/components/admin/ImageUpload'
 import {
   Building2,
   Plus,
@@ -46,6 +46,8 @@ interface Casino {
   is_featured: boolean
   is_active: boolean
   placeholder_bg_color?: string
+  created_at: string
+  updated_at: string
 }
 
 function CasinosContentPage() {
@@ -268,7 +270,8 @@ function CasinosContentPage() {
       customer_support_languages: undefined,
       established_year: new Date().getFullYear(),
       is_featured: false,
-      is_active: true
+      is_active: true,
+      placeholder_bg_color: '#1f2937'
     })
     setFeaturesInput('')
     setPaymentMethodsInput('')
