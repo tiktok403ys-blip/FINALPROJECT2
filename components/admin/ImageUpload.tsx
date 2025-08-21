@@ -15,6 +15,7 @@ interface ImageUploadProps {
   maxSize?: number // in MB
   className?: string
   placeholder?: string
+  placeholderBgColor?: string
 }
 
 export default function ImageUpload({
@@ -25,7 +26,8 @@ export default function ImageUpload({
   accept = 'image/*',
   maxSize = 5,
   className = '',
-  placeholder = 'Upload gambar'
+  placeholder = 'Upload gambar',
+  placeholderBgColor = '#1f2937'
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
@@ -128,10 +130,14 @@ export default function ImageUpload({
             relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200
             ${dragActive 
               ? 'border-blue-400 bg-blue-500/10' 
-              : 'border-white/20 bg-white/5 hover:bg-white/10'
+              : 'hover:bg-white/10'
             }
             backdrop-blur-sm cursor-pointer
           `}
+          style={{
+            borderColor: dragActive ? '#60a5fa' : placeholderBgColor + '60',
+            backgroundColor: dragActive ? '#3b82f620' : placeholderBgColor + '10'
+          }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -150,7 +156,10 @@ export default function ImageUpload({
             {uploading ? (
               <Loader2 className="w-12 h-12 text-blue-400 animate-spin" />
             ) : (
-              <div className="p-4 bg-white/10 rounded-full">
+              <div 
+                className="p-4 rounded-full"
+                style={{ backgroundColor: placeholderBgColor + '40' }}
+              >
                 <Upload className="w-8 h-8 text-white/70" />
               </div>
             )}

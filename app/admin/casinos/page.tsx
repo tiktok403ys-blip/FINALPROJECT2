@@ -45,8 +45,7 @@ interface Casino {
   established_year: number
   is_featured: boolean
   is_active: boolean
-  created_at: string
-  updated_at: string
+  placeholder_bg_color?: string
 }
 
 function CasinosContentPage() {
@@ -68,7 +67,8 @@ function CasinosContentPage() {
     customer_support_languages: undefined as number | undefined,
     established_year: new Date().getFullYear(),
     is_featured: false,
-    is_active: true
+    is_active: true,
+    placeholder_bg_color: '#1f2937'
   })
   const [featuresInput, setFeaturesInput] = useState('')
   const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
@@ -208,7 +208,8 @@ function CasinosContentPage() {
       customer_support_languages: (casino.customer_support_languages as any) ?? undefined,
       established_year: casino.established_year,
       is_featured: casino.is_featured,
-      is_active: casino.is_active
+      is_active: casino.is_active,
+      placeholder_bg_color: casino.placeholder_bg_color || '#1f2937'
     })
     setFeaturesInput(toStringArray(casino.features).join(', '))
     setPaymentMethodsInput(toStringArray(casino.payment_methods).join(', '))
@@ -465,12 +466,39 @@ function CasinosContentPage() {
             </div>
             <div>
               <label className="text-white/90 text-sm font-medium mb-2 block">Logo Casino</label>
-              <ImageUpload
-                value={formData.logo_url}
-                onChange={(url) => setFormData({ ...formData, logo_url: url })}
-                bucket="casino-images"
-                label="Upload logo casino"
-              />
+              <div className="space-y-4">
+                <ImageUpload
+                  value={formData.logo_url}
+                  onChange={(url) => setFormData(prev => ({ ...prev, logo_url: url }))}
+                  bucket="casino-images"
+                  label="Upload logo casino"
+                  placeholderBgColor={formData.placeholder_bg_color}
+                />
+                
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Background Color Placeholder
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="color"
+                      value={formData.placeholder_bg_color}
+                      onChange={(e) => setFormData(prev => ({ ...prev, placeholder_bg_color: e.target.value }))}
+                      className="w-12 h-10 rounded-lg border border-white/20 bg-transparent cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.placeholder_bg_color}
+                      onChange={(e) => setFormData(prev => ({ ...prev, placeholder_bg_color: e.target.value }))}
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="#1f2937"
+                    />
+                  </div>
+                  <p className="text-xs text-white/60 mt-1">
+                    Pilih warna background untuk placeholder logo casino
+                  </p>
+                </div>
+              </div>
             </div>
             <div>
               <label className="text-white/90 text-sm font-medium mb-2 block">Description</label>
