@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,7 @@ export function Navbar() {
   const [isLoading, setIsLoading] = useState(true)
   const [profileError, setProfileError] = useState<string | null>(null)
   const [showPinDialog, setShowPinDialog] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const pathname = usePathname()
   const mountedRef = useRef(true)
   const profileFetchedRef = useRef(false)
@@ -328,7 +329,7 @@ export function Navbar() {
       .slice(0, 2)
   }
 
-  const navItems = [
+  const navItems = useMemo(() => [
     { name: "Home", href: "/", icon: Home },
     { name: "Casinos", href: "/casinos", icon: Building2 },
     { name: "Bonuses", href: "/bonuses", icon: Gift },
@@ -344,7 +345,35 @@ export function Navbar() {
     },
     { name: "News", href: "/news", icon: Newspaper },
     { name: "Reports", href: "/reports", icon: FileText },
-  ]
+  ], [])
+
+  // Debug logging untuk memastikan dropdown items ter-render
+  useEffect(() => {
+    console.log("🔍 Navbar Debug - navItems:", navItems)
+    const reviewsItem = navItems.find(item => item.name === "Reviews")
+    if (reviewsItem) {
+      console.log("🔍 Reviews dropdown items:", reviewsItem.dropdownItems)
+    }
+  }, [navItems])
+
+  // Close dropdown when pathname changes
+  useEffect(() => {
+    setActiveDropdown(null)
+  }, [pathname])
+
+  // Click outside handler untuk menutup dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeDropdown && !(event.target as Element).closest('.dropdown-container')) {
+        setActiveDropdown(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [activeDropdown])
 
   const isSuperAdmin = profile?.role === "super_admin"
 
@@ -374,8 +403,9 @@ export function Navbar() {
 
                 if (item.hasDropdown) {
                   return (
-                    <div key={item.name} className="relative group">
+                    <div key={item.name} className="relative dropdown-container">
                       <button
+                        onClick={() => setActiveDropdown(activeDropdown === item.name ? null : item.name)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
                           isActive
                             ? "bg-[#00ff88]/20 text-[#00ff88] border border-[#00ff88]/30"
@@ -384,36 +414,39 @@ export function Navbar() {
                       >
                         <Icon className="w-4 h-4" />
                         <span className="font-medium">{item.name}</span>
-                        <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.name ? "rotate-180" : ""}`} />
                       </button>
                       
-                      {/* Dropdown Menu */}
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                        <div className="p-2">
-                          {item.dropdownItems.map((dropdownItem) => {
-                            const DropdownIcon = dropdownItem.icon
-                            const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))
-                            
-                            return (
-                              <Link
-                                key={dropdownItem.name}
-                                href={dropdownItem.href}
-                                className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
-                                  isDropdownActive
-                                    ? "bg-[#00ff88]/20 text-[#00ff88]"
-                                    : "text-gray-300 hover:text-white hover:bg-white/10"
-                                }`}
-                              >
-                                <DropdownIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">{dropdownItem.name}</div>
-                                  <div className="text-xs text-gray-400 mt-0.5">{dropdownItem.description}</div>
-                                </div>
-                              </Link>
-                            )
-                          })}
+                      {/* Dropdown Menu - Click-based with proper state management */}
+                      {activeDropdown === item.name && (
+                        <div className="absolute top-full left-0 mt-2 w-64 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
+                          <div className="p-2">
+                            {item.dropdownItems.map((dropdownItem) => {
+                              const DropdownIcon = dropdownItem.icon
+                              const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))
+                              
+                              return (
+                                <Link
+                                  key={dropdownItem.name}
+                                  href={dropdownItem.href}
+                                  onClick={() => setActiveDropdown(null)}
+                                  className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
+                                    isDropdownActive
+                                      ? "bg-[#00ff88]/20 text-[#00ff88]"
+                                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                                  }`}
+                                >
+                                  <DropdownIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{dropdownItem.name}</div>
+                                    <div className="text-xs text-gray-400 mt-0.5">{dropdownItem.description}</div>
+                                  </div>
+                                </Link>
+                              )
+                            })}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )
                 }
