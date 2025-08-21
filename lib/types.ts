@@ -8,6 +8,7 @@ export interface Casino {
   logo_url: string | null
   website_url: string | null
   license?: string | null
+  placeholder_bg_color?: string | null
   // Language coverage counts
   website_languages?: number | null
   live_chat_languages?: number | null
