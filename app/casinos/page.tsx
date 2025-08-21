@@ -75,6 +75,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
 
   const { data: casinos } = await query
 
+
+
   const createSlug = (name: string) => {
     return name
       .toLowerCase()
