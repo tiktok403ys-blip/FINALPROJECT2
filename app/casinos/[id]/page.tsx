@@ -183,8 +183,17 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
                     className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-black bg-transparent"
                     asChild
                   >
+                    <Link href={`/expert-reviews/${casino.id}-${casino.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                      Expert Review
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+                    asChild
+                  >
                     <Link href={`/reviews/${casino.id}-${casino.name.toLowerCase().replace(/\s+/g, "-")}`}>
-                      Read Reviews
+                      Player Reviews
                     </Link>
                   </Button>
                 </div>

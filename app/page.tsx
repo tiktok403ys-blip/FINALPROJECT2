@@ -312,7 +312,7 @@ export default async function HomePage() {
                     <span className="text-gray-500 text-xs">By {review.author_name || "GuruSingapore"}</span>
                     <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
                       <Link
-                        href={`/reviews/${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}-${review.casino_id}`}
+                        href={`/expert-reviews/${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}-${review.casino_id}`}
                       >
                         Read Review
                       </Link>
@@ -324,7 +324,7 @@ export default async function HomePage() {
 
             <div className="text-center mt-8">
               <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-                <Link href="/reviews">View All Reviews</Link>
+                <Link href="/expert-reviews">View All Expert Reviews</Link>
               </Button>
             </div>
           </section>
