@@ -59,7 +59,7 @@ function CasinosContentPage() {
     description: '',
     website_url: '',
     logo_url: '',
-    rating: 5,
+    rating: 6 // Updated default rating for 1-10 scale,
     bonus_info: '',
     features: [] as string[],
     payment_methods: [] as string[],
@@ -265,7 +265,7 @@ function CasinosContentPage() {
       description: '',
       website_url: '',
       logo_url: '',
-      rating: 5,
+      rating: 6 // Updated default rating for 1-10 scale,
       bonus_info: '',
       features: [],
       payment_methods: [],
@@ -412,7 +412,7 @@ function CasinosContentPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5].map(rating => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(rating => (
                       <SelectItem key={rating} value={rating.toString()}>
                         {rating} Star{rating > 1 ? 's' : ''}
                       </SelectItem>
