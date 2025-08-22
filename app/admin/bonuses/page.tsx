@@ -11,6 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import Image from 'next/image'
+// Slug generation utility
+const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+    .substring(0, 100) // Limit length
+}
+
 import {
   Gift,
   Plus,
@@ -38,6 +50,7 @@ interface Bonus {
   max_bonus: number
   casino_name: string // For display purposes - not stored in database
   casino_id: string
+  slug: string // URL-friendly identifier for the bonus
   promo_code: string
   terms_conditions: string
   valid_from: string
@@ -77,6 +90,7 @@ function BonusesContentPage() {
     max_bonus: 0,
     casino_name: '', // For display purposes - not stored in database
     casino_id: '',
+    slug: '', // Auto-generated from title
     promo_code: '',
     terms_conditions: '',
     valid_from: '',
@@ -113,6 +127,14 @@ function BonusesContentPage() {
     loadBonuses()
     loadCasinos()
   }, [])
+
+  // Auto-generate slug from title
+  useEffect(() => {
+    if (formData.title && !isEditing) {
+      const generatedSlug = generateSlug(formData.title)
+      setFormData(prev => ({ ...prev, slug: generatedSlug }))
+    }
+  }, [formData.title, isEditing])
 
   const loadCasinos = async () => {
     try {
@@ -173,6 +195,11 @@ function BonusesContentPage() {
     try {
       if (!formData.title.trim() || !formData.description.trim()) {
         toast.error('Title and description are required')
+        return
+      }
+
+      if (!formData.slug.trim()) {
+        toast.error('Slug is required (auto-generated from title)')
         return
       }
 
@@ -294,6 +321,7 @@ function BonusesContentPage() {
       max_bonus: 0,
       casino_name: '',
       casino_id: '',
+      slug: '',
       promo_code: '',
       terms_conditions: '',
       valid_from: '',
@@ -437,6 +465,16 @@ function BonusesContentPage() {
                   placeholder="Bonus title"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Slug</label>
+                <Input
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  placeholder="URL-friendly identifier (auto-generated from title)"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+                <p className="text-xs text-white/50 mt-1">Auto-generated from title. Used for URLs.</p>
               </div>
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Bonus Type</label>
