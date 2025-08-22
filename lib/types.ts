@@ -32,6 +32,7 @@ export interface Casino {
 export interface Bonus {
   id: string
   title: string
+  slug: string
   description: string | null
   bonus_amount: string | null
   bonus_type: string | null

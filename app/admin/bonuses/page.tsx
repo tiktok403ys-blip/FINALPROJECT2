@@ -250,6 +250,7 @@ function BonusesContentPage() {
       max_bonus: bonus.max_bonus,
       casino_name: bonus.casino_name,
       casino_id: bonus.casino_id,
+      slug: bonus.slug || '',
       promo_code: bonus.promo_code,
       terms_conditions: bonus.terms_conditions,
       valid_from: bonus.valid_from ? bonus.valid_from.split('T')[0] : '',
