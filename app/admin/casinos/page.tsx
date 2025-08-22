@@ -292,15 +292,35 @@ function CasinosContentPage() {
     setPaymentMethodsInput('')
   }
 
-  const filteredCasinos = (casinos || []).filter(casino => {
-    const matchesSearch = casino.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (casino.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && casino.is_active) ||
-                         (statusFilter === 'inactive' && !casino.is_active) ||
-                         (statusFilter === 'featured' && casino.is_featured)
-    return matchesSearch && matchesStatus
-  })
+  const filteredCasinos = (casinos || [])
+    .filter(casino => {
+      const matchesSearch = casino.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (casino.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = statusFilter === 'all' ||
+                           (statusFilter === 'active' && casino.is_active) ||
+                           (statusFilter === 'inactive' && !casino.is_active) ||
+                           (statusFilter === 'featured' && casino.is_featured)
+      return matchesSearch && matchesStatus
+    })
+    .sort((a, b) => {
+      // Primary sorting: display_order (lower number = higher position)
+      const orderA = a.display_order || 999
+      const orderB = b.display_order || 999
+
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+
+      // Secondary sorting: created_at (newest first for same order)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
+  // Debug: Log sorting results for verification
+  console.log('[DEBUG] Admin Casinos - Filtered & Sorted:', filteredCasinos.map(c => ({
+    name: c.name,
+    display_order: c.display_order || 999,
+    created_at: c.created_at
+  })))
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -629,7 +649,7 @@ function CasinosContentPage() {
                       {casino.is_featured && (
                         <Badge className="ml-2 bg-yellow-500/20 text-yellow-400">Featured</Badge>
                       )}
-                      <Badge className="ml-2 bg-blue-500/20 text-blue-400">
+                      <Badge className="ml-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5">
                         #{casino.display_order || 999}
                       </Badge>
                       {casino.website_url && (
