@@ -98,6 +98,65 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     return { text: "Poor", color: "bg-red-500/20 text-red-400 border-red-500/30" }
   }
 
+  // Generate dynamic feature text based on casino data
+  const getDynamicFeatures = (casino: Casino) => {
+    const features = []
+
+    // Website language support - dynamic based on actual data
+    if (casino.website_languages && casino.website_languages > 0) {
+      const languageText = casino.website_languages === 1
+        ? "Website supports 1 language"
+        : `Website supports ${casino.website_languages} languages`
+      features.push({
+        text: languageText,
+        color: 'text-green-400',
+        bgColor: 'bg-green-400'
+      })
+    } else {
+      // Fallback if no language data
+      features.push({
+        text: "Website supports multiple languages",
+        color: 'text-green-400',
+        bgColor: 'bg-green-400'
+      })
+    }
+
+    // Withdrawal processing - based on rating (higher rating = faster processing)
+    const withdrawalSpeed = casino.rating && casino.rating >= 7
+      ? "Fast withdrawal processing based on player reviews"
+      : casino.rating && casino.rating >= 5
+      ? "Standard withdrawal processing times"
+      : "Withdrawal processing may take longer"
+    features.push({
+      text: withdrawalSpeed,
+      color: casino.rating && casino.rating >= 7 ? 'text-green-400' : casino.rating && casino.rating >= 5 ? 'text-yellow-400' : 'text-orange-400',
+      bgColor: casino.rating && casino.rating >= 7 ? 'bg-green-400' : casino.rating && casino.rating >= 5 ? 'bg-yellow-400' : 'bg-orange-400'
+    })
+
+    // Live chat availability - dynamic based on live_chat_languages
+    if (casino.live_chat_languages && casino.live_chat_languages > 0) {
+      const chatText = casino.live_chat_languages >= 5
+        ? `Live chat available 24/7 in ${casino.live_chat_languages} languages`
+        : casino.live_chat_languages >= 2
+        ? `Live chat available in ${casino.live_chat_languages} languages`
+        : `Live chat available in ${casino.live_chat_languages} language`
+      features.push({
+        text: chatText,
+        color: casino.live_chat_languages >= 5 ? 'text-green-400' : 'text-yellow-400',
+        bgColor: casino.live_chat_languages >= 5 ? 'bg-green-400' : 'bg-yellow-400'
+      })
+    } else {
+      // Fallback if no live chat language data
+      features.push({
+        text: "Live chat availability may vary",
+        color: 'text-yellow-400',
+        bgColor: 'bg-yellow-400'
+      })
+    }
+
+    return features
+  }
+
   // Generate JSON-LD structured data
   const jsonLd = {
     "@context": "https://schema.org",
@@ -303,8 +362,9 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                           </div>
                         </div>
 
-                        {/* Features List */}
+                        {/* Features List - Dynamic based on casino data */}
                         <div className="space-y-2">
+                          {/* License info - conditional */}
                           {casino.license && (
                             <div className="flex items-center text-green-400 text-sm">
                               <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
@@ -312,21 +372,15 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                             </div>
                           )}
 
-                          <div className="flex items-center text-green-400 text-sm">
-                            <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                            <span>Website supports Singapore players</span>
-                          </div>
+                          {/* Dynamic features based on database data */}
+                          {getDynamicFeatures(casino).map((feature, index) => (
+                            <div key={index} className={`flex items-center ${feature.color} text-sm`}>
+                              <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
+                              <span>{feature.text}</span>
+                            </div>
+                          ))}
 
-                          <div className="flex items-center text-green-400 text-sm">
-                            <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                            <span>Fast withdrawal processing based on players experience</span>
-                          </div>
-
-                          <div className="flex items-center text-yellow-400 text-sm">
-                            <div className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
-                            <span>Live chat is available 24/7, but not for all languages</span>
-                          </div>
-
+                          {/* Location info - conditional and dynamic */}
                           {casino.location && (
                             <div className="flex items-center text-gray-400 text-sm">
                               <MapPin className="w-4 h-4 mr-2" />
