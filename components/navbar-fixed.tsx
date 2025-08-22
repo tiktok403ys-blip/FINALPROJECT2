@@ -42,6 +42,7 @@ export function NavbarFixed() {
   const [profileError, setProfileError] = useState<string | null>(null)
   const [showPinDialog, setShowPinDialog] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [mobileActiveDropdown, setMobileActiveDropdown] = useState<string | null>(null)
   const pathname = usePathname()
   const mountedRef = useRef(true)
   const profileFetchedRef = useRef(false)
@@ -556,32 +557,42 @@ export function NavbarFixed() {
                 if (item.hasDropdown) {
                   return (
                     <div key={item.name} className="space-y-1">
-                      <div className="flex items-center gap-3 px-3 py-2 text-gray-300 text-sm">
-                        <Icon className="w-4 h-4" />
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                      <div className="ml-6 space-y-1">
-                        {item.dropdownItems.map((dropdownItem) => {
-                          const DropdownIcon = dropdownItem.icon
-                          const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))
-                          
-                          return (
-                            <Link
-                              key={dropdownItem.name}
-                              href={dropdownItem.href}
-                              onClick={() => setIsOpen(false)}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 text-sm ${
-                                isDropdownActive
-                                  ? "bg-[#00ff88]/20 text-[#00ff88] border border-[#00ff88]/30"
-                                  : "text-gray-300 hover:text-white hover:bg-white/10"
-                              }`}
-                            >
-                              <DropdownIcon className="w-4 h-4" />
-                              <span className="font-medium">{dropdownItem.name}</span>
-                            </Link>
-                          )
-                        })}
-                      </div>
+                      <button
+                        onClick={() => setMobileActiveDropdown(mobileActiveDropdown === item.name ? null : item.name)}
+                        className="flex items-center justify-between w-full px-3 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 text-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="w-4 h-4" />
+                          <span className="font-medium">{item.name}</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 flex-shrink-0 ${
+                          mobileActiveDropdown === item.name ? "rotate-180" : ""
+                        }`} />
+                      </button>
+                      {mobileActiveDropdown === item.name && (
+                        <div className="ml-6 space-y-1 animate-in slide-in-from-top-2 duration-300">
+                          {item.dropdownItems.map((dropdownItem) => {
+                            const DropdownIcon = dropdownItem.icon
+                            const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))
+
+                            return (
+                              <Link
+                                key={dropdownItem.name}
+                                href={dropdownItem.href}
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 text-sm ${
+                                  isDropdownActive
+                                    ? "bg-[#00ff88]/20 text-[#00ff88] border border-[#00ff88]/30"
+                                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                                }`}
+                              >
+                                <DropdownIcon className="w-4 h-4" />
+                                <span className="font-medium">{dropdownItem.name}</span>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   )
                 }
