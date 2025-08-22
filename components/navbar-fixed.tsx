@@ -436,7 +436,7 @@ export function NavbarFixed() {
                       onClick={handleAdminAccess}
                       variant="outline"
                       size="sm"
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 bg-transparent transition-all duration-300 hover:scale-105"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 bg-transparent transition-all duration-300"
                     >
                       <Shield className="w-4 h-4 mr-2" />
                       Admin Panel
