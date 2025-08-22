@@ -98,33 +98,22 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     return { text: "Poor", color: "bg-red-500/20 text-red-400 border-red-500/30" }
   }
 
-  // Generate comprehensive feature display with deep reasoning for optimal data presentation
+  // Simplified and focused implementation - only show what's needed without duplication
   const getDynamicFeatures = (casino: Casino) => {
     const features = []
-    let totalFeaturesCount = 0
-    const MAX_TOTAL_FEATURES = 8 // Optimal limit to prevent UI overload
 
-    // Deep reasoning: Prioritize features by user value and information density
-    // 1. CASINO FEATURES (Highest priority - what users care about most)
+    // 1. FEATURES (User requested: Bright green, consistent color)
     if (casino.features && casino.features.length > 0) {
-      // Smart limiting: Show more features than payment methods since they're more valuable
-      const maxFeatures = Math.min(casino.features.length, Math.max(3, MAX_TOTAL_FEATURES - 3))
-      const featuresToShow = casino.features.slice(0, maxFeatures)
-
-      featuresToShow.forEach((feature, index) => {
-        if (totalFeaturesCount < MAX_TOTAL_FEATURES) {
-          features.push({
-            text: feature.trim(),
-            type: 'feature',
-            priority: 1,
-            color: getFeatureColor(index, 'feature'),
-            bgColor: getFeatureBgColor(index, 'feature')
-          })
-          totalFeaturesCount++
-        }
+      casino.features.slice(0, 5).forEach((feature) => {
+        features.push({
+          text: feature.trim(),
+          type: 'feature',
+          priority: 1,
+          color: 'text-green-400',      // ✅ CONSISTENT: Always bright green
+          bgColor: 'bg-green-400'       // ✅ CONSISTENT: Always bright green
+        })
       })
     } else {
-      // Fallback with generic but informative message
       features.push({
         text: "Premium casino gaming features",
         type: 'feature',
@@ -132,71 +121,31 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
         color: 'text-green-400',
         bgColor: 'bg-green-400'
       })
-      totalFeaturesCount++
     }
 
-    // 2. PAYMENT METHODS (High priority - practical user information)
+    // 2. PAYMENT METHODS (User requested: Purple, consistent color)
     if (casino.payment_methods && casino.payment_methods.length > 0) {
-      // Smart limiting: Show fewer payment methods since features are more important
-      const maxPayments = Math.min(casino.payment_methods.length, Math.max(2, MAX_TOTAL_FEATURES - totalFeaturesCount - 2))
-      const paymentsToShow = casino.payment_methods.slice(0, maxPayments)
-
-      paymentsToShow.forEach((method) => {
-        if (totalFeaturesCount < MAX_TOTAL_FEATURES) {
-          features.push({
-            text: `${method.trim()} payments accepted`,
-            type: 'payment',
-            priority: 2,
-            color: getFeatureColor(0, 'payment'),
-            bgColor: getFeatureBgColor(0, 'payment')
-          })
-          totalFeaturesCount++
-        }
+      casino.payment_methods.slice(0, 4).forEach((method) => {
+        features.push({
+          text: `${method.trim()} payments accepted`,
+          type: 'payment',
+          priority: 2,
+          color: 'text-purple-400',     // ✅ CONSISTENT: Always purple
+          bgColor: 'bg-purple-400'      // ✅ CONSISTENT: Always purple
+        })
       })
-    } else if (totalFeaturesCount < MAX_TOTAL_FEATURES) {
+    } else {
       features.push({
         text: "Multiple secure payment options",
         type: 'payment',
         priority: 2,
-        color: 'text-emerald-400',
-        bgColor: 'bg-emerald-400'
+        color: 'text-purple-400',
+        bgColor: 'bg-purple-400'
       })
-      totalFeaturesCount++
     }
 
-    // 3. LANGUAGE INFORMATION (Medium priority - useful for international users)
-    // Use website_languages field that's available in admin but not displayed
-    if (casino.website_languages && casino.website_languages > 0 && totalFeaturesCount < MAX_TOTAL_FEATURES) {
-      const languageText = casino.website_languages === 1
-        ? "Website in 1 language"
-        : `Website supports ${casino.website_languages} languages`
-      features.push({
-        text: languageText,
-        type: 'language',
-        priority: 3,
-        color: 'text-cyan-400',
-        bgColor: 'bg-cyan-400'
-      })
-      totalFeaturesCount++
-    }
-
-    // Use live_chat_languages if available and space permits
-    if (casino.live_chat_languages && casino.live_chat_languages > 0 && totalFeaturesCount < MAX_TOTAL_FEATURES) {
-      const chatText = casino.live_chat_languages === 1
-        ? "Live chat in 1 language"
-        : `Live chat in ${casino.live_chat_languages} languages`
-      features.push({
-        text: chatText,
-        type: 'support',
-        priority: 3,
-        color: 'text-orange-400',
-        bgColor: 'bg-orange-400'
-      })
-      totalFeaturesCount++
-    }
-
-    // 4. LICENSE & REGULATORY INFO (High priority - trust indicator)
-    if (casino.license && totalFeaturesCount < MAX_TOTAL_FEATURES) {
+    // 3. LICENSE INFO (If available, consistent yellow)
+    if (casino.license) {
       features.push({
         text: "Fully licensed and regulated",
         type: 'license',
@@ -204,100 +153,36 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
         color: 'text-yellow-400',
         bgColor: 'bg-yellow-400'
       })
-      totalFeaturesCount++
     }
 
-    // 5. ESTABLISHED YEAR (Low priority - credibility indicator)
-    // This field exists in admin but is never displayed in public
-    if (casino.established_year && totalFeaturesCount < MAX_TOTAL_FEATURES) {
+    // 4. ESTABLISHED YEAR (If available, consistent indigo)
+    if (casino.established_year) {
       features.push({
         text: `Established ${casino.established_year}`,
         type: 'credibility',
-        priority: 4,
+        priority: 3,
         color: 'text-indigo-400',
         bgColor: 'bg-indigo-400'
       })
-      totalFeaturesCount++
     }
 
-    // 6. LOCATION INFO (Lowest priority - geographic context)
-    if (casino.location && totalFeaturesCount < MAX_TOTAL_FEATURES) {
+    // 5. LOCATION INFO (If available, consistent gray)
+    if (casino.location) {
       features.push({
         text: `International casino - ${casino.location}`,
         type: 'location',
-        priority: 5,
+        priority: 4,
         color: 'text-gray-400',
         bgColor: 'bg-gray-400'
       })
-      totalFeaturesCount++
     }
 
     // Sort by priority to ensure most important info appears first
     return features.sort((a, b) => a.priority - b.priority)
   }
 
-  // Deep reasoning: Color scheme based on user requirements
-  // Features: Bright green spectrum (user specified)
-  // Payment Methods: Purple spectrum (user specified)
-  const getFeatureColor = (index: number, type: string): string => {
-    const colorSchemes = {
-      // ✅ FEATURES: Bright green spectrum (user requirement)
-      feature: [
-        'text-green-400',   // Bright green
-        'text-emerald-400', // Bright emerald
-        'text-lime-400',    // Bright lime
-        'text-green-300',   // Light bright green
-        'text-emerald-300'  // Light bright emerald
-      ],
-      // ✅ PAYMENT METHODS: Purple spectrum (user requirement)
-      payment: [
-        'text-purple-400',  // Bright purple
-        'text-violet-400',  // Bright violet
-        'text-indigo-400',  // Bright indigo
-        'text-purple-300',  // Light purple
-        'text-violet-300'   // Light violet
-      ],
-      // Other types maintain consistency with project theme
-      language: ['text-cyan-400', 'text-blue-400'],
-      support: ['text-orange-400', 'text-amber-400'],
-      license: ['text-yellow-400'],
-      credibility: ['text-indigo-400', 'text-purple-400'],
-      location: ['text-gray-400']
-    }
-
-    const colors = colorSchemes[type as keyof typeof colorSchemes] || ['text-gray-400']
-    return colors[index % colors.length] || colors[0]
-  }
-
-  const getFeatureBgColor = (index: number, type: string): string => {
-    const bgSchemes = {
-      // ✅ FEATURES: Bright green spectrum (user requirement)
-      feature: [
-        'bg-green-400',   // Bright green
-        'bg-emerald-400', // Bright emerald
-        'bg-lime-400',    // Bright lime
-        'bg-green-300',   // Light bright green
-        'bg-emerald-300'  // Light bright emerald
-      ],
-      // ✅ PAYMENT METHODS: Purple spectrum (user requirement)
-      payment: [
-        'bg-purple-400',  // Bright purple
-        'bg-violet-400',  // Bright violet
-        'bg-indigo-400',  // Bright indigo
-        'bg-purple-300',  // Light purple
-        'bg-violet-300'   // Light violet
-      ],
-      // Other types maintain consistency
-      language: ['bg-cyan-400', 'bg-blue-400'],
-      support: ['bg-orange-400', 'bg-amber-400'],
-      license: ['bg-yellow-400'],
-      credibility: ['bg-indigo-400', 'bg-purple-400'],
-      location: ['bg-gray-400']
-    }
-
-    const colors = bgSchemes[type as keyof typeof bgSchemes] || ['bg-gray-400']
-    return colors[index % colors.length] || colors[0]
-  }
+  // Color mapping is now handled directly in getDynamicFeatures for consistency
+  // No complex color schemes needed - user wants consistent colors per type
 
   // Generate JSON-LD structured data
   const jsonLd = {
