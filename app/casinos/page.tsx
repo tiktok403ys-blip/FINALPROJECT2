@@ -36,8 +36,8 @@ export const metadata = {
     "Discover the best online casinos with verified reviews, ratings, and exclusive bonuses. Find your perfect casino today.",
 }
 
-// Revalidate every 2 hours for casino listings
-export const revalidate = 7200
+// Revalidate every 5 minutes for testing - reduces delay for established_year updates
+export const revalidate = 300
 
 export default async function CasinosPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
   const supabase = await createClient()
@@ -109,6 +109,14 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
   // Clean implementation - focus on features and payment methods only
   // Language info is already displayed in the dedicated section with icons
   const getDynamicFeatures = (casino: Casino) => {
+    console.log(`[DEBUG] Processing casino: ${casino.name} (ID: ${casino.id})`)
+    console.log(`[DEBUG] Casino data:`, {
+      established_year: casino.established_year,
+      features: casino.features,
+      payment_methods: casino.payment_methods,
+      license: casino.license,
+      location: casino.location
+    })
     const features = []
 
     // 1. FEATURES - Show ALL available features (no arbitrary limit)
@@ -164,15 +172,21 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
       })
     }
 
-    // 4. ESTABLISHED YEAR (If available)
-    if (casino.established_year) {
+    // 4. ESTABLISHED YEAR (Enhanced validation and debugging)
+    const establishedYear = casino.established_year
+    if (establishedYear && !isNaN(Number(establishedYear)) && Number(establishedYear) > 1900) {
+      console.log(`[DEBUG] Adding established year feature: ${establishedYear} for ${casino.name}`)
       features.push({
-        text: `Established ${casino.established_year}`,
+        text: `Established ${establishedYear}`,
         type: 'credibility',
         priority: 4,
         color: 'text-indigo-400',
         bgColor: 'bg-indigo-400'
       })
+    } else if (establishedYear) {
+      console.log(`[DEBUG] Invalid established year: ${establishedYear} (type: ${typeof establishedYear}) for ${casino.name}`)
+    } else {
+      console.log(`[DEBUG] No established year for casino: ${casino.name}`)
     }
 
     // 5. LOCATION INFO (If available)
@@ -187,7 +201,9 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     }
 
     // Sort by priority to ensure most important info appears first
-    return features.sort((a, b) => a.priority - b.priority)
+    const sortedFeatures = features.sort((a, b) => a.priority - b.priority)
+    console.log(`[DEBUG] Generated ${sortedFeatures.length} features for ${casino.name}`)
+    return sortedFeatures
   }
 
   // Color mapping is now handled directly in getDynamicFeatures for consistency
