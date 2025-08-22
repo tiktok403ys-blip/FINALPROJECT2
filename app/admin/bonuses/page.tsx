@@ -44,7 +44,7 @@ interface Bonus {
   valid_until: string
   image_url: string
   is_exclusive: boolean
-  is_featured_home_home: boolean
+  is_featured_home: boolean
   is_active: boolean
   created_at: string
   updated_at: string
