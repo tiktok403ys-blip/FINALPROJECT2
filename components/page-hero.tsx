@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 import Image from "next/image"
-import { useState } from "react"
 
 import { ChevronRight, User, Calendar } from "lucide-react"
 import Link from "next/link"
