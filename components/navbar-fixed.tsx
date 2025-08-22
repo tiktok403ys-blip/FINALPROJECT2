@@ -453,7 +453,7 @@ export function NavbarFixed() {
                       <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
                         <span className="text-black font-bold text-xs">{getUserInitials()}</span>
                       </div>
-                      <span className="text-sm font-medium">{getUserDisplayName()}</span>
+                      <span className="text-xs font-medium">{getUserDisplayName()}</span>
                       {isSuperAdmin && (
                         <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
                           SUPER ADMIN
