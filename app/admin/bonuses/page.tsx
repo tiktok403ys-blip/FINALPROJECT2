@@ -49,9 +49,18 @@ interface Bonus {
   updated_at: string
 }
 
+interface Casino {
+  id: string
+  name: string
+  logo_url: string | null
+  rating: number | null
+}
+
 function BonusesContentPage() {
   const [bonuses, setBonuses] = useState<Bonus[]>([])
+  const [casinos, setCasinos] = useState<Casino[]>([])
   const [loading, setLoading] = useState(true)
+  const [casinosLoading, setCasinosLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -74,7 +83,18 @@ function BonusesContentPage() {
     image_url: '',
     is_exclusive: false,
     is_featured: false,
-    is_active: true
+    is_active: true,
+    // Enhanced fields for comprehensive bonus data
+    max_bet: 0,
+    max_bet_text: '',
+    wagering_x: 25,
+    wagering_text: '',
+    free_spins: 0,
+    free_spin_value: 0,
+    play_now_text: '',
+    terms: '',
+    expiry_days: 0,
+    expiry_text: ''
   })
 
   const bonusTypes = [
@@ -90,7 +110,44 @@ function BonusesContentPage() {
 
   useEffect(() => {
     loadBonuses()
+    loadCasinos()
   }, [])
+
+  const loadCasinos = async () => {
+    try {
+      setCasinosLoading(true)
+      const supabaseClient = supabase()
+      const { data, error } = await supabaseClient
+        .from('casinos')
+        .select('id, name, logo_url, rating')
+        .eq('is_active', true)
+        .order('name')
+
+      if (error) {
+        console.error('Error loading casinos:', error)
+        return
+      }
+
+      setCasinos(data || [])
+    } catch (error) {
+      console.error('Unexpected error loading casinos:', error)
+    } finally {
+      setCasinosLoading(false)
+    }
+  }
+
+  const handleCasinoSelect = (casinoId: string) => {
+    const selectedCasino = casinos.find(c => c.id === casinoId)
+    if (selectedCasino) {
+      console.log('Auto-populating bonus with casino data:', selectedCasino)
+      setFormData(prev => ({
+        ...prev,
+        casino_id: selectedCasino.id,
+        casino_name: selectedCasino.name,
+        image_url: selectedCasino.logo_url || prev.image_url // Auto-populate image if available
+      }))
+    }
+  }
 
   const loadBonuses = async () => {
     try {
@@ -170,7 +227,18 @@ function BonusesContentPage() {
       image_url: bonus.image_url || '',
       is_exclusive: bonus.is_exclusive,
       is_featured: bonus.is_featured,
-      is_active: bonus.is_active
+      is_active: bonus.is_active,
+      // Enhanced fields with fallbacks
+      max_bet: (bonus as any).max_bet || 0,
+      max_bet_text: (bonus as any).max_bet_text || '',
+      wagering_x: (bonus as any).wagering_x || 25,
+      wagering_text: (bonus as any).wagering_text || '',
+      free_spins: (bonus as any).free_spins || 0,
+      free_spin_value: (bonus as any).free_spin_value || 0,
+      play_now_text: (bonus as any).play_now_text || '',
+      terms: (bonus as any).terms || '',
+      expiry_days: (bonus as any).expiry_days || 0,
+      expiry_text: (bonus as any).expiry_text || ''
     })
   }
 
@@ -230,7 +298,18 @@ function BonusesContentPage() {
       image_url: '',
       is_exclusive: false,
       is_featured: false,
-      is_active: true
+      is_active: true,
+      // Reset enhanced fields
+      max_bet: 0,
+      max_bet_text: '',
+      wagering_x: 25,
+      wagering_text: '',
+      free_spins: 0,
+      free_spin_value: 0,
+      play_now_text: '',
+      terms: '',
+      expiry_days: 0,
+      expiry_text: ''
     })
   }
 
@@ -373,12 +452,47 @@ function BonusesContentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Casino Name</label>
-                <Input
-                  value={formData.casino_name}
-                  onChange={(e) => setFormData({ ...formData, casino_name: e.target.value })}
-                  placeholder="Casino name"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
-                />
+                {casinosLoading ? (
+                  <div className="bg-white/5 border border-white/20 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span className="text-white/50 text-sm">Loading casinos...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.casino_id || ''}
+                    onValueChange={handleCasinoSelect}
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                      <SelectValue placeholder="Select casino" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {casinos.map((casino) => (
+                        <SelectItem key={casino.id} value={casino.id}>
+                          <div className="flex items-center gap-2">
+                            {casino.logo_url && (
+                              <img
+                                src={casino.logo_url}
+                                alt={casino.name}
+                                className="w-4 h-4 object-contain"
+                              />
+                            )}
+                            <span>{casino.name}</span>
+                            {casino.rating && (
+                              <span className="text-xs text-yellow-400">★{casino.rating}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {formData.casino_id && (
+                  <p className="text-xs text-green-400 mt-1">
+                    ✓ Image auto-populated from {formData.casino_name}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Promo Code</label>
@@ -488,6 +602,119 @@ function BonusesContentPage() {
                 onChange={(e) => setFormData({ ...formData, terms_conditions: e.target.value })}
                 placeholder="Terms and conditions"
                 rows={4}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+
+            {/* Enhanced Bonus Details Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Maximum Bet ($)</label>
+                <Input
+                  type="number"
+                  value={formData.max_bet}
+                  onChange={(e) => setFormData({ ...formData, max_bet: parseFloat(e.target.value) || 0 })}
+                  placeholder="5"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Wagering Multiplier</label>
+                <Input
+                  type="number"
+                  value={formData.wagering_x}
+                  onChange={(e) => setFormData({ ...formData, wagering_x: parseInt(e.target.value) || 25 })}
+                  placeholder="25"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Maximum Bet Description</label>
+              <Textarea
+                value={formData.max_bet_text}
+                onChange={(e) => setFormData({ ...formData, max_bet_text: e.target.value })}
+                placeholder="While using bonus funds, your maximum bet per spin/hand is limited to $X. Exceeding this limit may void your bonus and winnings."
+                rows={3}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Free Spins</label>
+                <Input
+                  type="number"
+                  value={formData.free_spins}
+                  onChange={(e) => setFormData({ ...formData, free_spins: parseInt(e.target.value) || 0 })}
+                  placeholder="50"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Spin Value ($)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.free_spin_value}
+                  onChange={(e) => setFormData({ ...formData, free_spin_value: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.25"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Expiry Days</label>
+                <Input
+                  type="number"
+                  value={formData.expiry_days}
+                  onChange={(e) => setFormData({ ...formData, expiry_days: parseInt(e.target.value) || 0 })}
+                  placeholder="30"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Wagering Description</label>
+              <Textarea
+                value={formData.wagering_text}
+                onChange={(e) => setFormData({ ...formData, wagering_text: e.target.value })}
+                placeholder="You need to wager the bonus amount X times before you can withdraw any winnings."
+                rows={2}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Play Now Text</label>
+              <Textarea
+                value={formData.play_now_text}
+                onChange={(e) => setFormData({ ...formData, play_now_text: e.target.value })}
+                placeholder="This is a no deposit bonus, meaning you can claim it without making any initial deposit. Perfect for new players who want to try the casino risk-free."
+                rows={2}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Complete Terms</label>
+              <Textarea
+                value={formData.terms}
+                onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
+                placeholder="Full terms and conditions text for legal compliance"
+                rows={3}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+            </div>
+
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">Expiry Description</label>
+              <Textarea
+                value={formData.expiry_text}
+                onChange={(e) => setFormData({ ...formData, expiry_text: e.target.value })}
+                placeholder="Bonus expires X days after claiming. Make sure to use it before it expires!"
+                rows={2}
                 className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
               />
             </div>

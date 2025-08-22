@@ -158,6 +158,31 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         )}
                       </div>
 
+                      {/* Maximum Bet Restrictions */}
+                      <div className="border border-white/10 rounded-lg">
+                        <div
+                          className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
+                          onClick={() => toggleSection(bonus.id, "maxBet")}
+                        >
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <DollarSign className="w-4 h-4 text-[#00ff88]" />
+                            <span className="text-white font-medium">Maximum bet:</span>
+                            <span className="text-red-400 font-semibold">${(bonus as any).max_bet || 5}</span>
+                            <span className="text-red-400 text-sm">(important restrictions)</span>
+                          </div>
+                          <ChevronDown
+                            className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "maxBet") ? "rotate-180" : ""}`}
+                          />
+                        </div>
+                        {isExpanded(bonus.id, "maxBet") && (
+                          <div className="px-3 pb-3 text-gray-300 text-sm">
+                            {(bonus as any).max_bet_text || (
+                              <>While using bonus funds, your maximum bet per spin/hand is limited to ${(bonus as any).max_bet || 5}. Exceeding this limit may void your bonus and winnings.</>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
                       {/* Wagering Requirements */}
                       <div className="border border-white/10 rounded-lg">
                         <div
@@ -167,7 +192,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           <div className="flex items-center gap-3 flex-wrap">
                             <Gauge className="w-4 h-4 text-[#00ff88]" />
                              <span className="text-white font-medium">Wagering requirements:</span>
-                             <span className="text-[#00ff88] font-semibold">{bonus.wagering_x ?? 25}x</span>
+                             <span className="text-[#00ff88] font-semibold">{(bonus as any).wagering_x || bonus.wagering_x || 25}x</span>
                             <span className="text-blue-400 text-sm">(restrictions apply)</span>
                           </div>
                           <ChevronDown
@@ -176,8 +201,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "wagering") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            {bonus.wagering_text || (
-                              <>You need to wager the bonus amount {bonus.wagering_x ?? 25} times before you can withdraw any winnings. Some games may contribute differently to the wagering requirements.</>
+                            {(bonus as any).wagering_text || (
+                              <>You need to wager the bonus amount {(bonus as any).wagering_x || bonus.wagering_x || 25} times before you can withdraw any winnings. Some games may contribute differently to the wagering requirements.</>
                             )}
                           </div>
                         )}
