@@ -570,7 +570,7 @@ export function Navbar() {
                     <Link href="/auth/login">Login</Link>
                   </Button>
                   <Button
-                    className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold transition-all duration-300 hover:scale-105"
+                    className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold transition-all duration-300"
                     asChild
                   >
                     <Link href="/auth/register">Register</Link>
