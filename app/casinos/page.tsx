@@ -66,12 +66,20 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     query = query.or('description.ilike.%live%,bonus_info.ilike.%live%,name.ilike.%live%')
   }
 
-  // Ordering strategy per filter; push nulls last to avoid unstable ordering
+  // Ordering strategy: display_order first, then filter-specific ordering, then fallback
+  // Primary: display_order (lower number = higher position)
+  // Secondary: Filter-specific (rating for most, created_at for new)
+  // Tertiary: created_at for stable sorting
+  query = query.order('display_order', { ascending: true, nullsFirst: false })
+
   if (filter === 'new') {
     query = query.order('created_at', { ascending: false, nullsFirst: false })
   } else {
     query = query.order('rating', { ascending: false, nullsFirst: false })
   }
+
+  // Final fallback for stable sorting
+  query = query.order('created_at', { ascending: false, nullsFirst: false })
 
   const { data: casinos } = await query
 

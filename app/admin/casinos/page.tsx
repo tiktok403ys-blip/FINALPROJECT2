@@ -46,6 +46,7 @@ interface Casino {
   is_featured: boolean
   is_active: boolean
   placeholder_bg_color?: string
+  display_order?: number | null
   created_at: string
   updated_at: string
 }
@@ -70,7 +71,8 @@ function CasinosContentPage() {
     established_year: new Date().getFullYear(),
     is_featured: false,
     is_active: true,
-    placeholder_bg_color: '#1f2937'
+    placeholder_bg_color: '#1f2937',
+    display_order: 999
   })
   const [featuresInput, setFeaturesInput] = useState('')
   const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
@@ -222,7 +224,8 @@ function CasinosContentPage() {
       established_year: casino.established_year,
       is_featured: casino.is_featured,
       is_active: casino.is_active,
-      placeholder_bg_color: casino.placeholder_bg_color || '#1f2937'
+      placeholder_bg_color: casino.placeholder_bg_color || '#1f2937',
+      display_order: casino.display_order ?? 999
     })
     setFeaturesInput(toStringArray(casino.features).join(', '))
     setPaymentMethodsInput(toStringArray(casino.payment_methods).join(', '))
@@ -282,7 +285,8 @@ function CasinosContentPage() {
       established_year: new Date().getFullYear(),
       is_featured: false,
       is_active: true,
-      placeholder_bg_color: '#1f2937'
+      placeholder_bg_color: '#1f2937',
+      display_order: 999
     })
     setFeaturesInput('')
     setPaymentMethodsInput('')
@@ -444,6 +448,21 @@ function CasinosContentPage() {
                   placeholder="Malta Gaming Authority"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Display Order</label>
+                <Input
+                  type="number"
+                  value={formData.display_order}
+                  onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 999 })}
+                  placeholder="999"
+                  min="1"
+                  max="999"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+                <p className="text-xs text-white/60 mt-1">Lower number = higher position</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -610,6 +629,9 @@ function CasinosContentPage() {
                       {casino.is_featured && (
                         <Badge className="ml-2 bg-yellow-500/20 text-yellow-400">Featured</Badge>
                       )}
+                      <Badge className="ml-2 bg-blue-500/20 text-blue-400">
+                        #{casino.display_order || 999}
+                      </Badge>
                       {casino.website_url && (
                         <Button
                           variant="ghost"

@@ -20,6 +20,8 @@ export interface Casino {
   payment_methods?: string[] | null
   // Established year (from admin CRUD)
   established_year?: number | null
+  // Display order for custom positioning (lower number = higher position)
+  display_order?: number | null
   // Home curation fields
   is_featured_home?: boolean | null
   home_rank?: number | null
