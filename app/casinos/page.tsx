@@ -98,13 +98,14 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     return { text: "Poor", color: "bg-red-500/20 text-red-400 border-red-500/30" }
   }
 
-  // Simplified and focused implementation - only show what's needed without duplication
+  // Clean implementation - focus on features and payment methods only
+  // Language info is already displayed in the dedicated section with icons
   const getDynamicFeatures = (casino: Casino) => {
     const features = []
 
-    // 1. FEATURES (User requested: Bright green, consistent color)
+    // 1. FEATURES - Show ALL available features (no arbitrary limit)
     if (casino.features && casino.features.length > 0) {
-      casino.features.slice(0, 5).forEach((feature) => {
+      casino.features.forEach((feature) => {
         features.push({
           text: feature.trim(),
           type: 'feature',
@@ -123,9 +124,9 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
       })
     }
 
-    // 2. PAYMENT METHODS (User requested: Purple, consistent color)
+    // 2. PAYMENT METHODS - Show ALL available methods (no arbitrary limit)
     if (casino.payment_methods && casino.payment_methods.length > 0) {
-      casino.payment_methods.slice(0, 4).forEach((method) => {
+      casino.payment_methods.forEach((method) => {
         features.push({
           text: `${method.trim()} payments accepted`,
           type: 'payment',
@@ -144,34 +145,34 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
       })
     }
 
-    // 3. LICENSE INFO (If available, consistent yellow)
+    // 3. LICENSE INFO (If available)
     if (casino.license) {
       features.push({
         text: "Fully licensed and regulated",
         type: 'license',
-        priority: 2,
+        priority: 3,
         color: 'text-yellow-400',
         bgColor: 'bg-yellow-400'
       })
     }
 
-    // 4. ESTABLISHED YEAR (If available, consistent indigo)
+    // 4. ESTABLISHED YEAR (If available)
     if (casino.established_year) {
       features.push({
         text: `Established ${casino.established_year}`,
         type: 'credibility',
-        priority: 3,
+        priority: 4,
         color: 'text-indigo-400',
         bgColor: 'bg-indigo-400'
       })
     }
 
-    // 5. LOCATION INFO (If available, consistent gray)
+    // 5. LOCATION INFO (If available)
     if (casino.location) {
       features.push({
         text: `International casino - ${casino.location}`,
         type: 'location',
-        priority: 4,
+        priority: 5,
         color: 'text-gray-400',
         bgColor: 'bg-gray-400'
       })
@@ -463,20 +464,26 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                           </Button>
                         </div>
 
-                        {/* Additional Info */}
+                        {/* Language Info - Using existing icon-based display */}
                         <div className="text-xs text-gray-500 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-3 h-3" />
-                            Website: {typeof (casino as any).website_languages === 'number' ? (casino as any).website_languages : 'N/A'} languages
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MessageCircle className="w-3 h-3" />
-                            Live chat: {typeof (casino as any).live_chat_languages === 'number' ? (casino as any).live_chat_languages : 'N/A'} languages
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-3 h-3" />
-                            Customer support: {typeof (casino as any).customer_support_languages === 'number' ? (casino as any).customer_support_languages : 'N/A'} languages
-                          </div>
+                          {casino.website_languages && casino.website_languages > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Globe className="w-3 h-3" />
+                              Website: {casino.website_languages} languages
+                            </div>
+                          )}
+                          {casino.live_chat_languages && casino.live_chat_languages > 0 && (
+                            <div className="flex items-center gap-2">
+                              <MessageCircle className="w-3 h-3" />
+                              Live chat: {casino.live_chat_languages} languages
+                            </div>
+                          )}
+                          {casino.customer_support_languages && casino.customer_support_languages > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-3 h-3" />
+                              Customer support: {casino.customer_support_languages} languages
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
