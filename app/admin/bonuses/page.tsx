@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import Image from 'next/image'
 import {
   Gift,
   Plus,
@@ -472,9 +473,11 @@ function BonusesContentPage() {
                         <SelectItem key={casino.id} value={casino.id}>
                           <div className="flex items-center gap-2">
                             {casino.logo_url && (
-                              <img
+                              <Image
                                 src={casino.logo_url}
                                 alt={casino.name}
+                                width={16}
+                                height={16}
                                 className="w-4 h-4 object-contain"
                               />
                             )}

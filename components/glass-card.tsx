@@ -5,9 +5,10 @@ interface GlassCardProps {
   children: React.ReactNode
   className?: string
   hover?: boolean
+  style?: React.CSSProperties
 }
 
-export function GlassCard({ children, className, hover = true }: GlassCardProps) {
+export function GlassCard({ children, className, hover = true, style }: GlassCardProps) {
   return (
     <div
       className={cn(
@@ -15,6 +16,7 @@ export function GlassCard({ children, className, hover = true }: GlassCardProps)
         hover && "hover:bg-white/10 hover:border-white/20 transition-all duration-300",
         className,
       )}
+      style={style}
     >
       {children}
     </div>
