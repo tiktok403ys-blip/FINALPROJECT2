@@ -44,7 +44,7 @@ interface Bonus {
   valid_until: string
   image_url: string
   is_exclusive: boolean
-  is_featured: boolean
+  is_featured_home_home: boolean
   is_active: boolean
   created_at: string
   updated_at: string
@@ -83,7 +83,7 @@ function BonusesContentPage() {
     valid_until: '',
     image_url: '',
     is_exclusive: false,
-    is_featured: false,
+    is_featured_home: false,
     is_active: true,
     // Enhanced fields for comprehensive bonus data
     max_bet: 0,
@@ -229,7 +229,7 @@ function BonusesContentPage() {
       valid_until: bonus.valid_until ? bonus.valid_until.split('T')[0] : '',
       image_url: bonus.image_url || '',
       is_exclusive: bonus.is_exclusive,
-      is_featured: bonus.is_featured,
+      is_featured_home: bonus.is_featured_home,
       is_active: bonus.is_active,
       // Enhanced fields with fallbacks
       max_bet: (bonus as any).max_bet || 0,
@@ -264,7 +264,7 @@ function BonusesContentPage() {
     }
   }
 
-  const toggleStatus = async (id: string, field: 'is_active' | 'is_featured' | 'is_exclusive', currentStatus: boolean) => {
+  const toggleStatus = async (id: string, field: 'is_active' | 'is_featured_home' | 'is_exclusive', currentStatus: boolean) => {
     try {
       const supabaseClient = supabase()
       const { error } = await supabaseClient
@@ -300,7 +300,7 @@ function BonusesContentPage() {
       valid_until: '',
       image_url: '',
       is_exclusive: false,
-      is_featured: false,
+      is_featured_home: false,
       is_active: true,
       // Reset enhanced fields
       max_bet: 0,
@@ -324,7 +324,7 @@ function BonusesContentPage() {
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'active' && bonus.is_active) ||
                          (statusFilter === 'inactive' && !bonus.is_active) ||
-                         (statusFilter === 'featured' && bonus.is_featured) ||
+                         (statusFilter === 'featured' && bonus.is_featured_home) ||
                          (statusFilter === 'exclusive' && bonus.is_exclusive)
     return matchesSearch && matchesType && matchesStatus
   })
@@ -737,8 +737,8 @@ function BonusesContentPage() {
                 <label className="flex items-center space-x-2 text-white/90">
                   <input
                     type="checkbox"
-                    checked={formData.is_featured}
-                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                    checked={formData.is_featured_home}
+                    onChange={(e) => setFormData({ ...formData, is_featured_home: e.target.checked })}
                     className="rounded"
                   />
                   <span>Featured</span>
@@ -771,7 +771,7 @@ function BonusesContentPage() {
                 <div className="flex-1">
                   <CardTitle className="text-white flex items-center mb-2">
                     {bonus.title}
-                    {bonus.is_featured && (
+                    {bonus.is_featured_home && (
                       <Badge className="ml-2 bg-yellow-500/20 text-yellow-400">Featured</Badge>
                     )}
                     {bonus.is_exclusive && (
@@ -806,8 +806,8 @@ function BonusesContentPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => toggleStatus(bonus.id, 'is_featured', bonus.is_featured)}
-                    className={`${bonus.is_featured ? 'text-yellow-400' : 'text-white/50'} hover:text-yellow-300`}
+                    onClick={() => toggleStatus(bonus.id, 'is_featured_home', bonus.is_featured_home)}
+                    className={`${bonus.is_featured_home ? 'text-yellow-400' : 'text-white/50'} hover:text-yellow-300`}
                   >
                     <Star className="w-4 h-4" />
                   </Button>
