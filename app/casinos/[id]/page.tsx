@@ -25,6 +25,13 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
     notFound()
   }
 
+  // Debug: Log casino established_year data for Quick Overview section
+  console.log(`[DEBUG] Casino Quick Overview - ${casino.name}:`, {
+    established_year: casino.established_year,
+    type: typeof casino.established_year,
+    will_display: casino.established_year && !isNaN(Number(casino.established_year)) && Number(casino.established_year) > 1900
+  })
+
   const getRatingColor = (rating: number) => {
     if (rating >= 4.5) return "text-green-500"
     if (rating >= 4.0) return "text-blue-500"
@@ -233,7 +240,12 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
                     <Calendar className="w-4 h-4" />
                     Est. Year
                   </span>
-                  <span className="text-white font-semibold">N/A</span>
+                  <span className="text-white font-semibold">
+                    {casino.established_year && !isNaN(Number(casino.established_year)) && Number(casino.established_year) > 1900
+                      ? casino.established_year
+                      : 'N/A'
+                    }
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 flex items-center gap-2">

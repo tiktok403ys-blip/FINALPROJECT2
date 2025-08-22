@@ -83,6 +83,14 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
 
   const { data: casinos } = await query
 
+  // Debug: Log raw database response
+  console.log('[DEBUG] Raw casinos data from database:', casinos?.map(c => ({
+    id: c.id,
+    name: c.name,
+    established_year: c.established_year,
+    type: typeof c.established_year
+  })))
+
 
 
   const createSlug = (name: string) => {
