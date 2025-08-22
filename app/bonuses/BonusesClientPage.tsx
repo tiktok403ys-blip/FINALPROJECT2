@@ -369,7 +369,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           alt={`${bonus.casinos.name} logo`}
                           width={160}
                           height={60}
-                          className="max-w-full max-h-16 object-contain mx-auto filter brightness-0 invert"
+                          className="max-w-full max-h-16 object-contain mx-auto filter brightness-110"
                         />
                       ) : (
                         <div className="text-white font-bold text-xl">
