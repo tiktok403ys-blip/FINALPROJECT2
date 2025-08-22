@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 
 import { ChevronRight, User, Calendar } from "lucide-react"
@@ -24,7 +24,7 @@ export function PageHero({ title, description, breadcrumbs, author, date, childr
   const [isDesktop, setIsDesktop] = useState(false)
 
   // Only load pattern on desktop for performance
-  React.useEffect(() => {
+  useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
     checkDesktop()
     window.addEventListener('resize', checkDesktop)
