@@ -36,7 +36,7 @@ interface Bonus {
   wagering_requirement: number
   min_deposit: number
   max_bonus: number
-  casino_name: string
+  casino_name: string // For display purposes - not stored in database
   casino_id: string
   promo_code: string
   terms_conditions: string
@@ -75,7 +75,7 @@ function BonusesContentPage() {
     wagering_requirement: 0,
     min_deposit: 0,
     max_bonus: 0,
-    casino_name: '',
+    casino_name: '', // For display purposes - not stored in database
     casino_id: '',
     promo_code: '',
     terms_conditions: '',
@@ -177,12 +177,13 @@ function BonusesContentPage() {
       }
 
       if (editingId && editingId !== 'new') {
-        // Update existing bonus
+        // Update existing bonus - exclude casino_name from database operation
         const supabaseClient = supabase()
+        const { casino_name, ...dbFormData } = formData
         const { error } = await supabaseClient
           .from('bonuses')
           .update({
-            ...formData,
+            ...dbFormData,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingId)
@@ -190,11 +191,12 @@ function BonusesContentPage() {
         if (error) throw error
         toast.success('Bonus updated successfully')
       } else {
-        // Create new bonus
+        // Create new bonus - exclude casino_name from database operation
         const supabaseClient = supabase()
+        const { casino_name, ...dbFormData } = formData
         const { error } = await supabaseClient
           .from('bonuses')
-          .insert([formData])
+          .insert([dbFormData])
 
         if (error) throw error
         toast.success('Bonus created successfully')
