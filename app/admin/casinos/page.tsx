@@ -199,6 +199,12 @@ function CasinosContentPage() {
   }
 
   const handleEdit = (casino: Casino) => {
+    // Auto scroll to top when edit is triggered
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+
     setEditingId(casino.id)
     setFormData({
       name: casino.name,
