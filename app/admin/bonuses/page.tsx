@@ -128,13 +128,13 @@ function BonusesContentPage() {
     loadCasinos()
   }, [])
 
-  // Auto-generate slug from title
+  // Auto-generate slug from title (only for new items)
   useEffect(() => {
-    if (formData.title && !isEditing) {
+    if (formData.title && (!editingId || editingId === 'new')) {
       const generatedSlug = generateSlug(formData.title)
       setFormData(prev => ({ ...prev, slug: generatedSlug }))
     }
-  }, [formData.title, isEditing])
+  }, [formData.title, editingId])
 
   const loadCasinos = async () => {
     try {
