@@ -390,8 +390,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                           </div>
                         </div>
 
-                        {/* Features List - Dynamic based on casino data */}
-                        <div className="space-y-2">
+                        {/* Features & Payment Methods - Split Layout for Desktop */}
+                        <div className="space-y-4">
                           {/* License info - conditional */}
                           {casino.license && (
                             <div className="flex items-center text-green-400 text-sm">
@@ -400,15 +400,48 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                             </div>
                           )}
 
-                          {/* Dynamic features based on database data */}
-                          {getDynamicFeatures(casino).map((feature, index) => (
-                            <div key={index} className={`flex items-center ${feature.color} text-sm`}>
-                              <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
-                              <span>{feature.text}</span>
+                          {/* Desktop Split Layout: Features (Left) | Payment Methods (Right) */}
+                          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
+                            {/* Left Column - Features */}
+                            <div className="space-y-2">
+                              <h4 className="text-white font-semibold text-sm mb-2">Features</h4>
+                              {getDynamicFeatures(casino)
+                                .filter(feature => feature.type === 'feature' || feature.type === 'license' || feature.type === 'credibility')
+                                .map((feature, index) => (
+                                  <div key={`feature-${index}`} className={`flex items-center ${feature.color} text-sm`}>
+                                    <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
+                                    <span>{feature.text}</span>
+                                  </div>
+                                ))}
                             </div>
-                          ))}
 
-                          {/* Location info - conditional and dynamic */}
+                            {/* Right Column - Payment Methods */}
+                            <div className="space-y-2">
+                              <h4 className="text-white font-semibold text-sm mb-2">Payment Methods</h4>
+                              {getDynamicFeatures(casino)
+                                .filter(feature => feature.type === 'payment')
+                                .map((feature, index) => (
+                                  <div key={`payment-${index}`} className={`flex items-center ${feature.color} text-sm`}>
+                                    <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
+                                    <span>{feature.text}</span>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Mobile Layout - Single Column */}
+                          <div className="lg:hidden space-y-2">
+                            {getDynamicFeatures(casino)
+                              .filter(feature => feature.type !== 'location') // Exclude location on mobile for space
+                              .map((feature, index) => (
+                                <div key={`mobile-${index}`} className={`flex items-center ${feature.color} text-sm`}>
+                                  <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
+                                  <span>{feature.text}</span>
+                                </div>
+                              ))}
+                          </div>
+
+                          {/* Location info - always show below split layout */}
                           {casino.location && (
                             <div className="flex items-center text-gray-400 text-sm">
                               <MapPin className="w-4 h-4 mr-2" />
