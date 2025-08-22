@@ -98,57 +98,53 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     return { text: "Poor", color: "bg-red-500/20 text-red-400 border-red-500/30" }
   }
 
-  // Generate dynamic feature text based on casino data
+  // Generate dynamic feature text based on casino data from admin CRUD
   const getDynamicFeatures = (casino: Casino) => {
     const features = []
 
-    // Website language support - dynamic based on actual data
-    if (casino.website_languages && casino.website_languages > 0) {
-      const languageText = casino.website_languages === 1
-        ? "Website supports 1 language"
-        : `Website supports ${casino.website_languages} languages`
-      features.push({
-        text: languageText,
-        color: 'text-green-400',
-        bgColor: 'bg-green-400'
+    // Use features from admin CRUD "Features (comma separated)"
+    if (casino.features && casino.features.length > 0) {
+      // Show the first 2-3 features from admin input
+      const featuresToShow = casino.features.slice(0, 3)
+      featuresToShow.forEach((feature, index) => {
+        features.push({
+          text: feature.trim(),
+          color: index === 0 ? 'text-green-400' : index === 1 ? 'text-blue-400' : 'text-purple-400',
+          bgColor: index === 0 ? 'bg-green-400' : index === 1 ? 'bg-blue-400' : 'bg-purple-400'
+        })
       })
     } else {
-      // Fallback if no language data
+      // Fallback if no features data
       features.push({
-        text: "Website supports multiple languages",
+        text: "Premium casino features available",
         color: 'text-green-400',
         bgColor: 'bg-green-400'
       })
     }
 
-    // Withdrawal processing - based on rating (higher rating = faster processing)
-    const withdrawalSpeed = casino.rating && casino.rating >= 7
-      ? "Fast withdrawal processing based on player reviews"
-      : casino.rating && casino.rating >= 5
-      ? "Standard withdrawal processing times"
-      : "Withdrawal processing may take longer"
-    features.push({
-      text: withdrawalSpeed,
-      color: casino.rating && casino.rating >= 7 ? 'text-green-400' : casino.rating && casino.rating >= 5 ? 'text-yellow-400' : 'text-orange-400',
-      bgColor: casino.rating && casino.rating >= 7 ? 'bg-green-400' : casino.rating && casino.rating >= 5 ? 'bg-yellow-400' : 'bg-orange-400'
-    })
-
-    // Live chat availability - dynamic based on live_chat_languages
-    if (casino.live_chat_languages && casino.live_chat_languages > 0) {
-      const chatText = casino.live_chat_languages >= 5
-        ? `Live chat available 24/7 in ${casino.live_chat_languages} languages`
-        : casino.live_chat_languages >= 2
-        ? `Live chat available in ${casino.live_chat_languages} languages`
-        : `Live chat available in ${casino.live_chat_languages} language`
-      features.push({
-        text: chatText,
-        color: casino.live_chat_languages >= 5 ? 'text-green-400' : 'text-yellow-400',
-        bgColor: casino.live_chat_languages >= 5 ? 'bg-green-400' : 'bg-yellow-400'
+    // Use payment methods from admin CRUD "Payment Methods (comma separated)"
+    if (casino.payment_methods && casino.payment_methods.length > 0) {
+      const methodsToShow = casino.payment_methods.slice(0, 2)
+      methodsToShow.forEach((method) => {
+        features.push({
+          text: `${method.trim()} payments accepted`,
+          color: 'text-emerald-400',
+          bgColor: 'bg-emerald-400'
+        })
       })
     } else {
-      // Fallback if no live chat language data
+      // Fallback if no payment methods data
       features.push({
-        text: "Live chat availability may vary",
+        text: "Multiple payment methods supported",
+        color: 'text-emerald-400',
+        bgColor: 'bg-emerald-400'
+      })
+    }
+
+    // Add license info if available
+    if (casino.license) {
+      features.push({
+        text: "Fully licensed and regulated",
         color: 'text-yellow-400',
         bgColor: 'bg-yellow-400'
       })

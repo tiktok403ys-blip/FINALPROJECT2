@@ -15,6 +15,9 @@ export interface Casino {
   customer_support_languages?: number | null
   player_rating_avg?: number | null
   player_rating_count?: number | null
+  // Features and payment methods (from admin CRUD)
+  features?: string[] | null
+  payment_methods?: string[] | null
   // Home curation fields
   is_featured_home?: boolean | null
   home_rank?: number | null
