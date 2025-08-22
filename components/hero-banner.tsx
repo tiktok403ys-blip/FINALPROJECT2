@@ -169,19 +169,28 @@ export function HeroBanner({
         </div>
       </div>
 
-      {/* Scroll Indicator - Continuous smooth animation */}
+      {/* Scroll Indicator - Optimized single click handler */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-        <div 
+        <div
           className="flex flex-col items-center cursor-pointer animate-float"
           onClick={handleScrollDown}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleScrollDown()
+            }
+          }}
+          aria-label="Scroll down to content"
         >
-          <ChevronDown 
-            className="w-6 h-6 text-white/80 animate-pulse cursor-pointer hover:text-white transition-all duration-500" 
-            onClick={handleScrollDown}
+          <ChevronDown
+            className="w-6 h-6 text-white/80 animate-pulse hover:text-white transition-all duration-500"
+            aria-hidden="true"
           />
-          <span 
-            className="text-xs text-white/60 mt-1 cursor-pointer hover:text-white/80 transition-all duration-300 active:scale-95"
-            onClick={handleScrollDown}
+          <span
+            className="text-xs text-white/60 mt-1 hover:text-white/80 transition-all duration-300 active:scale-95"
+            aria-hidden="true"
           >
             Scroll Down
           </span>
