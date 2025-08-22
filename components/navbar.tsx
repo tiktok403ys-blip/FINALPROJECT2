@@ -495,15 +495,15 @@ export function Navbar() {
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       disabled={isSigningOut}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white disabled:opacity-50"
+                      className="flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-white disabled:opacity-50"
                     >
-                      <div className="w-6 h-6 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
+                      <div className="w-7 h-7 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center ring-1 ring-white/20 shadow-sm">
                         <span className="text-black font-bold text-xs">{getUserInitials()}</span>
                       </div>
-                      <span className="text-xs font-medium">{getUserDisplayName()}</span>
+                      <span className="text-xs font-normal text-white/90">{getUserDisplayName()}</span>
                       {isSuperAdmin && (
-                        <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
-                          SUPER ADMIN
+                        <span className="ml-auto px-1.5 py-0.5 bg-red-500/15 text-red-400 text-xs rounded-full">
+                          ADMIN
                         </span>
                       )}
                       {profileError && (
