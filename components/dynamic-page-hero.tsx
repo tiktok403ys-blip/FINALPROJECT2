@@ -3,6 +3,7 @@
 import { usePageSectionSingle } from '@/hooks/use-page-section'
 import { PageHero } from '@/components/page-hero'
 import { LoadingSpinner } from '@/components/loading-spinner'
+import { useMemo } from 'react'
 
 interface DynamicPageHeroProps {
   pageName: string
@@ -32,21 +33,49 @@ export function DynamicPageHero({
 }: DynamicPageHeroProps) {
   const { section, loading, error } = usePageSectionSingle(pageName, sectionType)
 
-  // Show loading state
+  // Memoized content for performance
+  const content = useMemo(() => {
+    const title = section?.heading || fallbackTitle
+    const description = section?.content || fallbackDescription
+    return { title, description }
+  }, [section?.heading, section?.content, fallbackTitle, fallbackDescription])
+
+  // Show loading state with skeleton instead of spinner
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner />
+      <div className="relative bg-gradient-to-br from-gray-900 via-purple-900 to-black pt-24 pb-16 min-h-[60vh]">
+        {/* Skeleton loading for better UX */}
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="space-y-6">
+              {/* Skeleton for breadcrumbs */}
+              <div className="flex items-center space-x-2">
+                <div className="h-4 bg-gray-700 rounded w-16 animate-pulse"></div>
+                <div className="h-4 bg-gray-700 rounded w-20 animate-pulse"></div>
+              </div>
+              {/* Skeleton for title */}
+              <div className="space-y-3">
+                <div className="h-12 bg-gray-700 rounded w-full animate-pulse"></div>
+                <div className="h-12 bg-gray-700 rounded w-3/4 animate-pulse"></div>
+              </div>
+              {/* Skeleton for description */}
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-700 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                <div className="h-4 bg-gray-700 rounded w-4/6 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="w-64 h-96 bg-gray-800 rounded-[2.5rem] animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
-  // Use dynamic content if available, otherwise fallback to static content
-  const title = section?.heading || fallbackTitle
-  const description = section?.content || fallbackDescription
-
   // If no dynamic content and no fallback, show error or empty state
-  if (!title && !description) {
+  if (!content.title && !content.description) {
     if (error) {
       console.error('Error loading page section:', error)
     }
@@ -59,8 +88,8 @@ export function DynamicPageHero({
 
   return (
     <PageHero
-      title={title}
-      description={description}
+      title={content.title}
+      description={content.description}
       breadcrumbs={breadcrumbs}
       author={author?.name}
       date={date}

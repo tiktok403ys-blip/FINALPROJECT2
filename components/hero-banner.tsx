@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
+import { useState, useEffect } from "react"
 
 interface HeroProps {
   imageUrl?: string | null
@@ -79,17 +81,26 @@ export function HeroBanner({
     }
   };
   return (
-    <div className="relative h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image/Video Placeholder */}
-      <div
-        className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"
-        style={{
-          backgroundImage: `url('${imageUrl || "/placeholder-714xv.png"}')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/60" />
+    <div className="relative h-[60vh] md:h-[70vh] lg:h-screen flex items-center justify-center overflow-hidden">
+      {/* Optimized Background Image with Next.js Image */}
+      <div className="absolute inset-0">
+        <Image
+          src={imageUrl || "/placeholder-714xv.png"}
+          alt="Hero background"
+          fill
+          priority={false} // Enable lazy loading for better performance
+          className="object-cover object-center"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+          onError={(e) => {
+            // Fallback to placeholder if image fails to load
+            const target = e.target as HTMLImageElement
+            target.src = "/placeholder-714xv.png"
+          }}
+        />
+        {/* Optimized overlay - only dark overlay, remove complex gradients */}
+        <div className="absolute inset-0 bg-black/50" />
       </div>
 
       {/* Content */}

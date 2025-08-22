@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
+import { useState } from "react"
 
 import { ChevronRight, User, Calendar } from "lucide-react"
 import Link from "next/link"
@@ -20,10 +22,31 @@ interface PageHeroProps {
 }
 
 export function PageHero({ title, description, breadcrumbs, author, date, children }: PageHeroProps) {
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  // Only load pattern on desktop for performance
+  React.useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
+    checkDesktop()
+    window.addEventListener('resize', checkDesktop)
+    return () => window.removeEventListener('resize', checkDesktop)
+  }, [])
+
   return (
-    <div className="relative bg-gradient-to-br from-gray-900 via-purple-900 to-black pt-24 pb-16 min-h-[60vh]">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('/casino-bg-pattern.png')] opacity-5"></div>
+    <div className="relative bg-gradient-to-br from-gray-900 via-purple-900 to-black pt-24 pb-16 min-h-[40vh] md:min-h-[50vh] lg:min-h-[60vh]">
+      {/* Optimized Background Pattern - Only load on desktop */}
+      {isDesktop && (
+        <Image
+          src="/casino-bg-pattern.png"
+          alt=""
+          fill
+          className="object-cover opacity-5 pointer-events-none"
+          sizes="100vw"
+          priority={false}
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+        />
+      )}
 
       <div className="relative container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">

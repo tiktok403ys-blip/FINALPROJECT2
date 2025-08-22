@@ -13,8 +13,8 @@ import RealtimeHomeRefresher from "@/components/realtime-home-refresher"
 import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
 
-// Revalidate every hour for better performance
-export const revalidate = 3600
+// Revalidate every 6 hours for static content optimization
+export const revalidate = 21600 // 6 hours instead of 1 hour
 
 export default async function HomePage() {
   const supabase = await createClient()
