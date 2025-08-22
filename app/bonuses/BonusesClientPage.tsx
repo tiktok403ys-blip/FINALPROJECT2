@@ -108,10 +108,22 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       ? "border-yellow-500/30"
                       : "border-white/10 hover:border-[#00ff88]/30"
                 }`}
+                style={{
+                  background: bonus.casinos?.placeholder_bg_color
+                    ? `linear-gradient(135deg, ${bonus.casinos.placeholder_bg_color}15, ${bonus.casinos.placeholder_bg_color}08)`
+                    : 'rgba(255, 255, 255, 0.05)'
+                }}
               >
                 <div className="flex flex-col lg:flex-row min-h-[300px]">
                   {/* Left Side - Bonus Details */}
-                  <div className="lg:w-2/3 p-6 bg-white/5">
+                  <div
+                    className="lg:w-2/3 p-6"
+                    style={{
+                      backgroundColor: bonus.casinos?.placeholder_bg_color
+                        ? `${bonus.casinos.placeholder_bg_color}10`
+                        : 'rgba(255, 255, 255, 0.05)'
+                    }}
+                  >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -340,7 +352,12 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   </div>
 
                   {/* Right Side - Casino Info & Actions */}
-                  <div className="lg:w-1/3 bg-gradient-to-br from-gray-900 to-black p-6 flex flex-col">
+                  <div
+                    className="lg:w-1/3 p-6 flex flex-col"
+                    style={{
+                      backgroundColor: bonus.casinos?.placeholder_bg_color || '#000000'
+                    }}
+                  >
                     {/* Casino Logo */}
                     <div 
                       className="rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center"
