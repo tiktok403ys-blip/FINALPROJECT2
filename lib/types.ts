@@ -18,6 +18,8 @@ export interface Casino {
   // Features and payment methods (from admin CRUD)
   features?: string[] | null
   payment_methods?: string[] | null
+  // Established year (from admin CRUD)
+  established_year?: number | null
   // Home curation fields
   is_featured_home?: boolean | null
   home_rank?: number | null
