@@ -6,6 +6,34 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 
+// Simple Typewriter Effect Component
+const TypewriterText = ({ text, speed = 100 }: { text: string; speed?: number }) => {
+  const [displayText, setDisplayText] = useState('')
+  const [isComplete, setIsComplete] = useState(false)
+
+  useEffect(() => {
+    let index = 0
+    const timer = setInterval(() => {
+      if (index < text.length) {
+        setDisplayText(text.slice(0, index + 1))
+        index++
+      } else {
+        setIsComplete(true)
+        clearInterval(timer)
+      }
+    }, speed)
+
+    return () => clearInterval(timer)
+  }, [text, speed])
+
+  return (
+    <span>
+      {displayText}
+      {!isComplete && <span className="animate-pulse text-[#00ff88] ml-1">|</span>}
+    </span>
+  )
+}
+
 interface HeroProps {
   imageUrl?: string | null
   title?: string | null
@@ -117,7 +145,10 @@ export function HeroBanner({
           )}
         </h1>
         <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed">
-          {subtitle}
+          <TypewriterText
+            text={subtitle || "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming."}
+            speed={80}
+          />
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8 md:mb-12">
           <Button
