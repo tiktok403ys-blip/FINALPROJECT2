@@ -323,13 +323,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
                 className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-white/10 hover:border-[#00ff88]/30 group"
               >
                 <div className="flex flex-col lg:flex-row min-h-[200px]">
-                  {/* Left Side - Logo Section (Dark Background) */}
-                  <div className="lg:w-1/4 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-8 relative overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88]/20 to-transparent"></div>
-                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_40%,rgba(0,255,136,0.1),transparent_50%)]"></div>
-                    </div>
+                  {/* Left Side - Logo Section (Dynamic Background) */}
+                  <div className="lg:w-1/4 flex items-center justify-center p-8 relative overflow-hidden" style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}>
 
                     {/* Logo Container */}
                     <div className="relative z-10 w-full max-w-[120px] h-[80px] flex items-center justify-center">
