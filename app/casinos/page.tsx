@@ -236,11 +236,28 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
     return features.sort((a, b) => a.priority - b.priority)
   }
 
-  // Smart color assignment based on feature type and index
+  // Deep reasoning: Color scheme based on user requirements
+  // Features: Bright green spectrum (user specified)
+  // Payment Methods: Purple spectrum (user specified)
   const getFeatureColor = (index: number, type: string): string => {
     const colorSchemes = {
-      feature: ['text-green-400', 'text-green-500', 'text-emerald-400', 'text-teal-400', 'text-cyan-400'],
-      payment: ['text-emerald-400', 'text-emerald-500', 'text-green-400'],
+      // ✅ FEATURES: Bright green spectrum (user requirement)
+      feature: [
+        'text-green-400',   // Bright green
+        'text-emerald-400', // Bright emerald
+        'text-lime-400',    // Bright lime
+        'text-green-300',   // Light bright green
+        'text-emerald-300'  // Light bright emerald
+      ],
+      // ✅ PAYMENT METHODS: Purple spectrum (user requirement)
+      payment: [
+        'text-purple-400',  // Bright purple
+        'text-violet-400',  // Bright violet
+        'text-indigo-400',  // Bright indigo
+        'text-purple-300',  // Light purple
+        'text-violet-300'   // Light violet
+      ],
+      // Other types maintain consistency with project theme
       language: ['text-cyan-400', 'text-blue-400'],
       support: ['text-orange-400', 'text-amber-400'],
       license: ['text-yellow-400'],
@@ -254,8 +271,23 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
 
   const getFeatureBgColor = (index: number, type: string): string => {
     const bgSchemes = {
-      feature: ['bg-green-400', 'bg-green-500', 'bg-emerald-400', 'bg-teal-400', 'bg-cyan-400'],
-      payment: ['bg-emerald-400', 'bg-emerald-500', 'bg-green-400'],
+      // ✅ FEATURES: Bright green spectrum (user requirement)
+      feature: [
+        'bg-green-400',   // Bright green
+        'bg-emerald-400', // Bright emerald
+        'bg-lime-400',    // Bright lime
+        'bg-green-300',   // Light bright green
+        'bg-emerald-300'  // Light bright emerald
+      ],
+      // ✅ PAYMENT METHODS: Purple spectrum (user requirement)
+      payment: [
+        'bg-purple-400',  // Bright purple
+        'bg-violet-400',  // Bright violet
+        'bg-indigo-400',  // Bright indigo
+        'bg-purple-300',  // Light purple
+        'bg-violet-300'   // Light violet
+      ],
+      // Other types maintain consistency
       language: ['bg-cyan-400', 'bg-blue-400'],
       support: ['bg-orange-400', 'bg-amber-400'],
       license: ['bg-yellow-400'],
