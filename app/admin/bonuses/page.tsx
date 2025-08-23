@@ -92,6 +92,7 @@ function BonusesContentPage() {
     casino_id: '',
     slug: '', // Auto-generated from title
     promo_code: '',
+    claim_url: '', // URL for "Get Bonus" button
     terms_conditions: '',
     valid_from: '',
     valid_until: '',
@@ -302,6 +303,7 @@ function BonusesContentPage() {
       casino_id: bonus.casino_id,
       slug: bonus.slug || '',
       promo_code: bonus.promo_code,
+      claim_url: bonus.claim_url || '',
       terms_conditions: bonus.terms_conditions,
       valid_from: bonus.valid_from ? bonus.valid_from.split('T')[0] : '',
       valid_until: bonus.valid_until ? bonus.valid_until.split('T')[0] : '',
@@ -378,6 +380,7 @@ function BonusesContentPage() {
       casino_id: '',
       slug: '',
       promo_code: '',
+      claim_url: '',
       terms_conditions: '',
       valid_from: '',
       valid_until: '',
@@ -604,6 +607,17 @@ function BonusesContentPage() {
                   placeholder="BONUS100"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Claim URL</label>
+                <Input
+                  type="url"
+                  value={formData.claim_url}
+                  onChange={(e) => setFormData({ ...formData, claim_url: e.target.value })}
+                  placeholder="https://example.com/claim-bonus"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+                <p className="text-xs text-white/50 mt-1">URL for "Get Bonus" button (optional - defaults to casino page)</p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
