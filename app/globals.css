@@ -177,15 +177,17 @@
     background-color: rgba(var(--dynamic-bg-color), 0.15) !important;
   }
 
-  .bonus-card-right {
-    background-color: var(--dynamic-bg-color) !important;
-  }
-
   .bonus-card-logo {
     background-color: var(--dynamic-bg-color) !important;
   }
 
   .exclusive-bonus-logo {
     background-color: var(--dynamic-bg-color) !important;
+  }
+
+  /* Selective coloring gap spacing - Right panel now only colors logo area */
+
+  .bonus-card-section {
+    /* For any future selective sections */
   }
 }
