@@ -304,7 +304,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                             <span className="text-white font-medium">
                               The process of getting this bonus should be relatively
                             </span>
-                            <span className="text-[#00ff88] font-semibold">FAST</span>
+                            <span className="text-[#00ff88] font-semibold">{(bonus as any).claiming_speed || 'FAST'}</span>
                           </div>
                           <ChevronDown
                             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "speed") ? "rotate-180" : ""}`}
@@ -312,8 +312,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "speed") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                             {bonus.how_to_get || "This bonus is typically credited to your account within minutes of claiming. No lengthy"}
-                            verification process required for new players.
+                            <span className="font-medium">Detail: </span>
+                            {bonus.how_to_get || "This bonus is typically credited to your account within minutes of claiming. No lengthy verification process required for new players."}
                           </div>
                         )}
                       </div>

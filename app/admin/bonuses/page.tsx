@@ -107,11 +107,12 @@ function BonusesContentPage() {
     free_spins: 0,
     free_spin_value: 0,
     value_text: '', // Custom text for free spins value section
+    claiming_speed: 'FAST', // Speed label for claiming process
     play_now_text: '',
     terms: '',
     expiry_days: 0,
     expiry_text: '',
-    how_to_get: '' // Custom text for claiming process section
+    how_to_get: '' // Custom text for claiming process details
   })
 
   const bonusTypes = [
@@ -269,6 +270,7 @@ function BonusesContentPage() {
       free_spins: (bonus as any).free_spins || 0,
       free_spin_value: (bonus as any).free_spin_value || 0,
       value_text: (bonus as any).value_text || '',
+      claiming_speed: (bonus as any).claiming_speed || 'FAST',
       play_now_text: (bonus as any).play_now_text || '',
       terms: (bonus as any).terms || '',
       expiry_days: (bonus as any).expiry_days || 0,
@@ -343,6 +345,7 @@ function BonusesContentPage() {
       free_spins: 0,
       free_spin_value: 0,
       value_text: '',
+      claiming_speed: 'FAST',
       play_now_text: '',
       terms: '',
       expiry_days: 0,
@@ -655,16 +658,33 @@ function BonusesContentPage() {
                 className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
               />
             </div>
-            <div>
-              <label className="text-white/90 text-sm font-medium mb-2 block">How to Get Bonus</label>
-              <Textarea
-                value={formData.how_to_get}
-                onChange={(e) => setFormData({ ...formData, how_to_get: e.target.value })}
-                placeholder="Custom description for claiming process (e.g., 'This bonus is typically credited to your account within minutes of claiming. No lengthy verification process required for new players.')"
-                rows={3}
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
-              />
-              <p className="text-xs text-white/50 mt-1">Leave empty to use default claiming process description</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Claiming Speed</label>
+                <select
+                  value={formData.claiming_speed}
+                  onChange={(e) => setFormData({ ...formData, claiming_speed: e.target.value })}
+                  className="w-full bg-white/5 border border-white/20 text-white placeholder:text-white/50 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00ff88]/50 focus:border-[#00ff88]"
+                >
+                  <option value="FAST">FAST</option>
+                  <option value="INSTANT">INSTANT</option>
+                  <option value="QUICK">QUICK</option>
+                  <option value="SLOW">SLOW</option>
+                  <option value="IMMEDIATE">IMMEDIATE</option>
+                </select>
+                <p className="text-xs text-white/50 mt-1">Speed label shown in public display</p>
+              </div>
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Claiming Process Details</label>
+                <Textarea
+                  value={formData.how_to_get}
+                  onChange={(e) => setFormData({ ...formData, how_to_get: e.target.value })}
+                  placeholder="Detail description (e.g., 'No lengthy verification process required for new players')"
+                  rows={3}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+                />
+                <p className="text-xs text-white/50 mt-1">Leave empty to use default detail description</p>
+              </div>
             </div>
 
             {/* Enhanced Bonus Details Section */}
