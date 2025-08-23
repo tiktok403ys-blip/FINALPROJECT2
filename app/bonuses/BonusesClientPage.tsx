@@ -82,14 +82,22 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
   const copyPromoCode = async (promoCode: string) => {
     try {
       await navigator.clipboard.writeText(promoCode)
-      toast.success(`Promo code "${promoCode}" copied to clipboard!`, {
-        description: "Ready to use in your casino account",
-        duration: 3000,
+      toast.success(`🎉 Promo code copied successfully!`, {
+        description: `"${promoCode}" is now in your clipboard. Ready to use in your casino account!`,
+        duration: 4000,
+        action: {
+          label: "Perfect!",
+          onClick: () => console.log("Success toast action clicked"),
+        },
       })
     } catch (error) {
-      toast.error("Failed to copy promo code", {
-        description: "Please try again or copy manually",
-        duration: 3000,
+      toast.error("❌ Copy failed", {
+        description: "Unable to copy promo code. Please try again or copy manually.",
+        duration: 4000,
+        action: {
+          label: "Try Again",
+          onClick: () => copyPromoCode(promoCode),
+        },
       })
     }
   }
@@ -423,10 +431,10 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           <button
                             type="button"
                             onClick={() => copyPromoCode(bonus.promo_code || "GURU2000")}
-                            className="p-1 rounded hover:bg-white/10 transition-colors"
+                            className="p-2 rounded-lg hover:bg-[#00ff88]/10 hover:scale-110 transition-all duration-200 group"
                             aria-label="Copy promo code"
                           >
-                            <Copy className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+                            <Copy className="w-4 h-4 text-gray-400 group-hover:text-[#00ff88] transition-colors duration-200" />
                           </button>
                         </div>
                       </div>
