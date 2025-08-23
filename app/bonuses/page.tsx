@@ -9,8 +9,8 @@ export const metadata = {
     "Discover the best casino bonuses and exclusive offers. Get more value from your casino experience with verified bonus codes.",
 }
 
-// Revalidate every hour for bonus offers
-export const revalidate = 3600
+// No ISR caching for real-time functionality
+// Real-time updates handled by RealtimeBonusesRefresher
 
 export default async function BonusesPage() {
   const supabase = await createClient()

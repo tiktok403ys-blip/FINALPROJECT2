@@ -8,6 +8,8 @@ export function RealtimeBonusesRefresher() {
   const router = useRouter()
 
   useEffect(() => {
+    console.log("🎯 Initializing Bonuses Real-time Refresher")
+
     const supabase = createClient()
     const channel = supabase
       .channel("bonuses-realtime")
@@ -16,7 +18,13 @@ export function RealtimeBonusesRefresher() {
         schema: "public",
         table: "bonuses"
       }, (payload: { new: any; old: any; eventType: string; table: string }) => {
-        console.log("Bonuses real-time update:", payload)
+        console.log("🔄 Bonuses real-time update received:", {
+          eventType: payload.eventType,
+          table: payload.table,
+          hasNewData: !!payload.new,
+          hasOldData: !!payload.old,
+          timestamp: new Date().toISOString()
+        })
         router.refresh()
       })
       .on("postgres_changes", {
@@ -24,12 +32,26 @@ export function RealtimeBonusesRefresher() {
         schema: "public",
         table: "casinos"
       }, (payload: { new: any; old: any; eventType: string; table: string }) => {
-        console.log("Casinos real-time update (affecting bonuses):", payload)
+        console.log("🔄 Casinos real-time update (affecting bonuses):", {
+          eventType: payload.eventType,
+          table: payload.table,
+          hasNewData: !!payload.new,
+          hasOldData: !!payload.old,
+          timestamp: new Date().toISOString()
+        })
         router.refresh()
       })
-      .subscribe()
+      .subscribe((status) => {
+        console.log("📡 Bonuses real-time subscription status:", status)
+        if (status === 'SUBSCRIBED') {
+          console.log("✅ Bonuses real-time successfully connected")
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error("❌ Bonuses real-time connection error")
+        }
+      })
 
     return () => {
+      console.log("🔌 Cleaning up Bonuses real-time subscription")
       supabase.removeChannel(channel)
     }
   }, [router])
