@@ -418,10 +418,10 @@ export function Navbar() {
                         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.name ? "rotate-180" : ""}`} />
                       </button>
                       
-                      {/* Integrated Dropdown Menu - Seamless with navbar */}
+                      {/* Border-Integrated Dropdown - Appears from navbar line */}
                       {activeDropdown === item.name && (
-                        <div className="absolute top-full left-0 mt-0 w-64 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 border-t-0 rounded-t-none">
-                          <div className="p-2">
+                        <div className="absolute top-full left-0 mt-[-1px] w-64 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 border-t border-t-white/30">
+                          <div className="p-2 border-t border-t-white/10">
                             {item.dropdownItems.map((dropdownItem) => {
                               const DropdownIcon = dropdownItem.icon
                               const isDropdownActive = pathname === dropdownItem.href || (dropdownItem.href !== "/" && pathname.startsWith(dropdownItem.href))

@@ -401,103 +401,71 @@ select:focus-visible {
   }
 }
 
-/* Integrated Navbar Dropdown Styling */
+/* Border-Integrated Navbar Dropdown Styling */
 .dropdown-container .absolute {
-  animation: dropdown-slide-down 0.2s ease-out;
+  animation: dropdown-appear 0.15s ease-out;
+  opacity: 1;
+  transform: translateY(0);
 }
 
-@keyframes dropdown-slide-down {
+@keyframes dropdown-appear {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
-/* Enhanced dropdown visual integration */
+/* Border-Line Navbar Dropdown Integration */
+.dropdown-container {
+  position: relative;
+  overflow: visible;
+}
+
 .dropdown-container button {
   position: relative;
   z-index: 10;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.dropdown-container button:hover {
+  border-bottom-color: rgba(0, 255, 136, 0.5);
+}
+
+.dropdown-container:has(.absolute) button {
+  border-bottom-color: #00ff88;
 }
 
 .dropdown-container .absolute {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-top: none;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  margin-top: -1px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0 0 1rem 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(17, 24, 39, 0.6));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Smooth hover transitions for dropdown items */
+/* Clean dropdown item styling */
 .dropdown-container .absolute a {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
+  border-radius: 0.5rem;
+  margin: 2px;
 }
 
 .dropdown-container .absolute a:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(2px);
-}
-
-/* Perfect navbar dropdown integration */
-.dropdown-container {
-  position: relative;
-}
-
-.dropdown-container button {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom: none;
-}
-
-.dropdown-container .absolute {
-  border-top-width: 1px;
-  border-top-style: solid;
-  border-top-color: rgba(255, 255, 255, 0.2);
-  margin-top: -1px;
-  border-radius: 0 0 1rem 1rem;
-}
-
-/* Enhanced dropdown appearance */
-.dropdown-container .absolute {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(17, 24, 39, 0.5));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Smooth item interactions */
-.dropdown-container .absolute > div > a {
-  position: relative;
-  overflow: hidden;
-}
-
-.dropdown-container .absolute > div > a::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 3px;
-  height: 100%;
-  background: #00ff88;
-  transform: scaleY(0);
-  transition: transform 0.2s ease;
-  border-radius: 0 2px 2px 0;
-}
-
-.dropdown-container .absolute > div > a:hover::before {
-  transform: scaleY(1);
-}
-
-.dropdown-container .absolute > div > a:hover {
   background: rgba(0, 255, 136, 0.1);
-  border-left: 3px solid #00ff88;
-  padding-left: 11px;
 }
+
+
 
 /* Professional Toast Notification Styling */
 [data-sonner-toaster] {
