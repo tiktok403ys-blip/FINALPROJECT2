@@ -141,7 +141,7 @@ function BonusesContentPage() {
         event: "INSERT",
         schema: "public",
         table: "bonuses"
-      }, (payload) => {
+      }, (payload: { new: any; old: any; eventType: string; table: string }) => {
         console.log("New bonus added:", payload.new)
         loadBonuses()
       })
@@ -149,7 +149,7 @@ function BonusesContentPage() {
         event: "UPDATE",
         schema: "public",
         table: "bonuses"
-      }, (payload) => {
+      }, (payload: { new: any; old: any; eventType: string; table: string }) => {
         console.log("Bonus updated:", payload.new)
         loadBonuses()
       })
@@ -157,7 +157,7 @@ function BonusesContentPage() {
         event: "DELETE",
         schema: "public",
         table: "bonuses"
-      }, (payload) => {
+      }, (payload: { new: any; old: any; eventType: string; table: string }) => {
         console.log("Bonus deleted:", payload.old)
         loadBonuses()
       })
