@@ -420,7 +420,7 @@ export function Navbar() {
                       
                       {/* Dropdown Menu - Click-based with proper state management */}
                       {activeDropdown === item.name && (
-                        <div className="absolute top-full left-0 mt-2 w-64 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
+                        <div className="absolute top-full left-0 mt-1 w-64 bg-black/50 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
                           <div className="p-2">
                             {item.dropdownItems.map((dropdownItem) => {
                               const DropdownIcon = dropdownItem.icon
