@@ -467,10 +467,10 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           <button
                             type="button"
                             onClick={() => copyPromoCode(bonus.promo_code || "GURU2000")}
-                            className="p-2 rounded-lg hover:bg-[#00ff88]/10 hover:scale-110 transition-all duration-200 group"
+                            className="p-3 rounded-lg hover:bg-[#00ff88]/10 hover:scale-105 transition-all duration-200 group min-w-[48px] min-h-[48px] flex items-center justify-center"
                             aria-label="Copy promo code"
                           >
-                            <Copy className="w-4 h-4 text-gray-400 group-hover:text-[#00ff88] transition-colors duration-200" />
+                            <Copy className="w-5 h-5 text-gray-400 group-hover:text-[#00ff88] transition-colors duration-200" />
                           </button>
                         </div>
                       </div>
