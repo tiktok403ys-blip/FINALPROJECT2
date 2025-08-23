@@ -41,7 +41,7 @@ export function RealtimeBonusesRefresher() {
         })
         router.refresh()
       })
-      .subscribe((status) => {
+      .subscribe((status: 'SUBSCRIBED' | 'CHANNEL_ERROR' | 'TIMED_OUT' | 'CLOSED') => {
         console.log("📡 Bonuses real-time subscription status:", status)
         if (status === 'SUBSCRIBED') {
           console.log("✅ Bonuses real-time successfully connected")
