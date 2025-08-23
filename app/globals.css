@@ -187,6 +187,25 @@
 
   /* Selective coloring gap spacing - Right panel now only colors logo area */
 
+  /* Bonus card panel separator */
+  .bonus-card-separator {
+    position: relative;
+  }
+
+  .bonus-card-separator::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.1)
+    );
+  }
+
   .bonus-card-section {
     /* For any future selective sections */
   }

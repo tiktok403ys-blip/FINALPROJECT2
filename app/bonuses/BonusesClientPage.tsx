@@ -358,7 +358,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
                   {/* Right Side - Casino Info & Actions */}
                                     <div
-                    className="lg:w-1/3 p-6 flex flex-col"
+                    className="lg:w-1/3 p-6 flex flex-col bonus-card-separator"
                   >
                     {/* Casino Logo - Colored Area */}
                     <div
