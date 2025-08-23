@@ -101,7 +101,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
             return (
               <GlassCard
                 key={bonus.id}
-                className={`overflow-hidden hover:shadow-xl transition-all duration-300 border ${
+                className={`overflow-hidden hover:shadow-xl transition-all duration-300 border bonus-card-glass ${
                   expired
                     ? "border-red-500/30 opacity-60"
                     : expiringSoon
@@ -109,24 +109,26 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       : "border-white/10 hover:border-[#00ff88]/30"
                 }`}
                 style={{
-                  background: (bonus as any).card_bg_color
-                    ? `linear-gradient(135deg, ${(bonus as any).card_bg_color}20, ${(bonus as any).card_bg_color}10)`
+                  '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937',
+                  '--dynamic-gradient-start': (bonus as any).card_bg_color
+                    ? `${(bonus as any).card_bg_color}20`
                     : bonus.casinos?.placeholder_bg_color
-                      ? `linear-gradient(135deg, ${bonus.casinos.placeholder_bg_color}15, ${bonus.casinos.placeholder_bg_color}08)`
-                      : 'rgba(255, 255, 255, 0.05)'
-                }}
+                      ? `${bonus.casinos.placeholder_bg_color}15`
+                      : 'rgba(255, 255, 255, 0.05)',
+                  '--dynamic-gradient-end': (bonus as any).card_bg_color
+                    ? `${(bonus as any).card_bg_color}10`
+                    : bonus.casinos?.placeholder_bg_color
+                      ? `${bonus.casinos.placeholder_bg_color}08`
+                      : 'rgba(255, 255, 255, 0.03)'
+                } as React.CSSProperties}
               >
                 <div className="flex flex-col lg:flex-row min-h-[300px]">
                   {/* Left Side - Bonus Details */}
                   <div
-                    className="lg:w-2/3 p-6"
+                    className="lg:w-2/3 p-6 bonus-card-left"
                     style={{
-                      backgroundColor: (bonus as any).card_bg_color
-                        ? `${(bonus as any).card_bg_color}15`
-                        : bonus.casinos?.placeholder_bg_color
-                          ? `${bonus.casinos.placeholder_bg_color}10`
-                          : 'rgba(255, 255, 255, 0.05)'
-                    }}
+                      '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
+                    } as React.CSSProperties}
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -356,15 +358,17 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
                   {/* Right Side - Casino Info & Actions */}
                   <div
-                    className="lg:w-1/3 p-6 flex flex-col"
+                    className="lg:w-1/3 p-6 flex flex-col bonus-card-right"
                     style={{
-                      backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
-                    }}
+                      '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
+                    } as React.CSSProperties}
                   >
                     {/* Casino Logo */}
-                    <div 
-                      className="rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center"
-                      style={{ backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000' }}
+                    <div
+                      className="rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center bonus-card-logo"
+                      style={{
+                        '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
+                      } as React.CSSProperties}
                     >
                       {bonus.casinos?.logo_url ? (
                         <Image

@@ -167,4 +167,25 @@
   .animate-scroll:hover {
     animation-play-state: paused;
   }
+
+  /* Bonus Card Real-time CSS Variables */
+  .bonus-card-glass {
+    background: linear-gradient(135deg, var(--dynamic-gradient-start), var(--dynamic-gradient-end)) !important;
+  }
+
+  .bonus-card-left {
+    background-color: rgba(var(--dynamic-bg-color), 0.15) !important;
+  }
+
+  .bonus-card-right {
+    background-color: var(--dynamic-bg-color) !important;
+  }
+
+  .bonus-card-logo {
+    background-color: var(--dynamic-bg-color) !important;
+  }
+
+  .exclusive-bonus-logo {
+    background-color: var(--dynamic-bg-color) !important;
+  }
 }
