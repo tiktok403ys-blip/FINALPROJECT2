@@ -418,9 +418,9 @@ export function Navbar() {
                         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.name ? "rotate-180" : ""}`} />
                       </button>
                       
-                      {/* Dropdown Menu - Click-based with proper state management */}
+                      {/* Integrated Dropdown Menu - Seamless with navbar */}
                       {activeDropdown === item.name && (
-                        <div className="absolute top-full left-0 mt-1 w-64 bg-black/50 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50">
+                        <div className="absolute top-full left-0 mt-0 w-64 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 border-t-0 rounded-t-none">
                           <div className="p-2">
                             {item.dropdownItems.map((dropdownItem) => {
                               const DropdownIcon = dropdownItem.icon
