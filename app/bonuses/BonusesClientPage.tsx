@@ -90,7 +90,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
         date="10 Dec 2024"
       />
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-0 py-16">
         {/* Bonuses List */}
         <div className="space-y-6">
           {bonuses?.map((bonus: Bonus & { casinos?: Casino; has_review?: boolean }, index: number) => {
@@ -125,13 +125,13 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                 <div className="flex flex-col lg:flex-row min-h-[300px]">
                   {/* Left Side - Bonus Details */}
                   <div
-                    className="lg:w-2/3 p-6 bonus-card-left"
+                    className="lg:w-2/3 pb-6 pl-0 pr-0 pt-0 bonus-card-left"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
                   >
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-4 px-6 pt-6">
                       <div className="flex items-center gap-3">
                         <div className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold flex items-center gap-1">
                           <Gift className="w-3 h-3" />
@@ -144,12 +144,12 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                     </div>
 
                     {/* Main Bonus Title */}
-                    <h2 className="text-2xl font-bold text-white mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-6 px-6">
                       {bonus.bonus_amount} {bonus.title}
                     </h2>
 
                     {/* Expandable Details */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 px-6 pb-6">
                       {/* Play Now Info */}
                       <div className="border border-white/10 rounded-lg">
                         <div
@@ -358,11 +358,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
                   {/* Right Side - Casino Info & Actions */}
                                     <div
-                    className="lg:w-1/3 p-6 flex flex-col bonus-card-separator"
+                    className="lg:w-1/3 pb-6 pl-0 pr-0 pt-0 flex flex-col bonus-card-separator"
                   >
                     {/* Casino Logo - Colored Area */}
                     <div
-                      className="rounded-lg p-6 mb-8 text-center min-h-[80px] flex items-center justify-center bonus-card-logo"
+                      className="rounded-lg pb-6 pl-0 pr-0 pt-0 mb-8 text-center min-h-[80px] flex items-center justify-center bonus-card-logo"
                       style={{
                         '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
                       } as React.CSSProperties}
@@ -383,7 +383,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       </div>
 
                     {/* Safety Index - Neutral Section */}
-                    <div className="mb-6" style={{ backgroundColor: 'transparent' }}>
+                    <div className="mb-6 px-6 pt-6" style={{ backgroundColor: 'transparent' }}>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-gray-400 text-sm">SAFETY INDEX:</span>
                         <Info className="w-3 h-3 text-gray-400" />
@@ -395,7 +395,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                     </div>
 
                     {/* How to Get Bonus - Neutral Section */}
-                    <div className="border border-white/20 rounded-lg p-4 mb-6" style={{ backgroundColor: 'transparent' }}>
+                    <div className="border border-white/20 rounded-lg p-4 mb-6 mx-6" style={{ backgroundColor: 'transparent' }}>
                       <h4 className="text-white font-semibold text-center mb-3">HOW TO GET BONUS?</h4>
                       <div className="text-center mb-3">
                         <div className="flex items-center justify-center gap-2 mb-2">
@@ -422,7 +422,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                     </div>
 
                     {/* Casino Review Link - Neutral Section */}
-                    <div className="mb-6" style={{ backgroundColor: 'transparent' }}>
+                    <div className="mb-6 px-6" style={{ backgroundColor: 'transparent' }}>
                       {bonus.has_review ? (
                         <Link
                           href={`/casinos/${bonus.casino_id}/review`}
@@ -443,7 +443,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                     </div>
 
                     {/* Action Buttons - Neutral Section */}
-                    <div className="space-y-3 mt-auto" style={{ backgroundColor: 'transparent' }}>
+                    <div className="space-y-3 mt-auto px-6 pb-6" style={{ backgroundColor: 'transparent' }}>
                       <Button
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
                         asChild
