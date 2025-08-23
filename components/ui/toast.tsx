@@ -7,8 +7,6 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const ToastProvider = ToastPrimitives.Provider
-
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
@@ -117,13 +115,7 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
-const ToastProvider = () => {
-  return (
-    <ToastPrimitives.Provider>
-      <ToastViewport className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]" />
-    </ToastPrimitives.Provider>
-  )
-}
+
 
 import { useToast } from "@/hooks/use-toast"
 
@@ -154,7 +146,6 @@ const Toaster = () => {
 export {
   type ToastProps,
   type ToastActionElement,
-  ToastProvider,
   ToastViewport,
   Toast,
   ToastTitle,

@@ -68,7 +68,7 @@ export default function PageContentAdmin() {
       toast({
         title: 'Error',
         description: 'Failed to fetch page sections',
-        variant: 'destructive'
+        variant: 'error'
       })
     } finally {
       setLoading(false)
@@ -124,7 +124,7 @@ export default function PageContentAdmin() {
       toast({
         title: 'Error',
         description: 'Failed to save page section',
-        variant: 'destructive'
+        variant: 'error'
       })
     }
   }
@@ -166,7 +166,7 @@ export default function PageContentAdmin() {
       toast({
         title: 'Error',
         description: 'Failed to delete page section',
-        variant: 'destructive'
+        variant: 'error'
       })
     }
   }
@@ -198,7 +198,7 @@ export default function PageContentAdmin() {
       toast({
         title: 'Error',
         description: 'Failed to update section status',
-        variant: 'destructive'
+        variant: 'error'
       })
     }
   }

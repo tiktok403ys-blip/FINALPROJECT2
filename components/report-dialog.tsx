@@ -59,7 +59,7 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
         toast({
           title: "Error",
           description: error.message,
-          variant: "destructive",
+          variant: "error",
         })
       } else {
         setSuccess(true)
@@ -84,7 +84,7 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        variant: "error",
       })
     } finally {
       setLoading(false)

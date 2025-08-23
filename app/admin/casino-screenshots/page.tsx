@@ -177,7 +177,7 @@ export default function AdminCasinoScreenshotsPage() {
     try {
       // Validation
       if (!formData.casino_id || !formData.image_url) {
-        toast({ title: "Validation Error", description: "Casino and image are required", variant: "destructive" })
+        toast({ title: "Validation Error", description: "Casino and image are required", variant: "error" })
         return
       }
 
@@ -216,7 +216,7 @@ export default function AdminCasinoScreenshotsPage() {
       fetchRows()
     } catch (error: any) {
       console.error("Error saving screenshot:", error)
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [formData, editingId, supabase, adminAuth, toast, resetForm, fetchRows])
 
@@ -243,7 +243,7 @@ export default function AdminCasinoScreenshotsPage() {
       
       fetchRows()
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [supabase, adminAuth, toast, fetchRows])
 
@@ -262,7 +262,7 @@ export default function AdminCasinoScreenshotsPage() {
       toast({ title: "Screenshot Deleted", description: row.title || "Screenshot" })
       fetchRows()
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [supabase, adminAuth, toast, fetchRows])
 

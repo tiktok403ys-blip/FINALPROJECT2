@@ -262,12 +262,12 @@ export default function AdminExpertReviewsPage() {
     try {
       // Validation
       if (!formData.casino_id || !formData.title || !formData.content) {
-        toast({ title: "Validation Error", description: "Casino, title, and content are required", variant: "destructive" })
+        toast({ title: "Validation Error", description: "Casino, title, and content are required", variant: "error" })
         return
       }
 
       if (formData.rating < 0 || formData.rating > 10) {
-        toast({ title: "Validation Error", description: "Rating must be between 0 and 10", variant: "destructive" })
+        toast({ title: "Validation Error", description: "Rating must be between 0 and 10", variant: "error" })
         return
       }
 
@@ -313,7 +313,7 @@ export default function AdminExpertReviewsPage() {
       fetchRows()
     } catch (error: any) {
       console.error("Error saving review:", error)
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [formData, editingId, supabase, adminAuth, toast, resetForm, fetchRows])
 
@@ -345,7 +345,7 @@ export default function AdminExpertReviewsPage() {
       
       fetchRows()
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [supabase, adminAuth, toast, fetchRows])
 
@@ -372,7 +372,7 @@ export default function AdminExpertReviewsPage() {
       
       fetchRows()
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [supabase, adminAuth, toast, fetchRows])
 
@@ -391,7 +391,7 @@ export default function AdminExpertReviewsPage() {
       toast({ title: "Review Deleted", description: row.title })
       fetchRows()
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Error", description: error.message, variant: "error" })
     }
   }, [supabase, adminAuth, toast, fetchRows])
 
