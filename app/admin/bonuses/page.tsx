@@ -617,7 +617,7 @@ function BonusesContentPage() {
                   placeholder="https://example.com/claim-bonus"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
-                <p className="text-xs text-white/50 mt-1">URL for "Get Bonus" button (optional - defaults to casino page)</p>
+                <p className="text-xs text-white/50 mt-1">URL for &ldquo;Get Bonus&rdquo; button (optional - defaults to casino page)</p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
