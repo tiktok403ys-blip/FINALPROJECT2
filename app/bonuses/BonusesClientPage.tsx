@@ -312,7 +312,6 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                         {isExpanded(bonus.id, "speed") && (
                           <div className="px-3 pb-3 text-gray-300 text-sm">
-                            <span className="font-medium">Detail: </span>
                             {bonus.how_to_get || "This bonus is typically credited to your account within minutes of claiming. No lengthy verification process required for new players."}
                           </div>
                         )}

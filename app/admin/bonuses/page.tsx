@@ -206,6 +206,16 @@ function BonusesContentPage() {
         return
       }
 
+      if (!formData.claiming_speed.trim()) {
+        toast.error('Claiming Speed is required')
+        return
+      }
+
+      if (!formData.how_to_get.trim()) {
+        toast.error('Claiming Process Details is required')
+        return
+      }
+
       if (editingId && editingId !== 'new') {
         // Update existing bonus - exclude casino_name from database operation
         const supabaseClient = supabase()
@@ -672,7 +682,7 @@ function BonusesContentPage() {
                   <option value="SLOW">SLOW</option>
                   <option value="IMMEDIATE">IMMEDIATE</option>
                 </select>
-                <p className="text-xs text-white/50 mt-1">Speed label shown in public display</p>
+                <p className="text-xs text-white/50 mt-1">Speed label shown in public display (required)</p>
               </div>
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Claiming Process Details</label>
@@ -683,7 +693,7 @@ function BonusesContentPage() {
                   rows={3}
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
-                <p className="text-xs text-white/50 mt-1">Leave empty to use default detail description</p>
+                <p className="text-xs text-white/50 mt-1">Detail description shown in public display (required)</p>
               </div>
             </div>
 
