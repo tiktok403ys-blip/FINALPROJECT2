@@ -25,6 +25,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
+import { toast } from "sonner"
 import type { Bonus, Casino } from "@/lib/types"
 
 export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { casinos?: Casino; has_review?: boolean })[] }) {
@@ -76,6 +77,21 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
   const isExpired = (expiryDate: string) => {
     return new Date(expiryDate) < new Date()
+  }
+
+  const copyPromoCode = async (promoCode: string) => {
+    try {
+      await navigator.clipboard.writeText(promoCode)
+      toast.success(`Promo code "${promoCode}" copied to clipboard!`, {
+        description: "Ready to use in your casino account",
+        duration: 3000,
+      })
+    } catch (error) {
+      toast.error("Failed to copy promo code", {
+        description: "Please try again or copy manually",
+        duration: 3000,
+      })
+    }
   }
 
   return (
@@ -406,11 +422,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           <span className="text-[#00ff88] font-bold">{bonus.promo_code || "GURU2000"}</span>
                           <button
                             type="button"
-                            onClick={() => navigator.clipboard.writeText(bonus.promo_code || "GURU2000")}
-                            className="p-1 rounded hover:bg-white/10"
+                            onClick={() => copyPromoCode(bonus.promo_code || "GURU2000")}
+                            className="p-1 rounded hover:bg-white/10 transition-colors"
                             aria-label="Copy promo code"
                           >
-                            <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
+                            <Copy className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
                           </button>
                         </div>
                       </div>
