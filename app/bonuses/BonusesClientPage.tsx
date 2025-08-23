@@ -80,185 +80,61 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
     return new Date(expiryDate) < new Date()
   }
 
-  // Premium Glass Toast Notification Component
-  const showGlassToast = (type: 'success' | 'error', message: string, description?: string) => {
-    const toastId = `glass-toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    const toastElement = document.createElement('div')
-    toastElement.id = toastId
+  // Simple popup dialog for copy feedback
+  const showCopyPopup = (message: string) => {
+    const popupId = `copy-popup-${Date.now()}`
+    const popupElement = document.createElement('div')
+    popupElement.id = popupId
     
-    // Mobile-first responsive positioning
-    toastElement.className = `
-      fixed top-4 right-4 z-[9999] 
-      w-[calc(100vw-2rem)] max-w-sm
-      sm:w-full sm:max-w-md
-      transform translate-x-full opacity-0 scale-95
-      transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]
+    popupElement.className = `
+      fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]
+      opacity-0 scale-95 transition-all duration-300 ease-out
     `
     
-    const iconMap = {
-      success: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>`,
-      error: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-circle"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`
-    }
-    
-    const glassStyles = {
-      success: {
-        gradient: 'from-[oklch(0.488_0.243_264.376)]/15 via-[oklch(0.488_0.243_264.376)]/10 to-[oklch(0.488_0.243_264.376)]/20',
-        border: 'border-[oklch(0.488_0.243_264.376)]/40',
-        glow: 'shadow-[oklch(0.488_0.243_264.376)]/25',
-        progress: 'from-[oklch(0.488_0.243_264.376)] via-[oklch(0.488_0.243_264.376)]/80 to-[oklch(0.488_0.243_264.376)]/60',
-        icon: 'from-[oklch(0.488_0.243_264.376)] to-[oklch(0.488_0.243_264.376)]/80'
-      },
-      error: {
-        gradient: 'from-[oklch(0.577_0.245_27.325)]/15 via-[oklch(0.577_0.245_27.325)]/10 to-[oklch(0.577_0.245_27.325)]/20',
-        border: 'border-[oklch(0.577_0.245_27.325)]/40',
-        glow: 'shadow-[oklch(0.577_0.245_27.325)]/25',
-        progress: 'from-[oklch(0.577_0.245_27.325)] via-[oklch(0.577_0.245_27.325)]/80 to-[oklch(0.577_0.245_27.325)]/60',
-        icon: 'from-[oklch(0.577_0.245_27.325)] to-[oklch(0.577_0.245_27.325)]/80'
-      }
-    }
-    
-    const style = glassStyles[type]
-    
-    toastElement.innerHTML = `
+    popupElement.innerHTML = `
       <div class="
-        relative overflow-hidden rounded-3xl
-        bg-gradient-to-br ${style.gradient}
-        backdrop-blur-3xl ${style.border}
-        shadow-2xl ${style.glow}
-        p-4 sm:p-6
-        before:absolute before:inset-0
-        before:bg-gradient-to-br before:from-white/8 before:via-white/4 before:to-transparent
-        before:backdrop-blur-2xl before:rounded-3xl
-        after:absolute after:inset-[1px] after:rounded-3xl
-        after:bg-gradient-to-br after:from-white/5 after:to-transparent
-        group hover:scale-[1.03] hover:shadow-3xl
-        transition-all duration-500 ease-out
-        border-2
+        bg-black/90 backdrop-blur-sm border border-white/20
+        rounded-lg px-4 py-3 shadow-xl
+        text-white text-sm font-medium
+        flex items-center gap-2
+        min-w-[200px] max-w-[300px]
       ">
-        <!-- Premium glass overlay with multiple layers -->
-        <div class="absolute inset-0 bg-gradient-to-br from-white/3 via-transparent to-black/5 rounded-3xl"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1),transparent_50%)] rounded-3xl"></div>
-        
-        <!-- Content container -->
-        <div class="relative z-20 flex items-start gap-4">
-          <!-- Premium icon with gradient background -->
-          <div class="
-            flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12
-            rounded-2xl bg-gradient-to-br ${style.icon}
-            flex items-center justify-center
-            shadow-lg shadow-black/20
-            text-lg sm:text-xl
-            border border-white/20
-          ">
-            ${iconMap[type]}
-          </div>
-          
-          <!-- Text content -->
-          <div class="flex-1 min-w-0 pt-1">
-            <div class="
-              text-white font-bold text-base sm:text-lg
-              leading-tight tracking-tight
-              drop-shadow-sm
-            ">
-              ${message}
-            </div>
-            ${description ? `
-              <div class="
-                text-white/85 text-sm sm:text-base
-                mt-2 leading-relaxed
-                font-medium tracking-wide
-              ">
-                ${description}
-              </div>
-            ` : ''}
-          </div>
-          
-          <!-- Premium close button -->
-          <button 
-            onclick="
-              const toast = document.getElementById('${toastId}');
-              if (toast) {
-                toast.style.transform = 'translateX(100%) scale(0.9)';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-              }
-            "
-            class="
-              flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9
-              rounded-xl bg-white/10 hover:bg-white/20
-              backdrop-blur-sm border border-white/20
-              flex items-center justify-center
-              text-white/70 hover:text-white
-              transition-all duration-300
-              text-lg font-light
-              hover:scale-110 hover:rotate-90
-              shadow-lg hover:shadow-xl
-            "
-          >
-            ×
-          </button>
-        </div>
-        
-        <!-- Premium animated progress bar -->
-        <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20 rounded-b-3xl overflow-hidden">
-          <div class="
-            h-full bg-gradient-to-r ${style.progress}
-            animate-shrink origin-left
-            shadow-lg shadow-black/30
-            relative
-            before:absolute before:inset-0
-            before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent
-            before:animate-pulse
-          "></div>
-        </div>
-        
-        <!-- Floating particles effect -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-          <div class="absolute top-2 left-4 w-1 h-1 bg-white/40 rounded-full animate-pulse"></div>
-          <div class="absolute top-6 right-8 w-0.5 h-0.5 bg-white/30 rounded-full animate-pulse" style="animation-delay: 0.5s"></div>
-          <div class="absolute bottom-8 left-8 w-1.5 h-1.5 bg-white/20 rounded-full animate-pulse" style="animation-delay: 1s"></div>
-        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400 flex-shrink-0">
+          <path d="m9 12 2 2 4-4"/>
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        <span>${message}</span>
       </div>
     `
     
-    document.body.appendChild(toastElement)
+    document.body.appendChild(popupElement)
     
-    // Premium entrance animation
+    // Show popup
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        toastElement.style.transform = 'translateX(0) scale(1)'
-        toastElement.style.opacity = '1'
-      })
+      popupElement.style.opacity = '1'
+      popupElement.style.transform = 'translate(-50%, -50%) scale(1)'
     })
     
-    // Auto-dismiss with smooth exit
+    // Auto hide after 2 seconds
     setTimeout(() => {
-      if (document.getElementById(toastId)) {
-        toastElement.style.transform = 'translateX(100%) scale(0.95)'
-        toastElement.style.opacity = '0'
+      if (document.getElementById(popupId)) {
+        popupElement.style.opacity = '0'
+        popupElement.style.transform = 'translate(-50%, -50%) scale(0.95)'
         setTimeout(() => {
-          if (document.getElementById(toastId)) {
-            document.getElementById(toastId)?.remove()
+          if (document.getElementById(popupId)) {
+            popupElement.remove()
           }
-        }, 700)
+        }, 300)
       }
-    }, 5000)
+    }, 2000)
   }
 
   const copyPromoCode = async (promoCode: string) => {
     try {
       await navigator.clipboard.writeText(promoCode)
-      showGlassToast(
-        'success',
-        'Promo Code Copied!',
-        `"${promoCode}" is ready to use in your casino account.`
-      )
+      showCopyPopup('Promo code copied!')
     } catch (err) {
-      showGlassToast(
-        'error',
-        'Copy Failed',
-        'Unable to copy promo code. Please try copying manually.'
-      )
+      showCopyPopup('Copy failed - try manually')
     }
   }
 
