@@ -85,11 +85,49 @@ const config: Config = {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+  			'shrink': {
+				'0%': { 
+					width: '100%', 
+					opacity: '1',
+					transform: 'scaleX(1)'
+				},
+				'100%': { 
+					width: '0%', 
+					opacity: '0.8',
+					transform: 'scaleX(0)'
+				}
+			},
+			'glass-float': {
+				'0%, 100%': { 
+					transform: 'translateY(0px) rotate(0deg)',
+					opacity: '0.6'
+				},
+				'50%': { 
+					transform: 'translateY(-10px) rotate(180deg)',
+					opacity: '1'
+				}
+			},
+			'glass-shimmer': {
+				'0%': { 
+					transform: 'translateX(-100%)',
+					opacity: '0'
+				},
+				'50%': {
+					opacity: '1'
+				},
+				'100%': { 
+					transform: 'translateX(100%)',
+					opacity: '0'
+				}
+			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'shrink': 'shrink 5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+  			'glass-float': 'glass-float 6s ease-in-out infinite',
+  			'glass-shimmer': 'glass-shimmer 3s ease-in-out infinite'
   		}
   	}
   },

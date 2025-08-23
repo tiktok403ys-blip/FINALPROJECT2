@@ -28,7 +28,7 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: "bg-gradient-to-br from-slate-900/90 via-slate-800/85 to-slate-900/90 text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] sm:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6)] border-slate-400/25 before:from-slate-400/30 before:via-slate-500/20 before:to-slate-400/30 after:from-slate-800/60 after:via-slate-700/40 after:to-slate-800/60",
-        success: "bg-gradient-to-br from-emerald-950/90 via-green-900/85 to-emerald-950/90 text-white shadow-[0_4px_20px_-4px_rgba(16,185,129,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(16,185,129,0.3)] border-emerald-400/30 before:from-emerald-400/35 before:via-green-500/25 before:to-emerald-400/35 after:from-emerald-900/60 after:via-green-800/40 after:to-emerald-900/60",
+        success: "bg-gradient-to-br from-blue-950/90 via-blue-900/85 to-indigo-950/90 text-white shadow-[0_4px_20px_-4px_rgba(59,130,246,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(59,130,246,0.3)] border-blue-400/30 before:from-blue-400/35 before:via-indigo-500/25 before:to-blue-400/35 after:from-blue-900/60 after:via-indigo-800/40 after:to-blue-900/60",
         error: "bg-gradient-to-br from-red-950/90 via-red-900/85 to-red-950/90 text-white shadow-[0_4px_20px_-4px_rgba(239,68,68,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(239,68,68,0.3)] border-red-400/30 before:from-red-400/35 before:via-red-500/25 before:to-red-400/35 after:from-red-900/60 after:via-red-800/40 after:to-red-900/60",
         warning: "bg-gradient-to-br from-amber-950/90 via-yellow-900/85 to-amber-950/90 text-white shadow-[0_4px_20px_-4px_rgba(245,158,11,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(245,158,11,0.3)] border-amber-400/30 before:from-amber-400/35 before:via-yellow-500/25 before:to-amber-400/35 after:from-amber-900/60 after:via-yellow-800/40 after:to-amber-900/60",
       },
@@ -122,7 +122,7 @@ import { useToast } from "@/hooks/use-toast"
 const getToastIcon = (variant?: string) => {
   switch (variant) {
     case "success":
-      return <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+      return <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400 flex-shrink-0 mt-0.5" />
     case "error":
       return <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-400 flex-shrink-0 mt-0.5" />
     case "warning":
