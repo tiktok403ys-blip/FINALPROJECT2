@@ -52,6 +52,7 @@ interface Bonus {
   casino_id: string
   slug: string // URL-friendly identifier for the bonus
   promo_code: string
+  claim_url: string // URL for "Get Bonus" button
   terms_conditions: string
   valid_from: string
   valid_until: string
