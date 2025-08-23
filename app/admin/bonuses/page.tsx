@@ -108,6 +108,7 @@ function BonusesContentPage() {
     free_spin_value: 0,
     value_text: '', // Custom text for free spins value section
     claiming_speed: 'FAST', // Speed label for claiming process
+    card_bg_color: '#0B0F1A', // Default bonus card background color
     play_now_text: '',
     terms: '',
     expiry_days: 0,
@@ -281,6 +282,7 @@ function BonusesContentPage() {
       free_spin_value: (bonus as any).free_spin_value || 0,
       value_text: (bonus as any).value_text || '',
       claiming_speed: (bonus as any).claiming_speed || 'FAST',
+      card_bg_color: (bonus as any).card_bg_color || '#0B0F1A',
       play_now_text: (bonus as any).play_now_text || '',
       terms: (bonus as any).terms || '',
       expiry_days: (bonus as any).expiry_days || 0,
@@ -356,6 +358,7 @@ function BonusesContentPage() {
       free_spin_value: 0,
       value_text: '',
       claiming_speed: 'FAST',
+      card_bg_color: '#0B0F1A',
       play_now_text: '',
       terms: '',
       expiry_days: 0,
@@ -694,6 +697,29 @@ function BonusesContentPage() {
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
                 <p className="text-xs text-white/50 mt-1">Detail description shown in public display (required)</p>
+              </div>
+            </div>
+
+            {/* Bonus Card Styling */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+              <div>
+                <label className="text-white/90 text-sm font-medium mb-2 block">Bonus Card Background Color</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={formData.card_bg_color}
+                    onChange={(e) => setFormData({ ...formData, card_bg_color: e.target.value })}
+                    className="w-12 h-10 rounded border border-white/20 bg-white/5 cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={formData.card_bg_color}
+                    onChange={(e) => setFormData({ ...formData, card_bg_color: e.target.value })}
+                    placeholder="#0B0F1A"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/50 flex-1"
+                  />
+                </div>
+                <p className="text-xs text-white/50 mt-1">Choose background color for bonus card (shown on public page)</p>
               </div>
             </div>
 

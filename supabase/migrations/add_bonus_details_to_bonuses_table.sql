@@ -22,6 +22,7 @@ ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS terms TEXT;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS expiry_days INTEGER DEFAULT 30;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS expiry_text TEXT;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS claiming_speed VARCHAR(50) DEFAULT 'FAST';
+ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS card_bg_color VARCHAR(7); -- Hex color for bonus card background
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS how_to_get TEXT;
 
 -- Homepage feature fields
@@ -54,6 +55,7 @@ COMMENT ON COLUMN bonuses.expiry_days IS 'Number of days until bonus expires';
 COMMENT ON COLUMN bonuses.expiry_text IS 'Description text for expiry information';
 COMMENT ON COLUMN bonuses.value_text IS 'Custom description text for free spins value section';
 COMMENT ON COLUMN bonuses.claiming_speed IS 'Speed label for bonus claiming process (FAST, INSTANT, QUICK, etc.)';
+COMMENT ON COLUMN bonuses.card_bg_color IS 'Hex color code for bonus card background (e.g., #FF6B35)';
 COMMENT ON COLUMN bonuses.how_to_get IS 'Custom description text for claiming process details';
 COMMENT ON COLUMN bonuses.is_featured_home IS 'Whether bonus is featured on homepage';
 COMMENT ON COLUMN bonuses.home_rank IS 'Display order for homepage featured bonuses';

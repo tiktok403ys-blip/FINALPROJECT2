@@ -49,6 +49,7 @@ export interface Bonus {
   free_spin_value?: number | null
   value_text?: string | null
   claiming_speed?: string | null
+  card_bg_color?: string | null
   max_bet?: number | null
   max_bet_text?: string | null
   expiry_days?: number | null

@@ -109,9 +109,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       : "border-white/10 hover:border-[#00ff88]/30"
                 }`}
                 style={{
-                  background: bonus.casinos?.placeholder_bg_color
-                    ? `linear-gradient(135deg, ${bonus.casinos.placeholder_bg_color}15, ${bonus.casinos.placeholder_bg_color}08)`
-                    : 'rgba(255, 255, 255, 0.05)'
+                  background: (bonus as any).card_bg_color
+                    ? `linear-gradient(135deg, ${(bonus as any).card_bg_color}20, ${(bonus as any).card_bg_color}10)`
+                    : bonus.casinos?.placeholder_bg_color
+                      ? `linear-gradient(135deg, ${bonus.casinos.placeholder_bg_color}15, ${bonus.casinos.placeholder_bg_color}08)`
+                      : 'rgba(255, 255, 255, 0.05)'
                 }}
               >
                 <div className="flex flex-col lg:flex-row min-h-[300px]">
@@ -119,9 +121,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   <div
                     className="lg:w-2/3 p-6"
                     style={{
-                      backgroundColor: bonus.casinos?.placeholder_bg_color
-                        ? `${bonus.casinos.placeholder_bg_color}10`
-                        : 'rgba(255, 255, 255, 0.05)'
+                      backgroundColor: (bonus as any).card_bg_color
+                        ? `${(bonus as any).card_bg_color}15`
+                        : bonus.casinos?.placeholder_bg_color
+                          ? `${bonus.casinos.placeholder_bg_color}10`
+                          : 'rgba(255, 255, 255, 0.05)'
                     }}
                   >
                     {/* Header */}
@@ -354,13 +358,13 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   <div
                     className="lg:w-1/3 p-6 flex flex-col"
                     style={{
-                      backgroundColor: bonus.casinos?.placeholder_bg_color || '#000000'
+                      backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
                     }}
                   >
                     {/* Casino Logo */}
                     <div 
                       className="rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center"
-                      style={{ backgroundColor: bonus.casinos?.placeholder_bg_color || '#000000' }}
+                      style={{ backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000' }}
                     >
                       {bonus.casinos?.logo_url ? (
                         <Image
