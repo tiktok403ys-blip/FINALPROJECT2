@@ -15,7 +15,7 @@ export function RealtimeBonusesRefresher() {
         event: "*",
         schema: "public",
         table: "bonuses"
-      }, (payload) => {
+      }, (payload: { new: any; old: any; eventType: string; table: string }) => {
         console.log("Bonuses real-time update:", payload)
         router.refresh()
       })
@@ -23,7 +23,7 @@ export function RealtimeBonusesRefresher() {
         event: "*",
         schema: "public",
         table: "casinos"
-      }, (payload) => {
+      }, (payload: { new: any; old: any; eventType: string; table: string }) => {
         console.log("Casinos real-time update (affecting bonuses):", payload)
         router.refresh()
       })
