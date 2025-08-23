@@ -16,6 +16,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: "default" | "success" | "error" | "warning"
+  icon?: React.ReactNode
 }
 
 const actionTypes = {
@@ -184,9 +186,39 @@ function useToast() {
     }
   }, [state])
 
+  const success = (title: string, description?: string, options?: Partial<ToasterToast>) => {
+    return toast({
+      variant: "success",
+      title,
+      description,
+      ...options,
+    })
+  }
+
+  const error = (title: string, description?: string, options?: Partial<ToasterToast>) => {
+    return toast({
+      variant: "error",
+      title,
+      description,
+      ...options,
+    })
+  }
+
+  const warning = (title: string, description?: string, options?: Partial<ToasterToast>) => {
+    return toast({
+      variant: "warning",
+      title,
+      description,
+      ...options,
+    })
+  }
+
   return {
     ...state,
     toast,
+    success,
+    error,
+    warning,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }

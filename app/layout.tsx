@@ -7,7 +7,7 @@ import { AuthProvider } from "@/components/auth-provider"
 import { NavbarFixed } from "@/components/navbar-fixed"
 import { CookieConsent } from "@/components/cookie-consent"
 import { WebVitals } from "@/components/web-vitals"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/toast"
 import { headers } from "next/headers"
 
 const inter = Inter({ subsets: ["latin"] })

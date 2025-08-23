@@ -25,13 +25,14 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-xl border p-6 pr-8 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full border-white/10",
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
-        destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+        default: "bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 text-white shadow-black/50",
+        success: "bg-gradient-to-br from-green-900/95 via-emerald-800/95 to-green-900/95 text-white border-green-400/20 shadow-green-500/20",
+        error: "bg-gradient-to-br from-red-900/95 via-red-800/95 to-red-900/95 text-white border-red-400/20 shadow-red-500/20",
+        warning: "bg-gradient-to-br from-yellow-900/95 via-amber-800/95 to-yellow-900/95 text-white border-yellow-400/20 shadow-yellow-500/20",
       },
     },
     defaultVariants: {
@@ -116,6 +117,40 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
+const ToastProvider = () => {
+  return (
+    <ToastPrimitives.Provider>
+      <ToastViewport className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]" />
+    </ToastPrimitives.Provider>
+  )
+}
+
+import { useToast } from "@/hooks/use-toast"
+
+const Toaster = () => {
+  const { toasts } = useToast()
+
+  return (
+    <ToastPrimitives.Provider>
+      {toasts.map(function ({ id, title, description, action, ...props }) {
+        return (
+          <Toast key={id} {...props}>
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
+            </div>
+            {action}
+            <ToastClose />
+          </Toast>
+        )
+      })}
+      <ToastViewport />
+    </ToastPrimitives.Provider>
+  )
+}
+
 export {
   type ToastProps,
   type ToastActionElement,
@@ -126,4 +161,5 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
+  Toaster,
 }

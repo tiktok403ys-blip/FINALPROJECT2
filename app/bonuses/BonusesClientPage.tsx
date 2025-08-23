@@ -25,11 +25,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast"
 import type { Bonus, Casino } from "@/lib/types"
 
 export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { casinos?: Casino; has_review?: boolean })[] }) {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
+  const { success, error } = useToast()
 
   const toggleSection = (bonusId: string, sectionKey: string) => {
     const key = `${bonusId}-${sectionKey}`
@@ -82,23 +83,35 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
   const copyPromoCode = async (promoCode: string) => {
     try {
       await navigator.clipboard.writeText(promoCode)
-      toast.success(`🎉 Promo code copied successfully!`, {
-        description: `"${promoCode}" is now in your clipboard. Ready to use in your casino account!`,
-        duration: 4000,
-        action: {
-          label: "Perfect!",
-          onClick: () => console.log("Success toast action clicked"),
-        },
-      })
-    } catch (error) {
-      toast.error("❌ Copy failed", {
-        description: "Unable to copy promo code. Please try again or copy manually.",
-        duration: 4000,
-        action: {
-          label: "Try Again",
-          onClick: () => copyPromoCode(promoCode),
-        },
-      })
+      success(
+        `🎉 Promo code copied successfully!`,
+        `"${promoCode}" is now in your clipboard. Ready to use in your casino account!`,
+        {
+          action: (
+            <button
+              onClick={() => console.log("Success toast action clicked")}
+              className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive"
+            >
+              Perfect!
+            </button>
+          ),
+        }
+      )
+    } catch (err) {
+      error(
+        "❌ Copy failed",
+        "Unable to copy promo code. Please try again or copy manually.",
+        {
+          action: (
+            <button
+              onClick={() => copyPromoCode(promoCode)}
+              className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive"
+            >
+              Try Again
+            </button>
+          ),
+        }
+      )
     }
   }
 
