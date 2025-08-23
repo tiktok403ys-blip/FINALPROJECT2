@@ -174,9 +174,9 @@ export default async function HomePage() {
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
                              <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
                                   <div className="flex items-stretch h-full">
-                   <div 
+                   <div
                      className="w-20 -ml-6 -mt-6 -mb-6 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
-                     style={{ backgroundColor: bonus.casinos?.placeholder_bg_color || '#1f2937' }}
+                     style={{ backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937' }}
                    >
                      {bonus.casinos?.logo_url ? (
                        <Image
