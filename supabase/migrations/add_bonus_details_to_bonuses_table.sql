@@ -14,12 +14,14 @@ ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS wagering_text TEXT;
 -- Free spins fields
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS free_spins INTEGER DEFAULT 0;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS free_spin_value DECIMAL(10,2) DEFAULT 0.25;
+ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS value_text TEXT;
 
 -- User interface fields
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS play_now_text TEXT;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS terms TEXT;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS expiry_days INTEGER DEFAULT 30;
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS expiry_text TEXT;
+ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS how_to_get TEXT;
 
 -- Homepage feature fields
 ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS is_featured_home BOOLEAN DEFAULT false;
@@ -49,6 +51,8 @@ COMMENT ON COLUMN bonuses.play_now_text IS 'Custom text for play now button';
 COMMENT ON COLUMN bonuses.terms IS 'Additional terms and conditions text';
 COMMENT ON COLUMN bonuses.expiry_days IS 'Number of days until bonus expires';
 COMMENT ON COLUMN bonuses.expiry_text IS 'Description text for expiry information';
+COMMENT ON COLUMN bonuses.value_text IS 'Custom description text for free spins value section';
+COMMENT ON COLUMN bonuses.how_to_get IS 'Custom description text for claiming process';
 COMMENT ON COLUMN bonuses.is_featured_home IS 'Whether bonus is featured on homepage';
 COMMENT ON COLUMN bonuses.home_rank IS 'Display order for homepage featured bonuses';
 COMMENT ON COLUMN bonuses.home_link_override IS 'Override URL for homepage CTA';

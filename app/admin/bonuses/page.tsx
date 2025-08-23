@@ -106,10 +106,12 @@ function BonusesContentPage() {
     wagering_text: '',
     free_spins: 0,
     free_spin_value: 0,
+    value_text: '', // Custom text for free spins value section
     play_now_text: '',
     terms: '',
     expiry_days: 0,
-    expiry_text: ''
+    expiry_text: '',
+    how_to_get: '' // Custom text for claiming process section
   })
 
   const bonusTypes = [
@@ -266,10 +268,12 @@ function BonusesContentPage() {
       wagering_text: (bonus as any).wagering_text || '',
       free_spins: (bonus as any).free_spins || 0,
       free_spin_value: (bonus as any).free_spin_value || 0,
+      value_text: (bonus as any).value_text || '',
       play_now_text: (bonus as any).play_now_text || '',
       terms: (bonus as any).terms || '',
       expiry_days: (bonus as any).expiry_days || 0,
-      expiry_text: (bonus as any).expiry_text || ''
+      expiry_text: (bonus as any).expiry_text || '',
+      how_to_get: (bonus as any).how_to_get || ''
     })
   }
 
@@ -338,10 +342,12 @@ function BonusesContentPage() {
       wagering_text: '',
       free_spins: 0,
       free_spin_value: 0,
+      value_text: '',
       play_now_text: '',
       terms: '',
       expiry_days: 0,
-      expiry_text: ''
+      expiry_text: '',
+      how_to_get: ''
     })
   }
 
@@ -649,6 +655,17 @@ function BonusesContentPage() {
                 className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
               />
             </div>
+            <div>
+              <label className="text-white/90 text-sm font-medium mb-2 block">How to Get Bonus</label>
+              <Textarea
+                value={formData.how_to_get}
+                onChange={(e) => setFormData({ ...formData, how_to_get: e.target.value })}
+                placeholder="Custom description for claiming process (e.g., 'This bonus is typically credited to your account within minutes of claiming. No lengthy verification process required for new players.')"
+                rows={3}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
+              />
+              <p className="text-xs text-white/50 mt-1">Leave empty to use default claiming process description</p>
+            </div>
 
             {/* Enhanced Bonus Details Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -706,6 +723,17 @@ function BonusesContentPage() {
                   placeholder="0.25"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                 />
+              </div>
+              <div className="md:col-span-3">
+                <label className="text-white/90 text-sm font-medium mb-2 block">Free Spins Value Description</label>
+                <Textarea
+                  value={formData.value_text}
+                  onChange={(e) => setFormData({ ...formData, value_text: e.target.value })}
+                  placeholder="Custom description for free spins value (e.g., 'Each free spin is worth $0.25, giving you a total bonus value of $12.50. Free spins are usually valid on specific slot games only.')"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50 min-h-[80px]"
+                  rows={3}
+                />
+                <p className="text-xs text-white/50 mt-1">Leave empty to use default calculated description</p>
               </div>
               <div>
                 <label className="text-white/90 text-sm font-medium mb-2 block">Expiry Days</label>
