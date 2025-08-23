@@ -1,4 +1,5 @@
 import BonusesClientPage from "./BonusesClientPage"
+import RealtimeBonusesRefresher from "@/components/realtime-bonuses-refresher"
 import { createClient } from "@/lib/supabase/server"
 import type { Bonus, Casino } from "@/lib/types"
 
@@ -43,5 +44,10 @@ export default async function BonusesPage() {
     bonusesWithFlag = (bonuses || []).map((b: Bonus) => ({ ...b, has_review: hasReviewSet.has(b.casino_id || '') }))
   }
 
-  return <BonusesClientPage bonuses={bonusesWithFlag as unknown as (Bonus & { casinos?: Casino })[]} />
+  return (
+    <>
+      <BonusesClientPage bonuses={bonusesWithFlag as unknown as (Bonus & { casinos?: Casino })[]} />
+      <RealtimeBonusesRefresher />
+    </>
+  )
 }

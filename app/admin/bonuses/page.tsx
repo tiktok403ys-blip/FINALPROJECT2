@@ -132,6 +132,42 @@ function BonusesContentPage() {
     loadCasinos()
   }, [])
 
+  // Real-time subscriptions for live updates
+  useEffect(() => {
+    const supabaseClient = supabase()
+    const channel = supabaseClient
+      .channel("admin-bonuses-realtime")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "bonuses"
+      }, (payload) => {
+        console.log("New bonus added:", payload.new)
+        loadBonuses()
+      })
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "bonuses"
+      }, (payload) => {
+        console.log("Bonus updated:", payload.new)
+        loadBonuses()
+      })
+      .on("postgres_changes", {
+        event: "DELETE",
+        schema: "public",
+        table: "bonuses"
+      }, (payload) => {
+        console.log("Bonus deleted:", payload.old)
+        loadBonuses()
+      })
+      .subscribe()
+
+    return () => {
+      supabaseClient.removeChannel(channel)
+    }
+  }, [])
+
   // Auto-generate slug from title (only for new items)
   useEffect(() => {
     if (formData.title && (!editingId || editingId === 'new')) {
