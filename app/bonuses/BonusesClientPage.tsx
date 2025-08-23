@@ -121,40 +121,33 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   <div
                     className="lg:w-2/3 p-6"
                     style={{
-                      backgroundColor: 'transparent'
+                      backgroundColor: (bonus as any).card_bg_color
+                        ? `${(bonus as any).card_bg_color}15`
+                        : bonus.casinos?.placeholder_bg_color
+                          ? `${bonus.casinos.placeholder_bg_color}10`
+                          : 'rgba(255, 255, 255, 0.05)'
                     }}
                   >
-                    {/* Colored Section Wrapper - Only applies background to specific areas */}
-                    <div
-                      className="rounded-lg p-4 mb-6"
-                      style={{
-                        backgroundColor: (bonus as any).card_bg_color
-                          ? `${(bonus as any).card_bg_color}08`
-                          : bonus.casinos?.placeholder_bg_color
-                            ? `${bonus.casinos.placeholder_bg_color}06`
-                            : 'transparent'
-                      }}
-                    >
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold flex items-center gap-1">
-                            <Gift className="w-3 h-3" />
-                            {(bonus.bonus_type?.toUpperCase() || (bonus.is_no_deposit ? "NO DEPOSIT BONUS" : "BONUS"))}
-                          </div>
-                          {bonus.is_exclusive && (
-                            <div className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">Exclusive</div>
-                          )}
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold flex items-center gap-1">
+                          <Gift className="w-3 h-3" />
+                          {(bonus.bonus_type?.toUpperCase() || (bonus.is_no_deposit ? "NO DEPOSIT BONUS" : "BONUS"))}
                         </div>
+                        {bonus.is_exclusive && (
+                          <div className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">Exclusive</div>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Main Bonus Title */}
-                      <h2 className="text-2xl font-bold text-white mb-6">
-                        {bonus.bonus_amount} {bonus.title}
-                      </h2>
+                    {/* Main Bonus Title */}
+                    <h2 className="text-2xl font-bold text-white mb-6">
+                      {bonus.bonus_amount} {bonus.title}
+                    </h2>
 
-                      {/* Expandable Details */}
-                      <div className="space-y-3">
+                    {/* Expandable Details */}
+                    <div className="space-y-3">
                       {/* Play Now Info */}
                       <div className="border border-white/10 rounded-lg">
                         <div
@@ -365,13 +358,13 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   <div
                     className="lg:w-1/3 p-6 flex flex-col"
                     style={{
-                      backgroundColor: bonus.casinos?.placeholder_bg_color || '#000000'
+                      backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
                     }}
                   >
                     {/* Casino Logo */}
                     <div 
                       className="rounded-lg p-6 mb-6 text-center min-h-[80px] flex items-center justify-center"
-                      style={{ backgroundColor: bonus.casinos?.placeholder_bg_color || '#000000' }}
+                      style={{ backgroundColor: (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000' }}
                     >
                       {bonus.casinos?.logo_url ? (
                         <Image
@@ -387,9 +380,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                                               )}
                       </div>
-                    </div>
 
-                    {/* Safety Index - Neutral Background (No Custom Coloring) */}
+                    {/* Safety Index */}
                     <div className="mb-6">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-gray-400 text-sm">SAFETY INDEX:</span>
@@ -401,8 +393,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       </div>
                     </div>
 
-                    {/* How to Get Bonus - Neutral Background (No Custom Coloring) */}
-                    <div className="border border-white/20 rounded-lg p-4 mb-6" style={{ backgroundColor: 'transparent' }}>
+                    {/* How to Get Bonus */}
+                    <div className="border border-white/20 rounded-lg p-4 mb-6">
                       <h4 className="text-white font-semibold text-center mb-3">HOW TO GET BONUS?</h4>
                       <div className="text-center mb-3">
                         <div className="flex items-center justify-center gap-2 mb-2">
@@ -428,8 +420,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       </div>
                     </div>
 
-                    {/* Casino Review Link - Neutral Background (No Custom Coloring) */}
-                    <div className="mb-6" style={{ backgroundColor: 'transparent' }}>
+                    {/* Casino Review Link */}
+                    <div className="mb-6">
                       {bonus.has_review ? (
                         <Link
                           href={`/casinos/${bonus.casino_id}/review`}
@@ -449,8 +441,8 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       )}
                     </div>
 
-                    {/* Action Buttons - Neutral Background (No Custom Coloring) */}
-                    <div className="space-y-3 mt-auto" style={{ backgroundColor: 'transparent' }}>
+                    {/* Action Buttons */}
+                    <div className="space-y-3 mt-auto">
                       <Button
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
                         asChild
