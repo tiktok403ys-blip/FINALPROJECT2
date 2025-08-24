@@ -254,3 +254,41 @@ export function CasinoCardMobileFirst({ casino, rank }: CasinoCardMobileFirstPro
     </GlassCard>
   )
 }
+
+// Skeleton component for loading states
+export function CasinoCardSkeleton() {
+  return (
+    <GlassCard className="overflow-hidden">
+      <div className="h-32 sm:h-40 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="w-20 h-16 sm:w-24 sm:h-20 bg-gray-700 rounded-lg animate-pulse" />
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Title skeleton */}
+        <div className="h-6 bg-gray-700 rounded animate-pulse" />
+
+        {/* Rating skeleton */}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="w-4 h-4 bg-gray-700 rounded animate-pulse" />
+            ))}
+          </div>
+          <div className="w-12 h-4 bg-gray-700 rounded animate-pulse" />
+        </div>
+
+        {/* Description skeleton */}
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 bg-gray-700 rounded animate-pulse w-3/4" />
+        </div>
+
+        {/* Bonus skeleton */}
+        <div className="h-5 bg-gray-700 rounded animate-pulse w-2/3" />
+
+        {/* Button skeleton */}
+        <div className="h-10 bg-gray-700 rounded-lg animate-pulse" />
+      </div>
+    </GlassCard>
+  )
+}

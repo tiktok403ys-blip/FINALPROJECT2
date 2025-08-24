@@ -30,6 +30,54 @@ import { Footer } from "@/components/footer"
 import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
 import type { Casino } from "@/lib/types"
 
+// Advanced React Ecosystem imports
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
+import { CasinoErrorBoundary } from '@/components/error-boundary'
+import { PerformanceMonitor } from '@/components/performance-monitor'
+import { StreamingCasinoGrid } from '@/components/streaming/casino-stream'
+import { CasinoFilterMobileFirst } from '@/components/casino-filter-mobile-first'
+import { QueryProvider } from '@/components/providers/query-provider'
+import { getCasinosServer } from '@/lib/server/casino-server'
+
+// Server Actions
+import { searchCasinos } from '@/app/actions/casino-actions'
+
+// Loading components
+function CasinoCardSkeleton() {
+  return (
+    <GlassCard className="overflow-hidden">
+      <div className="h-32 sm:h-40 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="w-20 h-16 sm:w-24 sm:h-20 bg-gray-700 rounded-lg animate-pulse" />
+      </div>
+      <div className="p-4 sm:p-6">
+        <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse" />
+        <div className="space-y-2 mb-4">
+          <div className="h-4 bg-gray-700 rounded w-3/4 animate-pulse" />
+          <div className="h-4 bg-gray-700 rounded w-1/2 animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-10 bg-gray-700 rounded w-full animate-pulse" />
+          <div className="h-10 bg-gray-700 rounded w-full animate-pulse" />
+        </div>
+      </div>
+    </GlassCard>
+  )
+}
+
+function FilterSkeleton() {
+  return (
+    <GlassCard className="p-4">
+      <div className="h-5 bg-gray-700 rounded mb-3 w-24 animate-pulse" />
+      <div className="flex flex-wrap gap-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-8 bg-gray-700 rounded px-4 w-20 animate-pulse" />
+        ))}
+      </div>
+    </GlassCard>
+  )
+}
+
 export const metadata = {
   title: "Best Online Casinos - GuruSingapore",
   description:
@@ -39,57 +87,36 @@ export const metadata = {
 // Revalidate every 5 minutes for testing - reduces delay for established_year updates
 export const revalidate = 300
 
-export default async function CasinosPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
-  const supabase = await createClient()
+// Enhanced casinos page with React Server Components
+export default async function CasinosPage({ searchParams }: { searchParams?: Promise<{ filter?: string; page?: string }> }) {
+  // Server-side data fetching with enhanced error handling
   const resolvedSearchParams = await searchParams
+  const filter = resolvedSearchParams?.filter || 'all'
+  const page = parseInt(resolvedSearchParams?.page || '1')
 
-  // Sanitize filter to known values
-  const allowedFilters = new Set(['all', 'high-rated', 'new', 'live'])
-  const rawFilter = typeof resolvedSearchParams?.filter === 'string' ? resolvedSearchParams?.filter : undefined
-  const filter = allowedFilters.has(rawFilter || '') ? (rawFilter as 'all' | 'high-rated' | 'new' | 'live') : 'all'
+  const casinoData = await getCasinosServer(filter, new URLSearchParams({
+    filter,
+    page: page.toString(),
+    limit: '20'
+  }))
 
-  let query = supabase.from("casinos").select("*")
-
-  // Apply filters based on query param
-  if (filter === 'high-rated') {
-    // Only include clearly high-rated casinos; null ratings are naturally excluded
-    query = query.gte('rating', 7)
-  } else if (filter === 'new') {
-    // Consider "new" as created within the last 3 months
-    const threeMonthsAgo = new Date()
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
-    query = query.gte('created_at', threeMonthsAgo.toISOString())
-  } else if (filter === 'live') {
-    // Heuristic: match common fields for "live" support without relying on schema changes
-    // Matches description, bonus_info, or name containing "live" (case-insensitive)
-    // Example: "live dealer", "live casino", etc.
-    query = query.or('description.ilike.%live%,bonus_info.ilike.%live%,name.ilike.%live%')
+  if (casinoData.error) {
+    console.error('Server error fetching casinos:', casinoData.error)
+    // Return error page
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Error Loading Casinos</h1>
+          <p className="text-gray-400">Please try again later.</p>
+        </div>
+      </div>
+    )
   }
 
-  // Ordering strategy: display_order first, then filter-specific ordering, then fallback
-  // Primary: display_order (lower number = higher position)
-  // Secondary: Filter-specific (rating for most, created_at for new)
-  // Tertiary: created_at for stable sorting
-  query = query.order('display_order', { ascending: true, nullsFirst: false })
+  const { casinos = [], total, currentPage, totalPages = 1 } = casinoData
 
-  if (filter === 'new') {
-    query = query.order('created_at', { ascending: false, nullsFirst: false })
-  } else {
-    query = query.order('rating', { ascending: false, nullsFirst: false })
-  }
-
-  // Final fallback for stable sorting
-  query = query.order('created_at', { ascending: false, nullsFirst: false })
-
-  const { data: casinos } = await query
-
-  // Debug: Log raw database response
-  console.log('[DEBUG] Raw casinos data from database:', casinos?.map(c => ({
-    id: c.id,
-    name: c.name,
-    established_year: c.established_year,
-    type: typeof c.established_year
-  })))
+  // Debug logging
+  console.log(`[SERVER] Loaded ${casinos.length} casinos for filter: ${filter}, page: ${currentPage}`)
 
 
 
@@ -278,281 +305,56 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Realtime refresh when casinos change */}
-      <RealtimeCasinosRefresher />
-      {/* JSON-LD Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <DynamicPageHero
-        pageName="casinos"
-        sectionType="hero"
-        fallbackTitle="Best Online Casinos for December 2024 - Expert Picks You Can Trust"
-        fallbackDescription="We&apos;ve reviewed more than 7,000 online casinos to bring you the TOP 10 for December. Each is rated using our unique Safety Index - developed by experts, grounded in real casino data, and shaped by insights from our active community. Find the best online casino for you."
-        breadcrumbs={[{ label: "Best online casinos" }]}
-        author={{ name: "GuruSingapore Team" }}
-        date="10 Dec 2024"
-      />
+    <QueryProvider>
+      <div className="min-h-screen bg-black">
+        {/* Realtime refresh when casinos change */}
+        <RealtimeCasinosRefresher />
 
-      <div className="container mx-auto px-4 py-16">
-        {/* Filter Section */}
-        <div className="mb-12">
-          <GlassCard className="p-6">
-            <div className="flex flex-col md:flex-row gap-4 items-center">
-              <div className="flex items-center gap-2 text-white">
-                <Filter className="w-5 h-5" />
-                <span className="font-semibold">Filter Casinos:</span>
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+
+        <DynamicPageHero
+          pageName="casinos"
+          sectionType="hero"
+          fallbackTitle="Best Online Casinos - GuruSingapore"
+          fallbackDescription="Discover the best online casinos with verified reviews, ratings, and exclusive bonuses."
+          breadcrumbs={[{ label: "Best online casinos" }]}
+          author={{ name: "GuruSingapore Team" }}
+          date="10 Dec 2024"
+        />
+
+        <div className="container mx-auto px-4 py-16">
+          {/* Performance Monitor - Development only */}
+          <PerformanceMonitor />
+
+          {/* Error Boundary untuk keseluruhan page */}
+          <CasinoErrorBoundary>
+            {/* Filter Section - Optimized with streaming */}
+            <Suspense fallback={<FilterSkeleton />}>
+              <CasinoFilterMobileFirst currentFilter={filter as 'all' | 'high-rated' | 'new' | 'live'} />
+            </Suspense>
+
+            {/* Streaming Casino Grid - Advanced React Server Components */}
+            <StreamingCasinoGrid
+              initialCasinos={casinos}
+              enableStreaming={true}
+              enableProgressiveLoading={true}
+            />
+
+            {/* Pagination Info */}
+            {totalPages > 1 && (
+              <div className="text-center py-8">
+                <p className="text-gray-400 text-sm">
+                  Page {currentPage} of {totalPages} • {total} total casinos
+                </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={filter === 'all' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
-                  asChild
-                >
-                  <Link href="/casinos">All Casinos</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={filter === 'high-rated' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
-                  asChild
-                >
-                  <Link href="/casinos?filter=high-rated">High Rated</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={filter === 'new' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
-                  asChild
-                >
-                  <Link href="/casinos?filter=new">New Casinos</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={filter === 'live' ? 'border-[#00ff88] text-[#00ff88] bg-transparent' : 'border-gray-600 text-gray-400 bg-transparent'}
-                  asChild
-                >
-                  <Link href="/casinos?filter=live">Live Casino</Link>
-                </Button>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
+            )}
 
-        {/* Casinos List - Horizontal Cards with Logo Section */}
-        <div className="space-y-6">
-          {casinos?.map((casino: Casino) => {
-            const ratingBadge = getRatingBadge(casino.rating || 0)
-            const slug = createSlug(casino.name)
-
-            return (
-              <GlassCard
-                key={casino.id}
-                className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-white/10 hover:border-[#00ff88]/30 group"
-              >
-                <div className="flex flex-col lg:flex-row min-h-[200px]">
-                  {/* Left Side - Logo Section (Dynamic Background) */}
-                  <div className="lg:w-1/4 flex items-center justify-center p-8 relative overflow-hidden" style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}>
-
-                    {/* Logo Container */}
-                    <div className="relative z-10 w-full max-w-[120px] h-[80px] flex items-center justify-center">
-                      {casino.logo_url ? (
-                        <Image
-                          src={casino.logo_url || "/placeholder.svg"}
-                          alt={`${casino.name} logo`}
-                          width={120}
-                          height={80}
-                          className="max-w-full max-h-full object-contain filter brightness-110"
-                        />
-                      ) : (
-                        <div 
-                          className="text-center p-4 rounded-lg"
-                          style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}
-                        >
-                          <div className="text-white font-bold text-2xl mb-1">
-                            {casino.name
-                              .split(" ")
-                              .map((word) => word.charAt(0))
-                              .join("")
-                              .slice(0, 3)}
-                          </div>
-                          <div className="text-[#00ff88] text-xs font-medium tracking-wider">CASINO</div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Ranking Badge */}
-                    <div className="absolute top-4 left-4 bg-[#00ff88] text-black text-xs font-bold px-2 py-1 rounded">
-                      #{casinos?.indexOf(casino) + 1 || 1}
-                    </div>
-                  </div>
-
-                  {/* Right Side - Casino Information */}
-                  <div className="lg:w-3/4 p-6 flex flex-col justify-between">
-                    <div className="flex flex-col lg:flex-row gap-6">
-                      {/* Casino Details */}
-                      <div className="lg:w-2/3 space-y-4">
-                        {/* Header */}
-                        <div>
-                          <h3 className="text-2xl font-bold text-white mb-2">{casino.name}</h3>
-
-                          {/* Rating */}
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="flex items-center">
-                              <Shield className={`w-5 h-5 mr-2 ${getRatingColor(casino.rating || 0)}`} />
-                              <span className="text-white font-semibold">SAFETY INDEX:</span>
-                              <span className={`font-bold ml-2 text-lg ${getRatingColor(casino.rating || 0)}`}>
-                                {casino.rating || "N/A"}
-                              </span>
-                            </div>
-                            <span
-                              className={`px-3 py-1 rounded-full text-sm font-semibold border ${ratingBadge.color}`}
-                            >
-                              {ratingBadge.text.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Features & Payment Methods - Split Layout for Desktop */}
-                        <div className="space-y-4">
-                          {/* License info - conditional */}
-                          {casino.license && (
-                            <div className="flex items-center text-green-400 text-sm">
-                              <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                              <span>Licensed & Regulated Casino</span>
-                            </div>
-                          )}
-
-                          {/* Desktop Split Layout: Features (Left) | Payment Methods (Right) */}
-                          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
-                            {/* Left Column - Features */}
-                            <div className="space-y-2">
-                              <h4 className="text-white font-semibold text-sm mb-2">Features</h4>
-                              {getDynamicFeatures(casino)
-                                .filter(feature => feature.type === 'feature' || feature.type === 'license' || feature.type === 'credibility')
-                                .map((feature, index) => (
-                                  <div key={`feature-${index}`} className={`flex items-center ${feature.color} text-sm`}>
-                                    <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
-                                    <span>{feature.text}</span>
-                                  </div>
-                                ))}
-                            </div>
-
-                            {/* Right Column - Payment Methods */}
-                            <div className="space-y-2">
-                              <h4 className="text-white font-semibold text-sm mb-2">Payment Methods</h4>
-                              {getDynamicFeatures(casino)
-                                .filter(feature => feature.type === 'payment')
-                                .map((feature, index) => (
-                                  <div key={`payment-${index}`} className={`flex items-center ${feature.color} text-sm`}>
-                                    <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
-                                    <span>{feature.text}</span>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-
-                          {/* Mobile Layout - Single Column */}
-                          <div className="lg:hidden space-y-2">
-                            {getDynamicFeatures(casino)
-                              .filter(feature => feature.type !== 'location') // Exclude location on mobile for space
-                              .map((feature, index) => (
-                                <div key={`mobile-${index}`} className={`flex items-center ${feature.color} text-sm`}>
-                                  <div className={`w-2 h-2 ${feature.bgColor} rounded-full mr-3`}></div>
-                                  <span>{feature.text}</span>
-                                </div>
-                              ))}
-                          </div>
-
-                          {/* Location info - always show below split layout */}
-                          {casino.location && (
-                            <div className="flex items-center text-gray-400 text-sm">
-                              <MapPin className="w-4 h-4 mr-2" />
-                              <span>International casino - {casino.location}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Description */}
-                        {casino.description && (
-                          <p className="text-gray-400 text-sm leading-relaxed">{casino.description}</p>
-                        )}
-                      </div>
-
-                      {/* Actions Section */}
-                      <div className="lg:w-1/3 space-y-4">
-                        {/* Bonus Info */}
-                        {casino.bonus_info && (
-                          <div className="p-4 bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-lg">
-                            <div className="text-center">
-                              <div className="text-[#00ff88] font-bold text-lg mb-1 flex items-center justify-center gap-2">
-                                <Gift className="w-5 h-5" />
-                                BONUS: {casino.bonus_info}
-                              </div>
-                              <div className="text-xs text-gray-400">*T&Cs apply</div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="space-y-3">
-                          {casino.website_url && (
-                            <Button
-                              className="w-full bg-[#00ff88] text-black hover:bg-[#00ff88]/80 font-bold py-3 text-lg"
-                              asChild
-                            >
-                              <Link href={casino.website_url} target="_blank" rel="noopener noreferrer">
-                                <Play className="w-5 h-5 mr-2" />
-                                Visit Casino
-                              </Link>
-                            </Button>
-                          )}
-
-                          <Button
-                            variant="outline"
-                            className="w-full border-purple-500 text-purple-400 bg-transparent hover:bg-purple-500/10"
-                            asChild
-                          >
-                            <Link href={`/casinos/${casino.id}`}>
-                              <RotateCcw className="w-4 h-4 mr-2" />
-                              Read Review
-                            </Link>
-                          </Button>
-                        </div>
-
-                        {/* Language Info - Using existing icon-based display */}
-                        <div className="text-xs text-gray-500 space-y-1">
-                          {casino.website_languages && casino.website_languages > 0 && (
-                            <div className="flex items-center gap-2">
-                              <Globe className="w-3 h-3" />
-                              Website: {casino.website_languages} languages
-                            </div>
-                          )}
-                          {casino.live_chat_languages && casino.live_chat_languages > 0 && (
-                            <div className="flex items-center gap-2">
-                              <MessageCircle className="w-3 h-3" />
-                              Live chat: {casino.live_chat_languages} languages
-                            </div>
-                          )}
-                          {casino.customer_support_languages && casino.customer_support_languages > 0 && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-3 h-3" />
-                              Customer support: {casino.customer_support_languages} languages
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </GlassCard>
-            )
-          })}
-        </div>
+          {/* Error Boundary Close */}
+        </CasinoErrorBoundary>
 
         {!casinos?.length && (
           <div className="text-center py-16">
@@ -562,185 +364,150 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
           </div>
         )}
 
-        {/* How GuruSingapore Helps Section */}
+        {/* How GuruSingapore Helps Section - Optimized for mobile */}
         <div className="mt-20 mb-16">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-4">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white text-center mb-4 leading-tight">
               How GuruSingapore can help you make the right choice
             </h2>
-            <div className="w-24 h-1 bg-[#00ff88] mx-auto mb-16"></div>
+            <div className="w-16 sm:w-24 h-1 bg-[#00ff88] mx-auto mb-12 sm:mb-16"></div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {/* Feature 1 */}
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto">
-                  <Database className="w-10 h-10 text-[#00ff88]" />
+              <div className="text-center space-y-4 group">
+                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto transition-transform duration-300 group-hover:scale-110">
+                  <Database className="w-8 sm:w-10 h-8 sm:h-10 text-[#00ff88]" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Up-to-date data on all real money online casinos</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">Up-to-date data on all real money online casinos</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
                   We review over 7,000 real money casino sites, ensuring one of the widest and most up to date
-                  selections on the market. Our focus on fairness and safety helps you confidently choose the best
-                  platforms to play on.
+                  selections on the market.
                 </p>
               </div>
 
               {/* Feature 2 */}
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto">
-                  <Users className="w-10 h-10 text-[#00ff88]" />
+              <div className="text-center space-y-4 group">
+                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto transition-transform duration-300 group-hover:scale-110">
+                  <Users className="w-8 sm:w-10 h-8 sm:h-10 text-[#00ff88]" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Independent casino review team</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  A dedicated team of nearly 20 reviewers applies a consistent, data-driven methodology, resulting in
-                  in-depth casino evaluations that prioritize player protection.
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">Independent casino review team</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                  A dedicated team of nearly 20 reviewers applies a consistent, data-driven methodology.
                 </p>
               </div>
 
               {/* Feature 3 */}
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto">
-                  <TrendingUp className="w-10 h-10 text-[#00ff88]" />
+              <div className="text-center space-y-4 group">
+                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto transition-transform duration-300 group-hover:scale-110">
+                  <TrendingUp className="w-8 sm:w-10 h-8 sm:h-10 text-[#00ff88]" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Methodical and objective reviews</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  Each casino is scored using a Safety Index based on over 20 factors, such as T&C fairness, casino
-                  size, and complaint resolution. This data-driven approach guarantees unbiased and uniform results.
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">Methodical and objective reviews</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                  Each casino is scored using a Safety Index based on over 20 factors.
                 </p>
               </div>
 
               {/* Feature 4 */}
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto">
-                  <UserCheck className="w-10 h-10 text-[#00ff88]" />
+              <div className="text-center space-y-4 group">
+                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto transition-transform duration-300 group-hover:scale-110">
+                  <UserCheck className="w-8 sm:w-10 h-8 sm:h-10 text-[#00ff88]" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Casino testers all around the world</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  Our global reach is reflected in our testing team, which includes local experts from the most popular
-                  gambling regions. Their insights ensure tailored information for players from all over the world.
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">Casino testers all around the world</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                  Our global reach includes local experts from the most popular gambling regions.
                 </p>
               </div>
 
               {/* Feature 5 */}
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto">
-                  <Scale className="w-10 h-10 text-[#00ff88]" />
+              <div className="text-center space-y-4 group">
+                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto transition-transform duration-300 group-hover:scale-110">
+                  <Scale className="w-8 sm:w-10 h-8 sm:h-10 text-[#00ff88]" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Ensuring fairness and player safety</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  We evaluate casinos on fairness and safety, actively pushing operators to remove unfair terms, resolve
-                  disputes appropriately, and uphold transparent practices. We resolved over 14K complaints in favor of
-                  the player.
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">Ensuring fairness and player safety</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                  We resolved over 14K complaints in favor of the player.
                 </p>
               </div>
 
               {/* Feature 6 */}
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto">
-                  <Globe className="w-10 h-10 text-[#00ff88]" />
+              <div className="text-center space-y-4 group">
+                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto transition-transform duration-300 group-hover:scale-110">
+                  <Globe className="w-8 sm:w-10 h-8 sm:h-10 text-[#00ff88]" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Enhanced by millions of casino players</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  GuruSingapore is powered by a thriving community, including 600,000+ registered forum users and
-                  millions of site visitors worldwide. Their shared experiences and feedback help us keep our content
-                  accurate, practical, and player focused.
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">Enhanced by millions of casino players</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                  600,000+ registered forum users and millions of site visitors worldwide.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Our Method Section */}
+        {/* Our Method Section - Optimized */}
         <div className="mt-20 mb-16">
-          <div className="max-w-4xl mx-auto">
-            <GlassCard className="p-8 md:p-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <div className="max-w-4xl mx-auto px-4">
+            <GlassCard className="p-6 sm:p-8 lg:p-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 text-center leading-tight">
                 Our method, your safety: how we rate casinos
               </h2>
 
-              <p className="text-gray-300 text-lg leading-relaxed mb-8">
-                The team at GuruSingapore methodically reviews each casino site listed on our website, focusing on
-                fairness and safety. This is achieved through a ranking system we call the Safety Index. The higher the
-                Safety Index, the more likely you are to enjoy your real money online casino games and cash out your
-                winnings without issues.
+              <p className="text-gray-300 text-base sm:text-lg leading-relaxed mb-8 text-center">
+                The team at GuruSingapore methodically reviews each casino site, focusing on fairness and safety through our Safety Index.
               </p>
 
-              <p className="text-gray-300 mb-12">
-                You can see the Safety Index next to each casino listed above is based on several factors, such as:
-              </p>
-
-              <div className="space-y-10">
+              <div className="space-y-8 sm:space-y-10">
                 {/* Fairness of terms and conditions */}
-                <div className="border-l-4 border-[#00ff88] pl-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <FileText className="w-6 h-6 text-[#00ff88]" />
-                    <h3 className="text-2xl font-bold text-white">Fairness of terms and conditions</h3>
+                <div className="border-l-4 border-[#00ff88] pl-4 sm:pl-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <FileText className="w-5 sm:w-6 h-5 sm:h-6 text-[#00ff88] flex-shrink-0 mt-1" />
+                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight">Fairness of terms and conditions</h3>
                   </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    GuruSingapore reviews each casino&apos;s Terms and Conditions (T&Cs) to identify clauses that may be
-                    unfair, misleading, or potentially harmful to players. Such clauses can adversely affect a casino&apos;s
-                    Safety Index. Over 600 casinos have amended their T&Cs based on GuruSingapore&apos;s recommendations.
+                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                    Over 600 casinos have amended their T&Cs based on our recommendations.
                   </p>
                 </div>
 
                 {/* Casino size */}
-                <div className="border-l-4 border-[#00ff88] pl-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Building className="w-6 h-6 text-[#00ff88]" />
-                    <h3 className="text-2xl font-bold text-white">Casino size</h3>
+                <div className="border-l-4 border-[#00ff88] pl-4 sm:pl-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <Building className="w-5 sm:w-6 h-5 sm:h-6 text-[#00ff88] flex-shrink-0 mt-1" />
+                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight">Casino size</h3>
                   </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    The size of a casino, often indicative of its financial stability and ability to pay out substantial
-                    winnings, is a critical factor in the Safety Index. Larger casinos are generally deemed safer due to
-                    their resources and established reputation, whereas smaller casinos may face challenges in
-                    fulfilling large payouts.
+                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                    Larger casinos are generally safer due to their resources and reputation.
                   </p>
                 </div>
 
                 {/* Player complaints */}
-                <div className="border-l-4 border-[#00ff88] pl-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <MessageSquare className="w-6 h-6 text-[#00ff88]" />
-                    <h3 className="text-2xl font-bold text-white">Player complaints</h3>
+                <div className="border-l-4 border-[#00ff88] pl-4 sm:pl-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <MessageSquare className="w-5 sm:w-6 h-5 sm:h-6 text-[#00ff88] flex-shrink-0 mt-1" />
+                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight">Player complaints</h3>
                   </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    GuruSingapore&apos;s{" "}
-                    <Link href="/reports" className="text-[#00ff88] hover:underline">
-                      Complaint Resolution Center
-                    </Link>{" "}
-                    has handled over 53,000 complaints, providing valuable insights into how casinos treat their
-                    players. Each complaint is assessed for validity, and justified complaints that remain unresolved
-                    negatively impact the casino&apos;s Safety Index. This thorough evaluation ensures that the Safety Index
-                    accurately reflects a casino&apos;s commitment to fair play.
+                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                    Our Complaint Resolution Center has handled over 53,000 complaints.
                   </p>
                 </div>
 
                 {/* Casino blacklists */}
-                <div className="border-l-4 border-red-500 pl-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <AlertTriangle className="w-6 h-6 text-red-500" />
-                    <h3 className="text-2xl font-bold text-white">Casino blacklists</h3>
+                <div className="border-l-4 border-red-500 pl-4 sm:pl-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <AlertTriangle className="w-5 sm:w-6 h-5 sm:h-6 text-red-500 flex-shrink-0 mt-1" />
+                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight">Casino blacklists</h3>
                   </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    Inclusion of reputable blacklists, including{" "}
-                    <Link href="/reports" className="text-[#00ff88] hover:underline">
-                      GuruSingapore&apos;s own blacklist
-                    </Link>
-                    , signals potential issues with a casino&apos;s operations. Such listings are factored into the Safety
-                    Index, with blacklisted casinos receiving lower scores. This approach helps players avoid platforms
-                    with a history of unethical practices.
+                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                    Blacklisted casinos receive lower Safety Index scores.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-12 p-6 bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-lg">
+              <div className="mt-12 p-4 sm:p-6 bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-lg">
                 <div className="flex items-start gap-4">
-                  <Shield className="w-8 h-8 text-[#00ff88] flex-shrink-0 mt-1" />
+                  <Shield className="w-6 sm:w-8 h-6 sm:h-8 text-[#00ff88] flex-shrink-0 mt-1" />
                   <div>
-                    <h4 className="text-[#00ff88] font-bold text-lg mb-2">Our Commitment to Player Safety</h4>
-                    <p className="text-gray-300 leading-relaxed">
-                      Every casino listed on GuruSingapore undergoes rigorous evaluation using our comprehensive Safety
-                      Index. We continuously monitor and update our assessments to ensure you have access to the most
-                      current and reliable information when choosing where to play.
+                    <h4 className="text-[#00ff88] font-bold text-base sm:text-lg mb-2">Our Commitment to Player Safety</h4>
+                    <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                      Every casino undergoes rigorous evaluation using our Safety Index.
                     </p>
                   </div>
                 </div>
@@ -749,32 +516,26 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
           </div>
         </div>
 
-        {/* Safety Notice */}
-        <div className="mt-16">
-          <GlassCard className="p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-white mb-6 text-center">How We Rate Casinos</h3>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
+        {/* Safety Notice - Optimized */}
+        <div className="mt-16 mb-8">
+          <GlassCard className="p-6 sm:p-8 max-w-4xl mx-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center">How We Rate Casinos</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="text-center">
                 <Shield className="w-8 h-8 text-[#00ff88] mx-auto mb-3" />
-                <h4 className="text-[#00ff88] font-semibold mb-2">Security & Licensing</h4>
-                <p className="text-gray-400">We verify licenses, encryption, and regulatory compliance.</p>
+                <h4 className="text-[#00ff88] font-semibold mb-2 text-sm sm:text-base">Security & Licensing</h4>
+                <p className="text-gray-400 text-sm">We verify licenses and regulatory compliance.</p>
               </div>
               <div className="text-center">
                 <Users className="w-8 h-8 text-[#00ff88] mx-auto mb-3" />
-                <h4 className="text-[#00ff88] font-semibold mb-2">Player Experience</h4>
-                <p className="text-gray-400">Real player reviews and community feedback matter.</p>
+                <h4 className="text-[#00ff88] font-semibold mb-2 text-sm sm:text-base">Player Experience</h4>
+                <p className="text-gray-400 text-sm">Real player reviews matter.</p>
               </div>
               <div className="text-center">
                 <Star className="w-8 h-8 text-[#00ff88] mx-auto mb-3" />
-                <h4 className="text-[#00ff88] font-semibold mb-2">Game Quality</h4>
-                <p className="text-gray-400">We evaluate game variety, software providers, and fairness.</p>
+                <h4 className="text-[#00ff88] font-semibold mb-2 text-sm sm:text-base">Game Quality</h4>
+                <p className="text-gray-400 text-sm">We evaluate game variety and fairness.</p>
               </div>
-            </div>
-            <div className="mt-6 p-4 bg-[#00ff88]/10 border border-[#00ff88]/20 rounded-lg">
-              <p className="text-gray-300 text-center">
-                <strong className="text-[#00ff88]">Responsible Gaming:</strong> All featured casinos promote responsible
-                gambling and provide tools to help players stay in control.
-              </p>
             </div>
           </GlassCard>
         </div>
@@ -782,5 +543,6 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
 
       <Footer />
     </div>
+    </QueryProvider>
   )
 }

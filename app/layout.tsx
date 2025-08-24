@@ -8,20 +8,34 @@ import { Navbar } from "@/components/navbar"
 import { CookieConsent } from "@/components/cookie-consent"
 import { WebVitals } from "@/components/web-vitals"
 import { Toaster } from "@/components/ui/toast"
+import { AnalyticsProvider } from "@/components/analytics-provider"
+import { QueryProvider } from "@/components/providers/query-provider"
+import { PerformanceMonitor } from "@/components/performance-monitor"
+import { PWAInstaller } from "@/components/pwa-installer"
 import { headers } from "next/headers"
 import type { Viewport } from "next"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "GuruSingapore - Ultimate Casino Guide",
+  title: "GuruSingapore - Best Online Casinos",
   description:
-    "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming.",
-  keywords: "casino, online casino, bonuses, reviews, gambling, Singapore",
+    "Discover the best online casinos with verified reviews, ratings, and exclusive bonuses. Mobile-first design with offline support.",
+  keywords: "casino, online casino, bonuses, reviews, gambling, Singapore, mobile, PWA, offline",
   authors: [{ name: "GuruSingapore" }],
   creator: "GuruSingapore",
   publisher: "GuruSingapore",
+  manifest: "/manifest.json",
   robots: "index, follow",
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'apple-mobile-web-app-title': 'GuruSingapore',
+    'msapplication-TileColor': '#00ff88',
+    'msapplication-config': '/browserconfig.xml',
+    'theme-color': '#00ff88',
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -57,15 +71,21 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <div className="min-h-screen bg-black text-white">
-              {!isAdminSubdomain && <Navbar />}
-              <main>{children}</main>
-              {!isAdminSubdomain && <CookieConsent />}
-              <WebVitals />
-            </div>
-            <Toaster />
-          </AuthProvider>
+          <QueryProvider>
+            <AnalyticsProvider>
+              <AuthProvider>
+                <div className="min-h-screen bg-black text-white">
+                  {!isAdminSubdomain && <Navbar />}
+                  <main>{children}</main>
+                  {!isAdminSubdomain && <CookieConsent />}
+                  {!isAdminSubdomain && <PWAInstaller />}
+                  <WebVitals />
+                  <PerformanceMonitor enableRealTime={false} />
+                </div>
+                <Toaster />
+              </AuthProvider>
+            </AnalyticsProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

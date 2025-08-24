@@ -1,179 +1,138 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { adminSecurityMiddleware, createCORSPreflightResponse, getSecurityHeaders } from './lib/security/admin-security-middleware';
-import { validatePinVerification } from './lib/auth/admin-middleware';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-/**
- * Check if request is from admin subdomain
- * @param request - NextRequest object
- * @returns boolean
- */
-function isAdminDomain(request: NextRequest): boolean {
-  const host = request.headers.get('host') || '';
-  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'admin.localhost:3000';
-  const adminHost = adminUrl.replace(/^https?:\/\//, '');
-  
-  // Direct match with configured admin host
-  if (host === adminHost) {
-    return true;
-  }
-  
-  // Support standard admin.* pattern
-  if (host.startsWith('admin.')) {
-    return true;
-  }
-  
-  // Support custom admin subdomain patterns (e.g., sg44admin.gurusingapore.com)
-  // Check if host contains 'admin' and matches known admin domain patterns
-  if (host.includes('admin') && (
-    host.includes('gurusingapore.com') || 
-    host.includes('localhost') ||
-    host.includes('vercel.app')
-  )) {
-    return true;
-  }
-  
-  return false;
+// Rate limiting store (in production, use Redis or similar)
+const rateLimit = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT = 100 // requests per minute
+const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
+
+// Security headers
+const securityHeaders = {
+  'Content-Security-Policy': `
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com;
+    style-src 'self' 'unsafe-inline' fonts.googleapis.com;
+    font-src 'self' fonts.gstatic.com;
+    img-src 'self' data: https: *.supabase.co *.googleusercontent.com;
+    connect-src 'self' *.supabase.co *.google-analytics.com;
+    frame-src 'self' *.youtube.com *.vimeo.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  `.replace(/\s+/g, ' ').trim(),
+
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
 }
 
-/**
- * Validate admin subdomain access for admin routes
- * @param request - NextRequest object
- * @returns boolean
- */
-function validateAdminSubdomainAccess(request: NextRequest): boolean {
-  const { pathname } = request.nextUrl;
-  
-  // Admin routes should only be accessible from admin subdomain
-  if (pathname.startsWith('/api/admin/') || pathname.startsWith('/admin')) {
-    return isAdminDomain(request);
-  }
-  
-  return true;
-}
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const ip = request.headers.get('x-forwarded-for') ||
+             request.headers.get('x-real-ip') ||
+             'unknown'
 
-/**
- * Global middleware for handling security and CORS
- * @param request - NextRequest object
- * @returns NextResponse
- */
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const isFromAdminDomain = isAdminDomain(request);
-  
-  // Validate admin subdomain access
-  if (!validateAdminSubdomainAccess(request)) {
-    // Redirect to a friendly 404 page instead of exposing details
-    const url = request.nextUrl.clone();
-    url.pathname = '/404';
-    url.search = '';
-    return NextResponse.redirect(url, { status: 307 });
-  }
-  
-  // Validate PIN for admin page routes (not API routes)
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/api/admin/')) {
-    // Dashboard root '/admin' tidak memerlukan PIN; section lain memerlukan
-    const isDashboard = pathname === '/admin' || pathname === '/admin/'
-    if (!isDashboard) {
-      const isPinVerified = await validatePinVerification(request)
-      if (!isPinVerified) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/admin'
-        url.searchParams.set('showPin', 'true')
-        url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
-        return NextResponse.redirect(url)
-      }
+  // Rate limiting for API routes
+  if (pathname.startsWith('/api/')) {
+    const now = Date.now()
+    const userKey = `${ip}-${pathname}`
+
+    const userLimit = rateLimit.get(userKey) || {
+      count: 0,
+      resetTime: now + RATE_LIMIT_WINDOW
     }
-  }
-  
-  // Handle CORS preflight requests for admin API
-  if (request.method === 'OPTIONS' && pathname.startsWith('/api/admin/')) {
-    return createCORSPreflightResponse(request);
-  }
-  
-  // Apply security middleware to admin API endpoints
-  if (pathname.startsWith('/api/admin/')) {
-    // Skip PIN validation for PIN-related endpoints that need to be accessible without verification
-    const skipPinValidation = 
-      pathname.startsWith('/api/admin/pin-verify') ||
-      pathname.startsWith('/api/admin/pin-status') ||
-      pathname.startsWith('/api/admin/set-pin') ||
-      pathname.startsWith('/api/admin/csrf-token');
-    
-    if (!skipPinValidation) {
-      // Validate PIN verification first
-      const isPinVerified = await validatePinVerification(request);
-      
-      if (!isPinVerified) {
-        return new NextResponse(
-          JSON.stringify({ error: 'PIN verification required', code: 'PIN_REQUIRED' }),
-          { 
-            status: 403,
-            headers: {
-              'Content-Type': 'application/json',
-              ...getSecurityHeaders(isFromAdminDomain)
-            }
-          }
-        );
-      }
+
+    // Reset counter if window has passed
+    if (now > userLimit.resetTime) {
+      userLimit.count = 0
+      userLimit.resetTime = now + RATE_LIMIT_WINDOW
     }
-    
-    const securityResult = await adminSecurityMiddleware(request);
-    
-    if (!securityResult.allowed) {
-      // Security check failed, return the error response
-      return securityResult.response || new NextResponse(
-        JSON.stringify({ error: 'Security check failed' }),
-        { 
-          status: 403,
+
+    // Check rate limit
+    if (userLimit.count >= RATE_LIMIT) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
+        },
+        {
+          status: 429,
           headers: {
-            'Content-Type': 'application/json',
-            ...getSecurityHeaders(isFromAdminDomain)
+            'Retry-After': Math.ceil((userLimit.resetTime - now) / 1000).toString(),
+            'X-RateLimit-Limit': RATE_LIMIT.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(userLimit.resetTime).toISOString()
           }
         }
-      );
+      )
     }
-    
-    // Security check passed, create response with security headers
-    const response = NextResponse.next();
-    
-    // Add comprehensive security headers
-    const securityHeaders = getSecurityHeaders(isFromAdminDomain);
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-    
-    // Add additional headers from security result
-    if (securityResult.headers) {
-      Object.entries(securityResult.headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
+
+    userLimit.count++
+    rateLimit.set(userKey, userLimit)
+
+    // Clean up old entries every 100 requests
+    if (Math.random() < 0.01) {
+      for (const [key, value] of rateLimit.entries()) {
+        if (now > value.resetTime) {
+          rateLimit.delete(key)
+        }
+      }
     }
-    
-    return response;
   }
-  
-  // For all other routes, apply basic security headers
-  const response = NextResponse.next();
-  const basicSecurityHeaders = getSecurityHeaders(isFromAdminDomain);
-  
-  Object.entries(basicSecurityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-  
-  return response;
+
+  // Admin route protection
+  if (pathname.startsWith('/admin') && !pathname.includes('/login')) {
+    const adminToken = request.cookies.get('admin_session')
+
+    if (!adminToken) {
+      return NextResponse.redirect(new URL('/auth/admin-pin', request.url))
+    }
+  }
+
+  // PWA route handling
+  if (pathname === '/sw.js') {
+    return NextResponse.next()
+  }
+
+  // Add security headers to all responses
+  const response = NextResponse.next()
+
+  // Apply security headers
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+
+  // Add additional headers
+  response.headers.set('X-Request-ID', crypto.randomUUID())
+
+  // PWA headers for manifest and service worker
+  if (pathname === '/manifest.json') {
+    response.headers.set('Content-Type', 'application/manifest+json')
+  }
+
+  // CORS headers for API routes
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_SITE_DOMAIN || '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.headers.set('Access-Control-Max-Age', '86400')
+  }
+
+  return response
 }
 
-/**
- * Middleware configuration
- */
 export const config = {
   matcher: [
-    // Match all routes except static files and internal Next.js routes
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)',
-    // Specifically include admin routes
-    '/admin/:path*',
-    '/api/admin/:path*',
-    // Include API routes for security headers
-    '/api/:path*'
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (public folder)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
-};
+}
