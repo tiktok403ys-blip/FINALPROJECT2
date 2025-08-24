@@ -31,16 +31,16 @@ export function PWAInstaller() {
 
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
+      // Don't prevent default - let browser show its prompt if our custom one fails
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
-      // Show install prompt after 3 seconds if user hasn't dismissed it before
+      // Show install prompt after 5 seconds if user hasn't dismissed it before
       setTimeout(() => {
         const dismissed = localStorage.getItem('pwa-install-dismissed');
         if (!dismissed && !isInstalled) {
           setIsVisible(true);
         }
-      }, 3000);
+      }, 5000);
     };
 
     // Listen for appinstalled event

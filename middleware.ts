@@ -10,15 +10,16 @@ const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
 const securityHeaders = {
   'Content-Security-Policy': `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com *.gstatic.com;
     style-src 'self' 'unsafe-inline' fonts.googleapis.com;
     font-src 'self' fonts.gstatic.com;
-    img-src 'self' data: https: *.supabase.co *.googleusercontent.com;
-    connect-src 'self' *.supabase.co *.google-analytics.com;
+    img-src 'self' data: https: *.supabase.co *.googleusercontent.com *.google-analytics.com *.gstatic.com;
+    connect-src 'self' *.supabase.co *.google-analytics.com wss://*.supabase.co https://*.google-analytics.com;
     frame-src 'self' *.youtube.com *.vimeo.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
+    upgrade-insecure-requests;
   `.replace(/\s+/g, ' ').trim(),
 
   'X-Frame-Options': 'DENY',

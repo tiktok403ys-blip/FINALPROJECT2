@@ -12,6 +12,7 @@ import { AnalyticsProvider } from "@/components/analytics-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
 import { PerformanceMonitor } from "@/components/performance-monitor"
 import { PWAInstaller } from "@/components/pwa-installer"
+import { GoogleAnalytics } from "@/components/google-analytics"
 import { headers } from "next/headers"
 import type { Viewport } from "next"
 
@@ -70,6 +71,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <GoogleAnalytics />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <QueryProvider>
             <AnalyticsProvider>
