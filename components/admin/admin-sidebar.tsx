@@ -1,4 +1,4 @@
-'use client'
+  'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
@@ -156,6 +156,7 @@ export function AdminSidebar() {
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="fixed top-4 left-4 z-50 p-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg text-white md:hidden"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

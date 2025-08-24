@@ -80,7 +80,7 @@ export function CookieConsent() {
   return (
     <>
       {/* Cookie Banner */}
-      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto lg:max-w-lg lg:left-auto lg:right-4 lg:mx-0">
+      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto lg:max-w-lg lg:left-auto lg:right-4 lg:mx-0" style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
         <Card className="bg-black/90 backdrop-blur-xl border border-white/20 shadow-2xl">
           <CardContent className="p-6">
             <div className="flex items-start gap-3 mb-4">

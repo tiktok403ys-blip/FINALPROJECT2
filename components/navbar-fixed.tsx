@@ -338,6 +338,7 @@ export function NavbarFixed() {
         className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
         }`}
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
         <div className="bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl px-6 py-3">
           <div className="flex items-center justify-between gap-8">

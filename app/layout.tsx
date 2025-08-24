@@ -9,6 +9,7 @@ import { CookieConsent } from "@/components/cookie-consent"
 import { WebVitals } from "@/components/web-vitals"
 import { Toaster } from "@/components/ui/toast"
 import { headers } from "next/headers"
+import type { Viewport } from "next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -37,6 +38,12 @@ export const metadata: Metadata = {
       "Discover the best online casinos, exclusive bonuses, and expert reviews. Your trusted guide to the world of online gaming.",
   },
     generator: 'v0.dev'
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 }
 
 export default async function RootLayout({
