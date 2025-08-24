@@ -15,7 +15,14 @@ export default function AdminPinPage() {
   }, [loading, user])
 
   const onSuccess = () => {
-    window.location.href = `https://${process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN}`
+    // Fallback to main domain if admin subdomain not configured
+    const adminSubdomain = process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN
+    if (adminSubdomain && adminSubdomain !== 'undefined') {
+      window.location.href = `https://${adminSubdomain}`
+    } else {
+      // Redirect to admin path on main domain as fallback
+      window.location.href = '/admin'
+    }
   }
 
   return (

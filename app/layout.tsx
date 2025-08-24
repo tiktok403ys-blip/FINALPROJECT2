@@ -80,7 +80,8 @@ export default async function RootLayout({
                   {!isAdminSubdomain && <Navbar />}
                   <main>{children}</main>
                   {!isAdminSubdomain && <CookieConsent />}
-                  {!isAdminSubdomain && <PWAInstaller />}
+                  {/* PWA Installer disabled - uncomment if needed */}
+                  {/* {!isAdminSubdomain && <PWAInstaller />} */}
                   <WebVitals />
                   <PerformanceMonitor enableRealTime={false} />
                 </div>
