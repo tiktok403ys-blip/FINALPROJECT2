@@ -118,7 +118,7 @@ export function AdminSidebar() {
 
   const handleSignOut = async () => {
     try {
-      // Sign out from Supabase
+      // Sign out from account
       await adminAuth.signOut()
       
       // Clear admin PIN verification cookie

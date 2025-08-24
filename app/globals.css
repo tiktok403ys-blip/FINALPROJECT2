@@ -392,7 +392,7 @@ select:focus-visible {
   }
 }
 
-/* Border-Line Navbar Dropdown Integration */
+/* Clean Navbar Dropdown Styling */
 .dropdown-container {
   position: relative;
   overflow: visible;
@@ -401,16 +401,15 @@ select:focus-visible {
 .dropdown-container button {
   position: relative;
   z-index: 10;
-  border-bottom: 2px solid transparent;
-  transition: border-color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .dropdown-container button:hover {
-  border-bottom-color: rgba(0, 255, 136, 0.5);
+  color: rgba(0, 255, 136, 0.8);
 }
 
 .dropdown-container:has(.absolute) button {
-  border-bottom-color: #00ff88;
+  color: #00ff88;
 }
 
 .dropdown-container .absolute {
