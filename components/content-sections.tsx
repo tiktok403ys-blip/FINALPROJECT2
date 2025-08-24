@@ -202,17 +202,17 @@ export function HowItWorks() {
             <div className="text-center lg:text-right">
               {/* Main Number - Mobile Medium, Desktop Huge */}
               <div className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl xl:text-9xl font-bold bg-gradient-to-br from-[#00ff88] to-[#06b6d4] bg-clip-text text-transparent mb-1 sm:mb-1.5 md:mb-2 lg:mb-3">
-                722
+                {/* Later */}
               </div>
               
               {/* Label - Mobile Small, Desktop Large */}
               <div className="text-sm sm:text-base md:text-xl lg:text-2xl xl:text-3xl font-medium sm:font-semibold md:font-bold text-[#00ff88] mb-1 sm:mb-1.5 md:mb-2 lg:mb-3">
-                casinos
+                {/* Later */}
               </div>
               
               {/* Description - Mobile Tiny, Desktop Normal */}
               <p className="text-gray-300 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg leading-tight sm:leading-normal">
-                changed their T&amp;Cs because of our efforts
+                {/* Later */}
               </p>
             </div>
           </div>
