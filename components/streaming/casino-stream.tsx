@@ -261,7 +261,7 @@ export function StreamingCasinoWithErrorBoundary({
     return () => {
       trackStreamEnd(context, !hasError)
     }
-  }, [casino.id, hasError])
+  }, [casino.id, hasError, trackStreamStart, trackStreamEnd])
 
   if (hasError) {
     return (

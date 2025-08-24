@@ -1,7 +1,7 @@
 // Mobile-optimized bundle analyzer and code splitting utilities
 // Designed to minimize bundle size and optimize loading for mobile devices
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useMobileFirst } from '@/hooks/use-mobile-first'
 
 interface BundleMetrics {
@@ -338,7 +338,7 @@ export function useBundleAnalysis() {
 
   const analyzer = MobileBundleAnalyzer.getInstance()
 
-  const analyze = async () => {
+  const analyze = useCallback(async () => {
     setIsAnalyzing(true)
     try {
       const result = await analyzer.analyzeCurrentBundle()
@@ -348,14 +348,14 @@ export function useBundleAnalysis() {
     } finally {
       setIsAnalyzing(false)
     }
-  }
+  }, [analyzer])
 
   useEffect(() => {
     // Auto-analyze on mobile or when explicitly requested
     if (isMobile) {
       analyze()
     }
-  }, [isMobile])
+  }, [isMobile, analyze])
 
   return {
     metrics,

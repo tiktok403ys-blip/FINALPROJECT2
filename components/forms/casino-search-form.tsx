@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect, useRef } from 'react'
+import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -72,24 +72,7 @@ export function CasinoSearchForm({ onSearch, showFilters = true, compact = false
     }
   }, [watchedQuery, showFilters])
 
-  // Handle real-time search (debounced)
-  useEffect(() => {
-    if (!watchedQuery) return
-
-    const timeoutId = setTimeout(() => {
-      if (watchedQuery.length >= 2) {
-        handleSearch({
-          query: watchedQuery,
-          filter: watchedFilter,
-          sortBy: watchedSortBy
-        })
-      }
-    }, 300) // 300ms debounce
-
-    return () => clearTimeout(timeoutId)
-  }, [watchedQuery, watchedFilter, watchedSortBy])
-
-  const handleSearch = (data: SearchFormData) => {
+  const handleSearch = useCallback((data: SearchFormData) => {
     startTransition(async () => {
       try {
         // Update local state
@@ -142,7 +125,24 @@ export function CasinoSearchForm({ onSearch, showFilters = true, compact = false
         console.error('Search error:', error)
       }
     })
-  }
+  }, [searchParams, router, onSearch, startTransition, setFilters])
+
+  // Handle real-time search (debounced)
+  useEffect(() => {
+    if (!watchedQuery) return
+
+    const timeoutId = setTimeout(() => {
+      if (watchedQuery.length >= 2) {
+        handleSearch({
+          query: watchedQuery,
+          filter: watchedFilter,
+          sortBy: watchedSortBy
+        })
+      }
+    }, 300) // 300ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [watchedQuery, watchedFilter, watchedSortBy, handleSearch])
 
   const clearSearch = () => {
     reset({
