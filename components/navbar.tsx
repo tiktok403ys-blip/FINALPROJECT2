@@ -409,10 +409,10 @@ export function Navbar() {
                     <div key={item.name} className="relative dropdown-container">
                       <button
                         onClick={() => setActiveDropdown(activeDropdown === item.name ? null : item.name)}
-                        className={`flex items-center gap-2 transition-all duration-300 ${
+                        className={`flex items-center gap-2 transition-all duration-300 px-4 py-2 rounded-xl ${
                           isActive
-                            ? "text-[#00ff88] px-2 py-1"
-                            : "text-gray-300 hover:text-[#00ff88] px-4 py-2 rounded-xl"
+                            ? "text-[#00ff88]"
+                            : "text-gray-300 hover:text-[#00ff88]"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -458,10 +458,10 @@ export function Navbar() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center gap-2 transition-all duration-300 group ${
+                      className={`flex items-center gap-2 transition-all duration-300 group px-4 py-2 rounded-xl ${
                         isActive
-                          ? "text-[#00ff88] px-2 py-1"
-                          : "text-gray-300 hover:text-[#00ff88] px-4 py-2 rounded-xl"
+                          ? "text-[#00ff88]"
+                          : "text-gray-300 hover:text-[#00ff88]"
                       }`}
                     >
                     <Icon className="w-4 h-4" />
@@ -651,10 +651,10 @@ export function Navbar() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 transition-all duration-300 text-sm ${
+                    className={`flex items-center gap-3 transition-all duration-300 text-sm px-3 py-2 rounded-lg ${
                       isActive
-                        ? "text-[#00ff88] px-3 py-2"
-                        : "text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg"
+                        ? "text-[#00ff88]"
+                        : "text-gray-300 hover:text-white hover:bg-white/10"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
