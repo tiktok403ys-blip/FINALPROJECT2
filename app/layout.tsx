@@ -4,7 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
-import { NavbarFixed } from "@/components/navbar-fixed"
+import { Navbar } from "@/components/navbar"
 import { CookieConsent } from "@/components/cookie-consent"
 import { WebVitals } from "@/components/web-vitals"
 import { Toaster } from "@/components/ui/toast"
@@ -59,7 +59,7 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <div className="min-h-screen bg-black text-white">
-              {!isAdminSubdomain && <NavbarFixed />}
+              {!isAdminSubdomain && <Navbar />}
               <main>{children}</main>
               {!isAdminSubdomain && <CookieConsent />}
               <WebVitals />

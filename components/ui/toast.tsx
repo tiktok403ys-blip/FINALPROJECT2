@@ -14,7 +14,14 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-3 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col sm:p-4 max-w-[280px] sm:max-w-[320px] md:max-w-[340px]",
+      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-3 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col sm:p-4",
+      // Mobile-first responsive widths
+      "max-w-[calc(100vw-1.5rem)] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[380px]",
+      // Safe area handling for mobile devices
+      "top-[max(1rem,env(safe-area-inset-top))]",
+      "right-[max(0.75rem,env(safe-area-inset-right))]",
+      "bottom-[max(0.75rem,env(safe-area-inset-bottom))]",
+      "left-[max(0.75rem,env(safe-area-inset-left))]",
       className
     )}
     {...props}
@@ -23,14 +30,14 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-start space-x-2 sm:space-x-3 overflow-hidden rounded-lg sm:rounded-xl border p-2.5 sm:p-3 pr-7 sm:pr-9 backdrop-blur-2xl transition-all duration-300 ease-out hover:scale-[1.01] hover:shadow-2xl data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full before:absolute before:inset-0 before:rounded-lg sm:before:rounded-xl before:bg-gradient-to-r before:p-[0.5px] sm:before:p-[1px] before:-z-10 after:absolute after:inset-[0.5px] sm:after:inset-[1px] after:rounded-lg sm:after:rounded-xl after:bg-gradient-to-br after:opacity-40 after:-z-10",
+  "group pointer-events-auto relative flex w-full items-start space-x-2 sm:space-x-3 overflow-hidden rounded-xl border p-3 pr-9 backdrop-filter backdrop-blur-xl saturate-180 transition-all duration-300 ease-out data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-br from-slate-900/90 via-slate-800/85 to-slate-900/90 text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] sm:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6)] border-slate-400/25 before:from-slate-400/30 before:via-slate-500/20 before:to-slate-400/30 after:from-slate-800/60 after:via-slate-700/40 after:to-slate-800/60",
-        success: "bg-gradient-to-br from-blue-950/90 via-blue-900/85 to-indigo-950/90 text-white shadow-[0_4px_20px_-4px_rgba(59,130,246,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(59,130,246,0.3)] border-blue-400/30 before:from-blue-400/35 before:via-indigo-500/25 before:to-blue-400/35 after:from-blue-900/60 after:via-indigo-800/40 after:to-blue-900/60",
-        error: "bg-gradient-to-br from-red-950/90 via-red-900/85 to-red-950/90 text-white shadow-[0_4px_20px_-4px_rgba(239,68,68,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(239,68,68,0.3)] border-red-400/30 before:from-red-400/35 before:via-red-500/25 before:to-red-400/35 after:from-red-900/60 after:via-red-800/40 after:to-red-900/60",
-        warning: "bg-gradient-to-br from-amber-950/90 via-yellow-900/85 to-amber-950/90 text-white shadow-[0_4px_20px_-4px_rgba(245,158,11,0.25)] sm:shadow-[0_8px_32px_-8px_rgba(245,158,11,0.3)] border-amber-400/30 before:from-amber-400/35 before:via-yellow-500/25 before:to-amber-400/35 after:from-amber-900/60 after:via-yellow-800/40 after:to-amber-900/60",
+        default: "bg-gradient-to-br from-black/50 via-slate-900/45 to-black/50 text-white border-white/20 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.15)]",
+        success: "bg-gradient-to-br from-black/50 via-green-900/45 to-emerald-900/45 text-white border-green-400/30 shadow-[0_25px_50px_-12px_rgba(34,197,94,0.3),0_0_0_1px_rgba(34,197,94,0.1),inset_0_1px_0_rgba(34,197,94,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(34,197,94,0.4),0_0_0_1px_rgba(34,197,94,0.15),inset_0_1px_0_rgba(34,197,94,0.25)]",
+        error: "bg-gradient-to-br from-black/50 via-red-900/45 to-red-900/45 text-white border-red-400/30 shadow-[0_25px_50px_-12px_rgba(239,68,68,0.3),0_0_0_1px_rgba(239,68,68,0.1),inset_0_1px_0_rgba(239,68,68,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(239,68,68,0.4),0_0_0_1px_rgba(239,68,68,0.15),inset_0_1px_0_rgba(239,68,68,0.25)]",
+        warning: "bg-gradient-to-br from-black/50 via-amber-900/45 to-yellow-900/45 text-white border-amber-400/30 shadow-[0_25px_50px_-12px_rgba(245,158,11,0.3),0_0_0_1px_rgba(245,158,11,0.1),inset_0_1px_0_rgba(245,158,11,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(245,158,11,0.4),0_0_0_1px_rgba(245,158,11,0.15),inset_0_1px_0_rgba(245,158,11,0.25)]",
       },
     },
     defaultVariants: {
@@ -61,7 +68,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-6 sm:h-7 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/15 backdrop-blur-sm px-2 sm:px-2.5 text-xs font-medium text-white transition-all duration-200 hover:bg-white/25 hover:scale-105 focus:outline-none focus:ring-1 focus:ring-white/40 disabled:pointer-events-none disabled:opacity-50",
+      "inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-black/30 backdrop-filter backdrop-blur-md saturate-180 px-2.5 text-xs font-medium text-white transition-all duration-200 hover:bg-white/15 hover:scale-105 focus:outline-none focus:ring-1 focus:ring-white/40 disabled:pointer-events-none disabled:opacity-50 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.4)]",
       className
     )}
     {...props}
@@ -76,13 +83,13 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-1.5 sm:right-2 top-1.5 sm:top-2 rounded-full p-0.5 sm:p-1 text-white/60 opacity-0 transition-all duration-200 hover:text-white hover:bg-white/15 hover:scale-110 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-white/40 group-hover:opacity-100 backdrop-blur-sm",
+      "absolute right-2 top-2 rounded-full p-1 text-white/60 opacity-0 transition-all duration-200 hover:text-white hover:bg-white/15 hover:scale-110 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-white/40 group-hover:opacity-100 backdrop-filter backdrop-blur-md saturate-180 border border-white/10",
       className
     )}
     toast-close=""
     {...props}
   >
-    <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+    <X className="h-3.5 w-3.5" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName
@@ -122,13 +129,13 @@ import { useToast } from "@/hooks/use-toast"
 const getToastIcon = (variant?: string) => {
   switch (variant) {
     case "success":
-      return <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+      return <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5 drop-shadow-[0_2px_4px_rgba(34,197,94,0.3)]" />
     case "error":
-      return <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-400 flex-shrink-0 mt-0.5" />
+      return <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5 drop-shadow-[0_2px_4px_rgba(239,68,68,0.3)]" />
     case "warning":
-      return <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+      return <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5 drop-shadow-[0_2px_4px_rgba(245,158,11,0.3)]" />
     default:
-      return <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 flex-shrink-0 mt-0.5" />
+      return <Info className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5 drop-shadow-[0_2px_4px_rgba(148,163,184,0.3)]" />
   }
 }
 

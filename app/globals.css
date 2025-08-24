@@ -349,6 +349,78 @@ select:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Mobile-First Design System */
+@supports (padding: max(0px)) {
+  /* Safe Area Handling */
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-left {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .safe-area-right {
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+}
+
+/* Enhanced Touch Targets for Mobile */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"],
+  [role="button"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Better tap highlights */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 255, 136, 0.1);
+    tap-highlight-color: rgba(0, 255, 136, 0.1);
+  }
+}
+
+/* Consistent Glass Effect Pattern */
+.glass-consistent {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile-First Responsive Spacing */
+.mobile-first-container {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Fluid Typography */
+@media (max-width: 768px) {
+  .fluid-text {
+    font-size: clamp(0.875rem, 4vw, 1rem);
+    line-height: 1.5;
+  }
+
+  .fluid-heading {
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
+    line-height: 1.3;
+  }
+}
+
 .gradient-border {
   position: relative;
   background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.1), transparent);
