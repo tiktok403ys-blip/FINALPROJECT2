@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     'apple-mobile-web-app-title': 'GuruSingapore',
     'msapplication-TileColor': '#00ff88',
     'msapplication-config': '/browserconfig.xml',
-    'theme-color': '#00ff88',
+    'theme-color': '#000000',
   },
   openGraph: {
     type: "website",
