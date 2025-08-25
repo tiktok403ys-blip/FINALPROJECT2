@@ -5,7 +5,6 @@ import { Casino } from '@/lib/types'
 import { CasinoCardMobileFirst, CasinoCardSkeleton } from '@/components/casino-card-mobile-first'
 import { useCasinoMobileOptimization } from '@/hooks/use-casino-mobile-optimization'
 import { useCasinoStore } from '@/lib/store/casino-store'
-import { useCasinoRealtimeWithData } from '@/hooks/use-casino-realtime'
 import { useRealtimeCasinoStatus } from '@/components/providers/realtime-casino-provider'
 
 // Progressive loader for chunked casino loading
@@ -85,29 +84,13 @@ export function StreamingCasinoGrid({
   enableStreaming?: boolean
   enableProgressiveLoading?: boolean
 }) {
-  const { actions: { setCasinos } } = useCasinoStore()
-  const { isConnected } = useRealtimeCasinoStatus()
+  const { state: { casinos: storeCasinos } } = useCasinoStore()
+  const { isConnected, initialLoading, error } = useRealtimeCasinoStatus()
   
-  // Use realtime hook untuk data yang selalu update
-  const { 
-    casinos: realtimeCasinos, 
-    initialLoading: isRealtimeLoading,
-    error: realtimeError 
-  } = useCasinoRealtimeWithData({
-    enabled: true
-  })
-
-  // Gunakan realtime data jika tersedia, fallback ke initial data
-  const activeCasinos = isConnected && realtimeCasinos.length > 0 
-    ? realtimeCasinos 
+  // Gunakan data dari store (diisi oleh Provider). Fallback ke initial data dari server.
+  const activeCasinos = storeCasinos.length > 0 
+    ? storeCasinos 
     : initialCasinos
-
-  // Set casinos in store
-  useEffect(() => {
-    if (activeCasinos.length > 0) {
-      setCasinos(activeCasinos)
-    }
-  }, [activeCasinos, setCasinos])
 
   // Use the mobile optimization hook
   const {
@@ -117,8 +100,8 @@ export function StreamingCasinoGrid({
     loadMore
   } = useCasinoMobileOptimization(activeCasinos, 'all')
 
-  // Show loading state untuk realtime data
-  if (isRealtimeLoading && activeCasinos.length === 0) {
+  // Show loading state ketika initial load dari provider masih berjalan
+  if (initialLoading && activeCasinos.length === 0) {
     return (
       <div className="space-y-6">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -128,12 +111,12 @@ export function StreamingCasinoGrid({
     )
   }
 
-  // Show error state jika ada error realtime
-  if (realtimeError && activeCasinos.length === 0) {
+  // Show error state jika ada error realtime dan belum ada data
+  if (error && activeCasinos.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-red-400 mb-4">⚠️ Error loading casino data</div>
-        <p className="text-gray-400">{realtimeError}</p>
+        <p className="text-gray-400">{error}</p>
       </div>
     )
   }
@@ -214,13 +197,13 @@ export function useStreamingMetrics() {
     }))
 
     // Track in analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'streaming_performance', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      ;(window as any).gtag('event', 'streaming_performance', {
         event_category: 'Performance',
         event_label: 'component_stream',
         value: Math.round(loadTime),
         custom_parameter_1: success ? 'success' : 'failed',
-        custom_parameter_2: context.componentName || 'unknown'
+        custom_parameter_2: (context as any).componentName || 'unknown'
       })
     }
   }
@@ -249,28 +232,14 @@ export function StreamingCasinoWithErrorBoundary({
     return () => {
       trackStreamEnd(context, !hasError)
     }
-  }, [casino.id, hasError, trackStreamStart, trackStreamEnd])
+  }, [casino.id, hasError, trackStreamEnd, trackStreamStart])
 
-  if (hasError) {
-    return (
-      <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-        <p className="text-red-400 text-sm">Failed to load casino: {casino.name}</p>
-        <button
-          onClick={() => setHasError(false)}
-          className="mt-2 text-xs text-red-300 hover:text-red-200"
-        >
-          Try again
-        </button>
-      </div>
-    )
-  }
-
-  try {
-    return <CasinoStream casino={casino} />
-  } catch (error) {
-    console.error(`Error streaming casino ${casino.id}:`, error)
-    setHasError(true)
-    onError?.(error as Error)
-    return null
-  }
+  return (
+    <Suspense fallback={<CasinoCardSkeleton />}>
+      <CasinoCardMobileFirst
+        casino={casino}
+        rank={0}
+      />
+    </Suspense>
+  )
 }

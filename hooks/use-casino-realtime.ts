@@ -22,13 +22,15 @@ interface UseCasinoRealtimeOptions {
   debounceMs?: number
   maxReconnectAttempts?: number
   batchSize?: number
+  debug?: boolean
 }
 
 const DEFAULT_OPTIONS: Required<UseCasinoRealtimeOptions> = {
   enabled: true,
   debounceMs: 300,
   maxReconnectAttempts: 3,
-  batchSize: 10
+  batchSize: 10,
+  debug: process.env.NODE_ENV !== 'production'
 }
 
 // Circuit breaker constants
@@ -152,7 +154,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     // Check if circuit breaker is open
     if (isCircuitBreakerOpen()) {
       // Only log circuit breaker status occasionally to reduce spam
-      if (realtimeState.reconnectAttempts === 0) {
+      if (opts.debug && realtimeState.reconnectAttempts === 0) {
         console.warn('⚡ Circuit breaker active, reconnection paused')
       }
       return
@@ -167,7 +169,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         circuitBreakerOpen: true,
         lastFailureTime: Date.now()
       }))
-      console.warn('⚡ Circuit breaker activated after max attempts')
+      if (opts.debug) console.warn('⚡ Circuit breaker activated after max attempts')
       return
     }
 
@@ -176,7 +178,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     const delay = Math.min(baseDelay, MAX_RETRY_DELAY)
     
     // Only log on first attempt or every 3rd attempt to reduce console spam
-    if (realtimeState.reconnectAttempts === 0 || realtimeState.reconnectAttempts % 3 === 0) {
+    if (opts.debug && (realtimeState.reconnectAttempts === 0 || realtimeState.reconnectAttempts % 3 === 0)) {
       console.log(`🔄 Reconnecting... (attempt ${realtimeState.reconnectAttempts + 1}/${opts.maxReconnectAttempts})`)
     }
     
@@ -217,11 +219,11 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       )
       .subscribe((status: string) => {
         // Only log important status changes, not every status update
-        if (status === 'SUBSCRIBED') {
+        if (opts.debug && status === 'SUBSCRIBED') {
           console.log('✅ Realtime connection established')
-        } else if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) {
+        } else if (opts.debug && ['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) {
           console.warn(`⚠️ Realtime connection ${status.toLowerCase()}`)
-        } else if (status === 'CLOSED' && realtimeState.isConnected) {
+        } else if (opts.debug && status === 'CLOSED' && realtimeState.isConnected) {
           // Only log CLOSED status if we were previously connected (to avoid spam)
           console.warn('⚠️ Realtime connection closed')
         }
@@ -262,7 +264,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       })
 
     channelRef.current = channel
-  }, [opts.enabled, supabase, handleRealtimeChange, actions, attemptReconnect, isCircuitBreakerOpen])
+  }, [opts.enabled, supabase, handleRealtimeChange, actions, attemptReconnect, isCircuitBreakerOpen, opts.debug, realtimeState.isConnected])
 
   // Manual reconnect function
   const reconnect = useCallback(() => {
@@ -311,7 +313,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       channelRef.current = null
     }
     
-    // Reset state with all required properties
+    // Reset state dengan semua properti yang dibutuhkan
     setRealtimeState({
       isConnected: false,
       isConnecting: false,
@@ -432,7 +434,9 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
         actions.setCasinos(casinos || [])
         actions.setError('initial', null)
       } catch (error) {
-        console.error('Error fetching initial casino data:', error)
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error fetching initial casino data:', error)
+        }
         actions.setError('initial', error instanceof Error ? error.message : 'Unknown error')
       } finally {
         actions.setLoading('initial', false)

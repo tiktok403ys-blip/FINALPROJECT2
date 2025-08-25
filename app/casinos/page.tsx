@@ -27,7 +27,6 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
-import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
 import type { Casino } from "@/lib/types"
 
 // Advanced React Ecosystem imports

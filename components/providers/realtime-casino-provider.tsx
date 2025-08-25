@@ -4,7 +4,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useCasinoRealtime } from '@/hooks/use-casino-realtime'
+import { useCasinoRealtimeWithData } from '@/hooks/use-casino-realtime'
 import { toast } from 'sonner'
 
 interface RealtimeCasinoContextType {
@@ -15,7 +15,9 @@ interface RealtimeCasinoContextType {
   reconnectAttempts: number
   reconnect: () => void
   disconnect: () => void
+  resetCircuitBreaker: () => void
   queueSize: number
+  initialLoading: boolean
 }
 
 const RealtimeCasinoContext = createContext<RealtimeCasinoContextType | null>(null)
@@ -31,11 +33,13 @@ export function RealtimeCasinoProvider({
   enabled = true, 
   showToasts = true 
 }: RealtimeCasinoProviderProps) {
-  const realtime = useCasinoRealtime({ 
+  // Gunakan hook withData agar initial load dan realtime berada di satu tempat (menghindari koneksi ganda)
+  const realtime = useCasinoRealtimeWithData({ 
     enabled,
     debounceMs: 300,
     maxReconnectAttempts: 5,
-    batchSize: 10
+    batchSize: 10,
+    debug: false
   })
 
   const [hasShownConnectedToast, setHasShownConnectedToast] = useState(false)
@@ -79,7 +83,18 @@ export function RealtimeCasinoProvider({
   }, [realtime.isConnecting])
 
   return (
-    <RealtimeCasinoContext.Provider value={realtime}>
+    <RealtimeCasinoContext.Provider value={{
+      isConnected: realtime.isConnected,
+      isConnecting: realtime.isConnecting,
+      error: realtime.error,
+      lastUpdate: realtime.lastUpdate,
+      reconnectAttempts: realtime.reconnectAttempts,
+      reconnect: realtime.reconnect,
+      disconnect: realtime.disconnect,
+      resetCircuitBreaker: realtime.resetCircuitBreaker,
+      queueSize: realtime.queueSize,
+      initialLoading: realtime.initialLoading
+    }}>
       {children}
     </RealtimeCasinoContext.Provider>
   )
@@ -104,6 +119,7 @@ export function useRealtimeCasinoStatus() {
     isConnected: context?.isConnected ?? false,
     isConnecting: context?.isConnecting ?? false,
     error: context?.error ?? null,
-    lastUpdate: context?.lastUpdate ?? 0
+    lastUpdate: context?.lastUpdate ?? 0,
+    initialLoading: context?.initialLoading ?? false
   }
 }
