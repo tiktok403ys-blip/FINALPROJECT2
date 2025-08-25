@@ -1,125 +1,77 @@
-"use client"
+'use client'
 
-import { Suspense, useState, useEffect, useCallback } from 'react'
-import { CasinoCardMobileFirst } from '@/components/casino-card-mobile-first'
-import { CasinoCardSkeleton } from '@/components/casino-card-mobile-first'
+import React, { Suspense, useState, useEffect } from 'react'
+import { Casino } from '@/lib/types'
+import { CasinoCardMobileFirst, CasinoCardSkeleton } from '@/components/casino-card-mobile-first'
 import { useCasinoMobileOptimization } from '@/hooks/use-casino-mobile-optimization'
 import { useCasinoStore } from '@/lib/store/casino-store'
-import type { Casino } from '@/lib/types'
+import { useCasinoRealtimeWithData } from '@/hooks/use-casino-realtime'
+import { useRealtimeCasinoStatus } from '@/components/providers/realtime-casino-provider'
 
-// Streaming component for individual casino
-async function CasinoStream({ casino }: { casino: Casino }) {
-  // Simulate streaming delay for demonstration
-  await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500))
-
-  return <CasinoCardMobileFirst casino={casino} rank={0} />
-}
-
-// Progressive loading manager
-function ProgressiveLoader({
+// Progressive loader for chunked casino loading
+export function ProgressiveLoader({
   casinos,
-  chunkSize = 4
+  chunkSize = 4,
+  delay = 100
 }: {
   casinos: Casino[]
   chunkSize?: number
+  delay?: number
 }) {
-  const [loadedChunks, setLoadedChunks] = useState(1)
+  const [visibleCount, setVisibleCount] = useState(chunkSize)
   const [isLoading, setIsLoading] = useState(false)
 
-  const chunks = []
-  for (let i = 0; i < casinos.length; i += chunkSize) {
-    chunks.push(casinos.slice(i, i + chunkSize))
+  const loadMore = async () => {
+    if (isLoading || visibleCount >= casinos.length) return
+    
+    setIsLoading(true)
+    
+    // Simulate network delay for progressive loading
+    await new Promise(resolve => setTimeout(resolve, delay))
+    
+    setVisibleCount(prev => Math.min(prev + chunkSize, casinos.length))
+    setIsLoading(false)
   }
 
-  const visibleChunks = chunks.slice(0, loadedChunks)
-  const hasMore = loadedChunks < chunks.length
-
-  const loadMore = useCallback(() => {
-    if (isLoading || !hasMore) return
-
-    setIsLoading(true)
-    setTimeout(() => {
-      setLoadedChunks(prev => prev + 1)
-      setIsLoading(false)
-    }, 500) // Simulate loading time
-  }, [isLoading, hasMore])
-
-  // Auto-load on scroll for mobile
-  useEffect(() => {
-    if (typeof window === 'undefined' || !hasMore) return
-
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-      const windowHeight = window.innerHeight
-      const documentHeight = document.documentElement.scrollHeight
-
-      if (scrollTop + windowHeight >= documentHeight - 200) {
-        loadMore()
-      }
-    }
-
-    const throttledScroll = (() => {
-      let timeoutId: NodeJS.Timeout | null = null
-      return () => {
-        if (timeoutId) return
-        timeoutId = setTimeout(() => {
-          handleScroll()
-          timeoutId = null
-        }, 100)
-      }
-    })()
-
-    window.addEventListener('scroll', throttledScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', throttledScroll)
-      if (throttledScroll) clearTimeout(throttledScroll as any)
-    }
-  }, [hasMore, loadMore])
+  const visibleCasinos = casinos.slice(0, visibleCount)
+  const hasMore = visibleCount < casinos.length
 
   return (
     <div className="space-y-6">
-      {/* Render visible chunks with streaming */}
-      {visibleChunks.map((chunk, chunkIndex) => (
-        <div key={chunkIndex} className="space-y-6">
-          {chunk.map((casino, casinoIndex) => {
-            const globalIndex = chunkIndex * chunkSize + casinoIndex
-
-            return (
-              <Suspense
-                key={casino.id}
-                fallback={<CasinoCardSkeleton />}
-              >
-                <CasinoStream casino={casino} />
-              </Suspense>
-            )
-          })}
-        </div>
+      {visibleCasinos.map((casino, index) => (
+        <CasinoStream key={casino.id} casino={casino} rank={index + 1} />
       ))}
-
-      {/* Loading indicator for next chunk */}
+      
       {hasMore && (
         <div className="flex justify-center py-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 border-2 border-[#00ff88]/30 border-t-[#00ff88] rounded-full animate-spin" />
-            <span className="text-gray-400 text-sm">Loading more casinos...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Load more button for desktop */}
-      {hasMore && (
-        <div className="hidden md:flex justify-center py-8">
           <button
             onClick={loadMore}
             disabled={isLoading}
             className="px-6 py-3 bg-[#00ff88]/10 hover:bg-[#00ff88]/20 border border-[#00ff88]/30 rounded-lg text-[#00ff88] font-medium transition-all duration-200 disabled:opacity-50"
           >
-            {isLoading ? 'Loading...' : 'Load More Casinos'}
+            {isLoading ? 'Loading...' : 'Load More'}
           </button>
         </div>
       )}
     </div>
+  )
+}
+
+// Individual casino stream component
+export function CasinoStream({ 
+  casino, 
+  rank 
+}: { 
+  casino: Casino
+  rank?: number 
+}) {
+  return (
+    <Suspense fallback={<CasinoCardSkeleton />}>
+      <CasinoCardMobileFirst
+        casino={casino}
+        rank={rank || 0}
+      />
+    </Suspense>
   )
 }
 
@@ -134,13 +86,28 @@ export function StreamingCasinoGrid({
   enableProgressiveLoading?: boolean
 }) {
   const { actions: { setCasinos } } = useCasinoStore()
+  const { isConnected } = useRealtimeCasinoStatus()
+  
+  // Use realtime hook untuk data yang selalu update
+  const { 
+    casinos: realtimeCasinos, 
+    initialLoading: isRealtimeLoading,
+    error: realtimeError 
+  } = useCasinoRealtimeWithData({
+    enabled: true
+  })
 
-  // Set initial casinos in store
+  // Gunakan realtime data jika tersedia, fallback ke initial data
+  const activeCasinos = isConnected && realtimeCasinos.length > 0 
+    ? realtimeCasinos 
+    : initialCasinos
+
+  // Set casinos in store
   useEffect(() => {
-    if (initialCasinos.length > 0) {
-      setCasinos(initialCasinos)
+    if (activeCasinos.length > 0) {
+      setCasinos(activeCasinos)
     }
-  }, [initialCasinos, setCasinos])
+  }, [activeCasinos, setCasinos])
 
   // Use the mobile optimization hook
   const {
@@ -148,12 +115,33 @@ export function StreamingCasinoGrid({
     hasMore,
     isLoadingMore,
     loadMore
-  } = useCasinoMobileOptimization(initialCasinos, 'all')
+  } = useCasinoMobileOptimization(activeCasinos, 'all')
 
-  if (enableStreaming && initialCasinos.length > 0) {
+  // Show loading state untuk realtime data
+  if (isRealtimeLoading && activeCasinos.length === 0) {
+    return (
+      <div className="space-y-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <CasinoCardSkeleton key={i} />
+        ))}
+      </div>
+    )
+  }
+
+  // Show error state jika ada error realtime
+  if (realtimeError && activeCasinos.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-red-400 mb-4">⚠️ Error loading casino data</div>
+        <p className="text-gray-400">{realtimeError}</p>
+      </div>
+    )
+  }
+
+  if (enableStreaming && activeCasinos.length > 0) {
     return (
       <ProgressiveLoader
-        casinos={initialCasinos}
+        casinos={activeCasinos}
         chunkSize={4}
       />
     )

@@ -38,6 +38,8 @@ import { PerformanceMonitor } from '@/components/performance-monitor'
 import { StreamingCasinoGrid } from '@/components/streaming/casino-stream'
 import { CasinoFilterMobileFirst } from '@/components/casino-filter-mobile-first'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { RealtimeCasinoProvider } from '@/components/providers/realtime-casino-provider'
+import { RealtimeConnectionStatus } from '@/components/realtime-connection-status'
 import { getCasinosServer } from '@/lib/server/casino-server'
 
 // Server Actions
@@ -306,9 +308,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
 
   return (
     <QueryProvider>
-      <div className="min-h-screen bg-black">
-        {/* Realtime refresh when casinos change */}
-        <RealtimeCasinosRefresher />
+      <RealtimeCasinoProvider enabled={true} showToasts={true}>
+        <div className="min-h-screen bg-black">
 
         {/* JSON-LD Structured Data */}
         <script
@@ -327,6 +328,11 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
         />
 
         <div className="container mx-auto px-4 py-16">
+          {/* Realtime Connection Status */}
+          <div className="mb-6 flex justify-end">
+            <RealtimeConnectionStatus className="text-sm" />
+          </div>
+          
           {/* Performance Monitor - Development only */}
           <PerformanceMonitor />
 
@@ -542,7 +548,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
       </div>
 
       <Footer />
-    </div>
+        </div>
+      </RealtimeCasinoProvider>
     </QueryProvider>
   )
 }
