@@ -196,7 +196,7 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 ml-3 flex flex-col">
+                  <div className="flex-1 ml-3 flex flex-col text-left items-start">
                     <div className="flex items-center gap-1 mb-1">
                       {bonus.is_exclusive && (
                         <span className="bg-white/10 border border-white/20 text-white/90 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide">Exclusive</span>

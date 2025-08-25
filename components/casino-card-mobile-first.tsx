@@ -9,7 +9,6 @@ import {
   Star,
   MapPin,
   Shield,
-  Gift,
   Play,
   RotateCcw,
   Globe,
@@ -119,7 +118,6 @@ export function CasinoCardMobileFirst({ casino, rank }: CasinoCardMobileFirstPro
             <div className="mb-4 p-4 bg-[#00ff88]/10 border border-[#00ff88]/30 rounded-lg">
               <div className="text-center">
                 <div className="text-[#00ff88] font-bold text-sm sm:text-base mb-1 flex items-center justify-center gap-2">
-                  <Gift className="w-4 h-4" />
                   BONUS: {casino.bonus_info}
                 </div>
                 <div className="text-xs text-gray-400">*T&Cs apply</div>
