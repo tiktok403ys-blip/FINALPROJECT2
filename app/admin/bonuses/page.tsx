@@ -36,7 +36,7 @@ import {
   Percent,
   DollarSign
 } from 'lucide-react'
-import { ImageUpload } from '@/components/admin/image-upload'
+import ImageUpload from '@/components/admin/ImageUpload'
 
 interface Bonus {
   id: string

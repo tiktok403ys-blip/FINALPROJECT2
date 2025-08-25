@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import Image from 'next/image'
 
 interface ImageUploadProps {
@@ -46,12 +46,12 @@ export default function ImageUpload({
 
   const uploadFile = async (file: File) => {
     if (file.size > maxSize * 1024 * 1024) {
-      toast.error(`Ukuran file maksimal ${maxSize}MB`)
+      toast.error('File Too Large', `Maximum file size is ${maxSize}MB. Please choose a smaller image.`)
       return
     }
 
-    setUploading(true)
-    try {
+    // Create upload promise for toast.promise
+    const uploadPromise = (async () => {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = folder ? `${folder}/${fileName}` : fileName
@@ -69,13 +69,27 @@ export default function ImageUpload({
         .getPublicUrl(filePath)
 
       onChange(publicUrl)
-      toast.success('Gambar berhasil diupload')
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error('Gagal mengupload gambar')
-    } finally {
-      setUploading(false)
-    }
+      return publicUrl
+    })()
+
+    // Show promise-based toast with glass card theme
+    toast.promise(uploadPromise, {
+      loading: 'Uploading Image...',
+      success: 'Image Uploaded Successfully',
+      error: 'Upload Failed'
+    })
+
+    // Handle promise completion
+    uploadPromise
+      .then((url) => {
+        console.log('Image uploaded successfully:', url)
+      })
+      .catch((error) => {
+        console.error('Upload error:', error)
+      })
+      .finally(() => {
+        setUploading(false)
+      })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

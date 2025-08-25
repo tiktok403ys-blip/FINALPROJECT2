@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import Image from 'next/image'
 
 interface ImageUploadProps {
@@ -47,10 +47,10 @@ export function ImageUpload({ value, onChange, bucket, className, label }: Image
         .getPublicUrl(filePath)
 
       onChange(data.publicUrl)
-      toast.success('Image uploaded successfully!')
+      toast.success('Image Uploaded', 'Image has been successfully uploaded to storage')
     } catch (error) {
       console.error('Error uploading image:', error)
-      toast.error('Error uploading image')
+      toast.error('Upload Failed', 'Unable to upload image. Please check file format and size.')
     } finally {
       setUploading(false)
     }
