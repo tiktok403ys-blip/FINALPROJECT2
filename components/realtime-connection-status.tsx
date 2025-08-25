@@ -1,5 +1,5 @@
-// Komponen untuk menampilkan status koneksi realtime
-// Memberikan feedback visual kepada user tentang status realtime connection
+// Component to display realtime connection status
+// Provides visual feedback to users about realtime connection status
 
 'use client'
 
@@ -54,10 +54,10 @@ export function RealtimeConnectionStatus({
   }
 
   const getStatusText = () => {
-    if (isConnecting) return 'Menghubungkan...'
-    if (error) return 'Koneksi bermasalah'
-    if (isConnected) return 'Terhubung'
-    return 'Tidak terhubung'
+    if (isConnecting) return 'Connecting...'
+    if (error) return 'Connection error'
+    if (isConnected) return 'Connected'
+    return 'Disconnected'
   }
 
   const getLastUpdateText = () => {
@@ -66,14 +66,14 @@ export function RealtimeConnectionStatus({
     const now = Date.now()
     const diff = now - lastUpdate
     
-    if (diff < 60000) { // < 1 menit
-      return 'Baru saja'
-    } else if (diff < 3600000) { // < 1 jam
+    if (diff < 60000) { // < 1 minute
+      return 'Just now'
+    } else if (diff < 3600000) { // < 1 hour
       const minutes = Math.floor(diff / 60000)
-      return `${minutes} menit lalu`
+      return `${minutes} min ago`
     } else {
       const hours = Math.floor(diff / 3600000)
-      return `${hours} jam lalu`
+      return `${hours} hr ago`
     }
   }
 
@@ -106,7 +106,7 @@ export function RealtimeConnectionStatus({
   )
 }
 
-// Komponen mini untuk header atau toolbar
+// Mini component for header or toolbar
 export function RealtimeConnectionIndicator({ className }: { className?: string }) {
   return (
     <RealtimeConnectionStatus 
@@ -117,27 +117,27 @@ export function RealtimeConnectionIndicator({ className }: { className?: string 
   )
 }
 
-// Komponen dengan tooltip untuk informasi detail
+// Component with tooltip for detailed information
 export function RealtimeConnectionTooltip({ children }: { children: React.ReactNode }) {
   const { isConnected, isConnecting, error, lastUpdate } = useRealtimeCasinoStatus()
   
   const getTooltipContent = () => {
     if (isConnecting) {
-      return 'Sedang menghubungkan ke server realtime...'
+      return 'Connecting to realtime server...'
     }
     
     if (error) {
-      return `Koneksi bermasalah: ${error}`
+      return `Connection error: ${error}`
     }
     
     if (isConnected) {
       const lastUpdateText = lastUpdate > 0 
-        ? new Date(lastUpdate).toLocaleTimeString('id-ID')
-        : 'Belum ada update'
-      return `Terhubung ke realtime. Update terakhir: ${lastUpdateText}`
+        ? new Date(lastUpdate).toLocaleTimeString('en-US')
+        : 'No updates yet'
+      return `Connected to realtime. Last update: ${lastUpdateText}`
     }
     
-    return 'Tidak terhubung ke server realtime'
+    return 'Not connected to realtime server'
   }
 
   return (

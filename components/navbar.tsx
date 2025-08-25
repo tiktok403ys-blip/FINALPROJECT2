@@ -355,7 +355,7 @@ export function Navbar() {
             </Link>
 
             {/* Navigation Items */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-6">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
@@ -365,10 +365,10 @@ export function Navbar() {
                     <div key={item.name} className="relative dropdown-container">
                       <button
                         onClick={() => setActiveDropdown(activeDropdown === item.name ? null : item.name)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${TOUCH_TARGET_SIZE} ${
+                        className={`flex items-center gap-2 transition-all duration-300 ${TOUCH_TARGET_SIZE} ${
                           isActive
-                            ? "text-[#00ff88] bg-black/30 backdrop-filter backdrop-blur-md saturate-180 border border-[#00ff88]/20 shadow-[0_4px_12px_-4px_rgba(0,255,136,0.2)]"
-                            : "text-gray-300 hover:text-[#00ff88] hover:bg-white/5"
+                            ? "text-[#00ff88]"
+                            : "text-gray-300 hover:text-[#00ff88]"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -378,7 +378,7 @@ export function Navbar() {
 
                       {/* Dropdown Menu */}
                       {activeDropdown === item.name && (
-                        <div className="absolute top-full left-0 mt-2 w-64 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 border-t border-t-white/30">
+                        <div className="absolute top-full left-0 mt-2 w-64 bg-black/50 backdrop-blur-xl rounded-2xl shadow-2xl z-50">
                           <div className="p-2">
                             {item.dropdownItems.map((dropdownItem) => {
                               const DropdownIcon = dropdownItem.icon
@@ -414,10 +414,10 @@ export function Navbar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 group ${TOUCH_TARGET_SIZE} ${
+                    className={`flex items-center gap-2 transition-all duration-300 group ${TOUCH_TARGET_SIZE} ${
                       isActive
-                        ? "text-[#00ff88] bg-black/30 backdrop-filter backdrop-blur-md saturate-180 border border-[#00ff88]/20 shadow-[0_4px_12px_-4px_rgba(0,255,136,0.2)]"
-                        : "text-gray-300 hover:text-[#00ff88] hover:bg-white/5"
+                        ? "text-[#00ff88]"
+                        : "text-gray-300 hover:text-[#00ff88]"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -569,7 +569,7 @@ export function Navbar() {
               maxHeight: 'calc(100vh - 6rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
             }}
           >
-            <div className="space-y-2 overflow-y-auto">
+            <div className="space-y-4 overflow-y-auto">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
@@ -600,10 +600,10 @@ export function Navbar() {
                                 key={dropdownItem.name}
                                 href={dropdownItem.href}
                                 onClick={() => setIsOpen(false)}
-                                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-300 text-sm ${TOUCH_TARGET_SIZE} ${
+                                className={`flex items-center gap-3 transition-all duration-300 text-sm ${TOUCH_TARGET_SIZE} ${
                                   isDropdownActive
-                                    ? "text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/20"
-                                    : "text-gray-300 hover:text-[#00ff88] hover:bg-white/5"
+                                    ? "text-[#00ff88]"
+                                    : "text-gray-300 hover:text-[#00ff88]"
                                 }`}
                               >
                                 <DropdownIcon className="w-4 h-4" />
@@ -622,10 +622,10 @@ export function Navbar() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-300 text-sm ${TOUCH_TARGET_SIZE} ${
+                    className={`flex items-center gap-3 transition-all duration-300 text-sm ${TOUCH_TARGET_SIZE} ${
                       isActive
-                        ? "text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/20"
-                        : "text-gray-300 hover:text-white hover:bg-white/10"
+                        ? "text-[#00ff88]"
+                        : "text-gray-300 hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
