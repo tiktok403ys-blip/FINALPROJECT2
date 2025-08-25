@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AdminAuth } from '@/lib/auth/admin-auth'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
       const success = await adminAuth.signIn(data.email, data.password)
       
       if (success) {
-        toast.success('Login successful!')
+        toast.success('Login Successful', 'Welcome back! Redirecting to admin panel...')
         router.push('/admin')
       } else {
         setError('root', {

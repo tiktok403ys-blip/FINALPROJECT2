@@ -197,7 +197,7 @@ function CasinosContentPage() {
       refetch()
     } catch (error) {
       console.error('Error saving casino:', error)
-      toast.error('Failed to save casino')
+      toast.error('Save Failed', 'Unable to save casino data. Please check your connection and try again.')
     }
   }
 
@@ -243,11 +243,11 @@ function CasinosContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Casino deleted successfully')
+      toast.success('Casino Deleted', 'Casino has been successfully removed from the system')
       refetch()
     } catch (error) {
       console.error('Error deleting casino:', error)
-      toast.error('Failed to delete casino')
+      toast.error('Delete Failed', 'Unable to delete casino. Please try again or contact support.')
     }
   }
 
@@ -260,11 +260,11 @@ function CasinosContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success(`${field === 'is_active' ? 'Status' : 'Featured'} updated successfully`)
+      toast.success('Status Updated', `Casino ${field === 'is_active' ? 'status' : 'featured flag'} has been successfully updated`)
       refetch()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast.error('Status Update Failed', 'Unable to update casino status. Please try again.')
     }
   }
 

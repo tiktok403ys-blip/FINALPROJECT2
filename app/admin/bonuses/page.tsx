@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import Image from 'next/image'
 // Slug generation utility
 const generateSlug = (title: string): string => {
@@ -227,7 +227,7 @@ function BonusesContentPage() {
       setBonuses(data || [])
     } catch (error) {
       console.error('Error loading bonuses:', error)
-      toast.error('Failed to load bonuses')
+      toast.error('Load Failed', 'Unable to load bonuses data. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -236,22 +236,22 @@ function BonusesContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.title.trim() || !formData.description.trim()) {
-        toast.error('Title and description are required')
+        toast.error('Validation Error', 'Title and description are required fields')
         return
       }
 
       if (!formData.slug.trim()) {
-        toast.error('Slug is required (auto-generated from title)')
+        toast.error('Validation Error', 'Slug is required (auto-generated from title)')
         return
       }
 
       if (!formData.claiming_speed.trim()) {
-        toast.error('Claiming Speed is required')
+        toast.error('Validation Error', 'Claiming Speed is required field')
         return
       }
 
       if (!formData.how_to_get.trim()) {
-        toast.error('Claiming Process Details is required')
+        toast.error('Validation Error', 'Claiming Process Details is required field')
         return
       }
 
@@ -268,7 +268,7 @@ function BonusesContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Bonus updated successfully')
+        toast.success('Bonus Updated', 'Changes have been saved successfully')
       } else {
         // Create new bonus - exclude casino_name from database operation
         const supabaseClient = supabase()
@@ -278,14 +278,14 @@ function BonusesContentPage() {
           .insert([dbFormData])
 
         if (error) throw error
-        toast.success('Bonus created successfully')
+        toast.success('Bonus Created', 'New bonus has been added to the system')
       }
 
       resetForm()
       loadBonuses()
     } catch (error) {
       console.error('Error saving bonus:', error)
-      toast.error('Failed to save bonus')
+      toast.error('Save Failed', 'Unable to save bonus data. Please check your connection and try again.')
     }
   }
 
@@ -341,11 +341,11 @@ function BonusesContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Bonus deleted successfully')
+      toast.success('Bonus Deleted', 'Bonus has been successfully removed from the system')
       loadBonuses()
     } catch (error) {
       console.error('Error deleting bonus:', error)
-      toast.error('Failed to delete bonus')
+      toast.error('Delete Failed', 'Unable to delete bonus. Please try again or contact support.')
     }
   }
 
@@ -358,11 +358,11 @@ function BonusesContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success(`${field.replace('is_', '').charAt(0).toUpperCase() + field.replace('is_', '').slice(1)} status updated successfully`)
+      toast.success('Status Updated', `Bonus ${field.replace('is_', '').replace('_', ' ')} status has been successfully updated`)
       loadBonuses()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast.error('Status Update Failed', 'Unable to update bonus status. Please try again.')
     }
   }
 

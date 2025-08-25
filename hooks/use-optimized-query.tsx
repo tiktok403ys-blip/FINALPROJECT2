@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase as createSupabaseClient } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 
 interface QueryOptions {
   table: string
@@ -122,7 +122,7 @@ export function useOptimizedQuery<T = any>(options: QueryOptions): QueryResult<T
       if (err.name !== 'AbortError') {
         console.error('Query error:', err)
         setError(err.message || 'An error occurred while fetching data')
-        toast.error('Failed to load data')
+        toast.error('Load Failed', 'Unable to load data. Please check your connection and try again.')
       }
     } finally {
       setLoading(false)

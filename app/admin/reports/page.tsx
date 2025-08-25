@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { toast } from '@/lib/toast'
+import { toast } from '@/components/ui/sonner'
 import { supabase } from '@/lib/supabase'
 
 // Report interface
@@ -191,7 +191,7 @@ export default function ReportsPage() {
         setCasinos(casinoData || [])
       } catch (error) {
         console.error('Error loading data:', error)
-        toast.error('Failed to load reference data')
+        toast.error('Load Failed', 'Unable to load reference data. Please check your connection and try again.')
       } finally {
         setLoadingAdmins(false)
         setLoadingCasinos(false)
@@ -697,7 +697,7 @@ export default function ReportsPage() {
       resolved_at: new Date().toISOString(),
       resolution_time: resolutionTime
     })
-    toast.success('Report marked as resolved')
+    toast.success('Report Resolved', 'Report has been marked as resolved successfully')
   }
 
   const handleClose = async (report: Report) => {
@@ -705,7 +705,7 @@ export default function ReportsPage() {
       status: 'closed',
       closed_at: new Date().toISOString()
     })
-    toast.success('Report closed')
+    toast.success('Report Closed', 'Report has been closed successfully')
   }
 
   const handleEscalate = async (report: Report) => {
@@ -714,7 +714,7 @@ export default function ReportsPage() {
       escalated_at: new Date().toISOString(),
       priority: report.priority === 'low' ? 'medium' : report.priority === 'medium' ? 'high' : 'critical'
     })
-    toast.success('Report escalated')
+    toast.success('Report Escalated', 'Report has been escalated for further investigation')
   }
 
   const itemActions: DataTableAction<Report>[] = [

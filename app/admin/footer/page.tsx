@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import {
   Layout,
   Plus,
@@ -96,7 +96,7 @@ function FooterContentPage() {
       setFooterItems(data || [])
     } catch (error) {
       console.error('Error loading footer items:', error)
-      toast.error('Failed to load footer content')
+      toast.error('Load Failed', 'Unable to load footer content. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -105,7 +105,7 @@ function FooterContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.section.trim() || !formData.title.trim()) {
-        toast.error('Section and title are required')
+        toast.error('Validation Error', 'Section and title are required fields')
         return
       }
 
@@ -121,7 +121,7 @@ function FooterContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Footer item updated successfully')
+        toast.success('Footer Updated', 'Footer item has been updated successfully')
       } else {
         // Create new footer item
         const supabaseClient = supabase()
@@ -130,14 +130,14 @@ function FooterContentPage() {
           .insert([formData])
 
         if (error) throw error
-        toast.success('Footer item created successfully')
+        toast.success('Footer Created', 'New footer item has been added successfully')
       }
 
       resetForm()
       loadFooterItems()
     } catch (error) {
       console.error('Error saving footer item:', error)
-      toast.error('Failed to save footer item')
+      toast.error('Save Failed', 'Unable to save footer item. Please check your connection and try again.')
     }
   }
 
@@ -166,11 +166,11 @@ function FooterContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Footer item deleted successfully')
+      toast.success('Footer Deleted', 'Footer item has been deleted successfully')
       loadFooterItems()
     } catch (error) {
       console.error('Error deleting footer item:', error)
-      toast.error('Failed to delete footer item')
+      toast.error('Delete Failed', 'Unable to delete footer item. Please try again or contact support.')
     }
   }
 
@@ -183,11 +183,11 @@ function FooterContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Status updated successfully')
+      toast.success('Status Updated', 'Footer item status has been updated successfully')
       loadFooterItems()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast.error('Status Update Failed', 'Unable to update footer item status. Please try again.')
     }
   }
 

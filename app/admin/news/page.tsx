@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import {
   Newspaper,
   Plus,
@@ -91,7 +91,7 @@ function NewsContentPage() {
       setArticles(data || [])
     } catch (error) {
       console.error('Error loading articles:', error)
-      toast.error('Failed to load articles')
+      toast.error('Load Failed', 'Unable to load news articles. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -100,7 +100,7 @@ function NewsContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.title.trim() || !formData.content.trim()) {
-        toast.error('Title and content are required')
+        toast.error('Validation Error', 'Title and content are required fields')
         return
       }
 
@@ -124,7 +124,7 @@ function NewsContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Article updated successfully')
+        toast.success('Article Updated', 'Changes have been saved successfully')
       } else {
         // Create new article
         const supabaseClient = supabase()
@@ -133,14 +133,14 @@ function NewsContentPage() {
           .insert([dataToSave])
 
         if (error) throw error
-        toast.success('Article created successfully')
+        toast.success('Article Created', 'New article has been added to the system')
       }
 
       resetForm()
       loadArticles()
     } catch (error) {
       console.error('Error saving article:', error)
-      toast.error('Failed to save article')
+      toast.error('Save Failed', 'Unable to save article data. Please check your connection and try again.')
     }
   }
 
@@ -172,11 +172,11 @@ function NewsContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Article deleted successfully')
+      toast.success('Article Deleted', 'Article has been successfully removed from the system')
       loadArticles()
     } catch (error) {
       console.error('Error deleting article:', error)
-      toast.error('Failed to delete article')
+      toast.error('Delete Failed', 'Unable to delete article. Please try again or contact support.')
     }
   }
 
@@ -189,11 +189,11 @@ function NewsContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Featured status updated successfully')
+      toast.success('Featured Status Updated', 'Article featured status has been successfully updated')
       loadArticles()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast.error('Status Update Failed', 'Unable to update article status. Please try again.')
     }
   }
 
@@ -215,11 +215,11 @@ function NewsContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success(`Article ${newStatus} successfully`)
+      toast.success('Status Changed', `Article has been ${newStatus} successfully`)
       loadArticles()
     } catch (error) {
       console.error('Error changing status:', error)
-      toast.error('Failed to change status')
+      toast.error('Status Change Failed', 'Unable to change article status. Please try again.')
     }
   }
 

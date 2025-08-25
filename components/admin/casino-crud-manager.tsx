@@ -6,7 +6,7 @@
 import React, { useState, useCallback } from 'react'
 import { useRealtimeCasinoContext } from '@/components/providers/realtime-casino-provider'
 import { Casino } from '@/lib/types'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -141,9 +141,7 @@ export function CasinoCrudManager({
   const saveCasino = useCallback(async () => {
     const validationErrors = validateForm()
     if (validationErrors.length > 0) {
-      toast.error('Validation Error', {
-        description: validationErrors.join(', ')
-      })
+      toast.error('Validation Error', `Please check: ${validationErrors.join(', ')}`)
       return
     }
 
@@ -175,23 +173,17 @@ export function CasinoCrudManager({
       if (editingCasino?.isNew) {
         // Create new casino
         const result = await createCasino(tempCasino)
-        toast.success('Casino created successfully', {
-          description: `${result.name} has been added`
-        })
+        toast.success('Casino Created', `${result.name} has been added to the system`)
       } else {
         // Update existing casino
         const result = await updateCasino(editingCasino?.id!, tempCasino)
-        toast.success('Casino updated successfully', {
-          description: `${result.name} has been updated`
-        })
+        toast.success('Casino Updated', `${result.name} has been updated successfully`)
       }
 
       cancelEditing()
     } catch (error) {
       console.error('Error saving casino:', error)
-      toast.error('Failed to save casino', {
-        description: error instanceof Error ? error.message : 'Unknown error occurred'
-      })
+      toast.error('Save Failed', 'Unable to save casino data. Please check your connection and try again.')
     } finally {
       setIsLoading(false)
       setPendingOperations(prev => {
@@ -213,14 +205,10 @@ export function CasinoCrudManager({
 
     try {
       await deleteCasino(casino.id)
-      toast.success('Casino deleted successfully', {
-        description: `${casino.name} has been removed`
-      })
+      toast.success('Casino Deleted', 'Casino has been successfully removed from the system')
     } catch (error) {
       console.error('Error deleting casino:', error)
-      toast.error('Failed to delete casino', {
-        description: error instanceof Error ? error.message : 'Unknown error occurred'
-      })
+      toast.error('Delete Failed', 'Unable to delete casino. Please try again or contact support.')
     } finally {
       setPendingOperations(prev => {
         const next = new Set(prev)

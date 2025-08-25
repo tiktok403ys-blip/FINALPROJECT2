@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import {
   Home,
   Plus,
@@ -61,7 +61,7 @@ function HomeContentPage() {
       setContents(data || [])
     } catch (error) {
       console.error('Error loading home contents:', error)
-      toast.error('Failed to load home contents')
+      toast.error('Load Failed', 'Unable to load home contents. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -70,7 +70,7 @@ function HomeContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.title.trim() || !formData.content.trim()) {
-        toast.error('Title and content are required')
+        toast.error('Validation Error', 'Title and content are required fields')
         return
       }
 
@@ -86,7 +86,7 @@ function HomeContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Home content updated successfully')
+        toast.success('Content Updated', 'Home content has been updated successfully')
       } else {
         // Create new content
         const supabaseClient = supabase()
@@ -95,14 +95,14 @@ function HomeContentPage() {
           .insert([formData])
 
         if (error) throw error
-        toast.success('Home content created successfully')
+        toast.success('Content Created', 'New home content has been added successfully')
       }
 
       resetForm()
       loadHomeContents()
     } catch (error) {
       console.error('Error saving home content:', error)
-      toast.error('Failed to save home content')
+      toast.error('Save Failed', 'Unable to save home content. Please check your connection and try again.')
     }
   }
 
@@ -128,11 +128,11 @@ function HomeContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Home content deleted successfully')
+      toast.success('Content Deleted', 'Home content has been deleted successfully')
       loadHomeContents()
     } catch (error) {
       console.error('Error deleting home content:', error)
-      toast.error('Failed to delete home content')
+      toast.error('Delete Failed', 'Unable to delete home content. Please try again or contact support.')
     }
   }
 
@@ -145,11 +145,11 @@ function HomeContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Status updated successfully')
+      toast.success('Status Updated', 'Content status has been updated successfully')
       loadHomeContents()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast.error('Status Update Failed', 'Unable to update content status. Please try again.')
     }
   }
 

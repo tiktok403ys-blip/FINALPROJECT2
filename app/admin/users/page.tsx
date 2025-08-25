@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUpload } from '@/components/admin/image-upload'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
 import {
@@ -86,7 +86,7 @@ function UsersManagementPage() {
   const { mutate, loading: mutationLoading } = useOptimizedMutation<AdminUser>({
     table: 'admin_users',
     onSuccess: () => {
-      toast.success('Operation completed successfully')
+      toast.success('Operation Completed', 'User data has been updated successfully')
       refetch()
     },
     onError: (error) => {
@@ -129,14 +129,14 @@ function UsersManagementPage() {
   const handleSaveOptimized = async () => {
     try {
       if (!formData.email.trim() || !formData.full_name.trim() || !formData.role) {
-        toast.error('Email, full name, and role are required')
+        toast.error('Validation Error', 'Email, full name, and role are required fields')
         return
       }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
-        toast.error('Please enter a valid email address')
+        toast.error('Invalid Email', 'Please enter a valid email address')
         return
       }
 

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import {
   Star,
   Plus,
@@ -68,7 +68,7 @@ function ReviewsContentPage() {
       setReviews(data || [])
     } catch (error) {
       console.error('Error loading reviews:', error)
-      toast.error('Failed to load reviews')
+      toast.error('Load Failed', 'Unable to load reviews data. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -77,7 +77,7 @@ function ReviewsContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.casino_name.trim() || !formData.title.trim() || !formData.content.trim()) {
-        toast.error('Casino name, title, and content are required')
+        toast.error('Validation Error', 'Casino name, title, and content are required fields')
         return
       }
 
@@ -93,7 +93,7 @@ function ReviewsContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Review updated successfully')
+        toast.success('Review Updated', 'Changes have been saved successfully')
       } else {
         // Create new review
         const supabaseClient = supabase()
@@ -102,14 +102,14 @@ function ReviewsContentPage() {
           .insert([formData])
 
         if (error) throw error
-        toast.success('Review created successfully')
+        toast.success('Review Created', 'New review has been added to the system')
       }
 
       resetForm()
       loadReviews()
     } catch (error) {
       console.error('Error saving review:', error)
-      toast.error('Failed to save review')
+      toast.error('Save Failed', 'Unable to save review data. Please check your connection and try again.')
     }
   }
 
@@ -137,11 +137,11 @@ function ReviewsContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Review deleted successfully')
+      toast.success('Review Deleted', 'Review has been successfully removed from the system')
       loadReviews()
     } catch (error) {
       console.error('Error deleting review:', error)
-      toast.error('Failed to delete review')
+      toast.error('Delete Failed', 'Unable to delete review. Please try again or contact support.')
     }
   }
 
@@ -154,11 +154,11 @@ function ReviewsContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success(`Review ${status} successfully`)
+      toast.success('Status Updated', `Review has been ${status} successfully`)
       loadReviews()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast.error('Status Update Failed', 'Unable to update review status. Please try again.')
     }
   }
 
@@ -171,11 +171,11 @@ function ReviewsContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Featured status updated successfully')
+      toast.success('Featured Status Updated', 'Review featured status has been successfully updated')
       loadReviews()
     } catch (error) {
       console.error('Error updating featured status:', error)
-      toast.error('Failed to update featured status')
+      toast.error('Featured Status Update Failed', 'Unable to update review featured status. Please try again.')
     }
   }
 

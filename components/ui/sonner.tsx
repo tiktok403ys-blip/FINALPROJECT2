@@ -1,9 +1,19 @@
 "use client"
 
 import { Toaster as Sonner } from "sonner"
-import { CheckCircle, XCircle, AlertCircle, Info } from "lucide-react"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
+
+interface ToastOptions {
+  description?: string
+  className?: string
+}
+
+interface ToastPromiseOptions {
+  loading: string
+  success: string
+  error: string
+}
 
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
@@ -26,14 +36,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           warning: "group-[.toast]:border-yellow-500/30 group-[.toast]:shadow-[0_0_20px_rgba(234,179,8,0.1)]",
           info: "group-[.toast]:border-blue-500/30 group-[.toast]:shadow-[0_0_20px_rgba(59,130,246,0.1)]",
         },
-        style: {
-          backdropFilter: 'blur(20px) saturate(180%)',
-          background: 'rgba(0, 0, 0, 0.5)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '12px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          color: 'white',
-        }
+
       }}
       {...props}
     />
@@ -41,87 +44,51 @@ const Toaster = ({ ...props }: ToasterProps) => {
 }
 
 // Enhanced Toast Functions with Glass Card Theme
+// Provides consistent, type-safe toast notifications with glass card styling
 import { toast as sonnerToast } from "sonner"
 
 export const toast = {
-  success: (message: string, description?: string) => {
+  success: (message: string, description?: string, options?: Omit<ToastOptions, 'description'>) => {
     return sonnerToast.success(message, {
       description,
-      icon: "✅",
-      style: {
-        backdropFilter: 'blur(20px) saturate(180%)',
-        background: 'rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(34, 197, 94, 0.3)',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      },
+      ...options,
+      className: `border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)] ${options?.className || ''}`.trim()
     })
   },
 
-  error: (message: string, description?: string) => {
+  error: (message: string, description?: string, options?: Omit<ToastOptions, 'description'>) => {
     return sonnerToast.error(message, {
       description,
-      icon: "❌",
-      style: {
-        backdropFilter: 'blur(20px) saturate(180%)',
-        background: 'rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(239, 68, 68, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      },
+      ...options,
+      className: `border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)] ${options?.className || ''}`.trim()
     })
   },
 
-  warning: (message: string, description?: string) => {
+  warning: (message: string, description?: string, options?: Omit<ToastOptions, 'description'>) => {
     return sonnerToast.warning(message, {
       description,
-      icon: "⚠️",
-      style: {
-        backdropFilter: 'blur(20px) saturate(180%)',
-        background: 'rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(234, 179, 8, 0.3)',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(234, 179, 8, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      },
+      ...options,
+      className: `border-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.1)] ${options?.className || ''}`.trim()
     })
   },
 
-  info: (message: string, description?: string) => {
+  info: (message: string, description?: string, options?: Omit<ToastOptions, 'description'>) => {
     return sonnerToast.info(message, {
       description,
-      icon: "ℹ️",
-      style: {
-        backdropFilter: 'blur(20px) saturate(180%)',
-        background: 'rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(59, 130, 246, 0.3)',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      },
+      ...options,
+      className: `border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)] ${options?.className || ''}`.trim()
     })
   },
 
-  promise: (promise: Promise<any>, {
-    loading,
-    success,
-    error
-  }: {
-    loading: string
-    success: string
-    error: string
-  }) => {
+  promise: (promise: Promise<any>, options: ToastPromiseOptions & { className?: string }) => {
     return sonnerToast.promise(promise, {
-      loading,
-      success,
-      error,
-      style: {
-        backdropFilter: 'blur(20px) saturate(180%)',
-        background: 'rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      },
+      ...options,
+      className: `border-white/20 ${options.className || ''}`.trim()
     })
   }
 }
+
+// Legacy toast functions for backward compatibility
+export const legacyToast = sonnerToast
 
 export { Toaster }
