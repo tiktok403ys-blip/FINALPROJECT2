@@ -670,3 +670,12 @@ html {
 /* Optional safe area helpers (can be applied to sticky/fixed headers/footers) */
 .safe-top { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+@layer utilities {
+  /* Exclusive Bonuses micro-utilities */
+  .exclusive-card-padding { padding: 1rem; }
+  @media (min-width: 640px) { .exclusive-card-padding { padding: 1.25rem; } }
+  .exclusive-logo-rail { width: 4rem; margin-left: -1rem; margin-top: -1rem; margin-bottom: -1rem; }
+  .exclusive-title { font-size: 1rem; }
+  @media (min-width: 640px) { .exclusive-title { font-size: 1.125rem; } }
+}

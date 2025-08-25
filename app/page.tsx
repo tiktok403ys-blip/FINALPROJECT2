@@ -167,37 +167,41 @@ export default async function HomePage() {
         <section>
           <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 md:mb-4">Exclusive Bonuses</h2>
-            <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p>
+            {/* Removed subheading paragraph as requested */}
+            {/* <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p> */}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: any) => (
-                             <GlassCard key={bonus.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
-                                  <div className="flex items-stretch h-full">
-                   <div
-                     className="w-20 -ml-6 -mt-6 -mb-6 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
-                     style={{
-                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
-                     } as React.CSSProperties}
-                   >
-                     {bonus.casinos?.logo_url ? (
-                       <Image
-                         src={bonus.casinos.logo_url || "/placeholder.svg"}
-                         alt={`${bonus.casinos.name} logo`}
-                         width={80}
-                         height={80}
-                         className="w-full h-full object-contain p-2"
-                       />
-                     ) : (
-                       <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88] p-2">
-                         <Trophy className="w-8 h-8" />
-                         <span className="text-xs font-bold mt-1">BONUS</span>
-                       </div>
-                     )}
-                   </div>
-                   <div className="flex-1 ml-4 flex flex-col">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-1 rounded text-xs font-semibold">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: Bonus & { casinos?: Casino }) => (
+              <GlassCard key={bonus.id} className="p-3 sm:p-4 hover:border-[#00ff88]/30 transition-colors">
+                <div className="flex items-stretch h-full">
+                  <div
+                    className="w-20 -ml-4 -mt-4 -mb-4 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
+                    style={{
+                      '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
+                    } as React.CSSProperties}
+                  >
+                    {bonus.casinos?.logo_url ? (
+                      <Image
+                        src={bonus.casinos.logo_url || "/placeholder.svg"}
+                        alt={`${bonus.casinos.name} logo`}
+                        width={72}
+                        height={72}
+                        className="w-full h-full object-contain p-1"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88] p-2">
+                        <Trophy className="w-8 h-8" />
+                        <span className="text-xs font-bold mt-1">BONUS</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 ml-3 flex flex-col">
+                    <div className="flex items-center gap-1 mb-1">
+                      {bonus.is_exclusive && (
+                        <span className="bg-white/10 border border-white/20 text-white/90 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide">Exclusive</span>
+                      )}
+                      <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-0.5 rounded text-[11px] font-semibold">
                         {bonus.bonus_type || "BONUS"}
                       </span>
                       {bonus.casinos?.rating && (
@@ -207,17 +211,12 @@ export default async function HomePage() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 min-h-[3rem]" title={bonus.title}>{bonus.title}</h3>
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2 flex-grow">{bonus.description}</p>
-                    <div className="flex items-center justify-between mt-auto">
-                      <div>
-                        <div className="text-[#00ff88] font-bold">{bonus.bonus_amount}</div>
-                        <div className="text-gray-400 text-xs">{bonus.casinos?.name}</div>
-                      </div>
-                      <Button size="sm" className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80" asChild>
-                        <Link href={bonus.home_link_override || bonus.claim_url || `/casinos/${bonus.casino_id}`}>Claim Now</Link>
-                      </Button>
-                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-1 line-clamp-2" title={bonus.title}>
+                      {bonus.title}
+                    </h3>
+                    <Button size="sm" className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 mt-0.5 self-start" asChild>
+                      <Link href={bonus.home_link_override || bonus.claim_url || `/casinos/${bonus.casino_id}`} aria-label={`Claim bonus: ${bonus.title}`}>Claim Now</Link>
+                    </Button>
                   </div>
                 </div>
               </GlassCard>
