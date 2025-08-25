@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
 import ImageUpload from '@/components/admin/ImageUpload'
@@ -117,11 +117,11 @@ function CasinosContentPage() {
   const { mutate, loading: mutationLoading } = useOptimizedMutation<Casino>({
     table: 'casinos',
     onSuccess: () => {
-      toast.success('Operation completed successfully')
+      toast.success('Operation completed successfully', 'Casino data has been updated')
       refetch()
     },
     onError: (error) => {
-      toast.error(error.message)
+              toast.error('Save Failed', error.message)
     },
     invalidateQueries: [`casinos-${searchTerm}-${statusFilter}`]
   })
@@ -131,7 +131,7 @@ function CasinosContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.name.trim() || !formData.description.trim()) {
-        toast.error('Name and description are required')
+        toast.error('Validation Error', 'Please fill in the required fields')
         return
       }
 
@@ -166,7 +166,7 @@ function CasinosContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Casino updated successfully')
+        toast.success('Casino Updated', 'Changes have been saved successfully')
       } else {
         // Create new casino
         const supabaseClient = supabase()
@@ -190,7 +190,7 @@ function CasinosContentPage() {
           .insert([{ slug, ...payload }])
 
         if (error) throw error
-        toast.success('Casino created successfully')
+        toast.success('Casino Created', 'New casino has been added to the system')
       }
 
       resetForm()
