@@ -91,7 +91,7 @@ export function RealtimeCasinoProvider({
       })
       setHasShownErrorToast(true)
     }
-  }, [realtime.isConnected, realtime.error, hasShownConnectedToast, hasShownErrorToast, showToasts, realtime.reconnect])
+  }, [realtime.isConnected, realtime.error, hasShownConnectedToast, hasShownErrorToast, showToasts, realtime.reconnect, realtime])
 
   // Reset toast flags when reconnecting
   useEffect(() => {

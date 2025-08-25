@@ -22,6 +22,9 @@ export interface Casino {
   established_year?: number | null
   // Display order for custom positioning (lower number = higher position)
   display_order?: number | null
+  // Admin control fields
+  is_featured?: boolean | null
+  is_active?: boolean | null
   // Home curation fields
   is_featured_home?: boolean | null
   home_rank?: number | null

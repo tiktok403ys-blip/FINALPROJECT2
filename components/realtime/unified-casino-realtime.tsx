@@ -118,7 +118,7 @@ export function UnifiedCasinoRealtime({
         duration: 3000
       })
     }
-  }, [lastUpdate, totalCasinos, filteredCasinos.length, applyFilters, enableStreaming])
+  }, [lastUpdate, totalCasinos, filteredCasinos.length, applyFilters, enableStreaming, filteredCasinos])
 
   // Handle connection status changes
   useEffect(() => {
@@ -163,12 +163,9 @@ export function UnifiedCasinoRealtime({
       {/* Connection Status - Optional */}
       {showConnectionStatus && (
         <RealtimeConnectionStatus
-          isConnected={isConnected}
-          isConnecting={isConnecting}
-          error={error}
-          lastUpdate={lastUpdate}
-          onRefresh={handleRefresh}
-          performanceInfo={performanceInfo}
+          showText={true}
+          size="md"
+          className="mb-4"
         />
       )}
 

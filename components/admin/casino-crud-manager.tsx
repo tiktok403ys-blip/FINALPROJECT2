@@ -13,7 +13,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ImageUpload } from '@/components/admin/image-upload'
+import ImageUpload from '@/components/admin/ImageUpload'
+import Image from 'next/image'
 import {
   Plus,
   Edit,
@@ -80,8 +81,8 @@ export function CasinoCrudManager({
         bonus_info: casino.bonus_info || '',
         license: casino.license || '',
         established_year: casino.established_year || new Date().getFullYear(),
-        is_featured: casino.is_featured || false,
-        is_active: casino.is_active !== false,
+        is_featured: casino.is_featured ?? false,
+        is_active: casino.is_active ?? true,
         display_order: casino.display_order || 999
       })
       setEditingCasino(casino)
@@ -157,6 +158,7 @@ export function CasinoCrudManager({
         id: editingCasino?.isNew ? `temp-${Date.now()}` : editingCasino?.id!,
         name: formData.name,
         description: formData.description,
+        location: null, // Required by Casino type
         website_url: formData.website_url,
         logo_url: formData.logo_url,
         rating: formData.rating,
@@ -488,9 +490,11 @@ export function CasinoCrudManager({
                 </div>
 
                 {casino.logo_url && (
-                  <img
+                  <Image
                     src={casino.logo_url}
                     alt={casino.name}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 object-cover rounded-lg mb-3"
                   />
                 )}
