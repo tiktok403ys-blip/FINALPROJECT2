@@ -13,6 +13,8 @@ interface RealtimeState {
   error: string | null
   lastUpdate: number
   reconnectAttempts: number
+  circuitBreakerOpen: boolean
+  lastFailureTime: number
 }
 
 interface UseCasinoRealtimeOptions {
@@ -25,9 +27,15 @@ interface UseCasinoRealtimeOptions {
 const DEFAULT_OPTIONS: Required<UseCasinoRealtimeOptions> = {
   enabled: true,
   debounceMs: 300,
-  maxReconnectAttempts: 5,
+  maxReconnectAttempts: 3,
   batchSize: 10
 }
+
+// Circuit breaker constants
+const CIRCUIT_BREAKER_TIMEOUT = 60000 // 1 minute
+const MAX_CONSECUTIVE_FAILURES = 3
+const INITIAL_RETRY_DELAY = 2000 // 2 seconds
+const MAX_RETRY_DELAY = 30000 // 30 seconds
 
 export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options }
@@ -39,7 +47,9 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     isConnecting: false,
     error: null,
     lastUpdate: 0,
-    reconnectAttempts: 0
+    reconnectAttempts: 0,
+    circuitBreakerOpen: false,
+    lastFailureTime: 0
   })
 
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -120,18 +130,49 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     }
   }, [state.casinos, actions, opts.batchSize, processBatchedUpdates, debouncedUpdate])
 
-  // Reconnection logic
+  // Circuit breaker check
+  const isCircuitBreakerOpen = useCallback(() => {
+    const now = Date.now()
+    return realtimeState.circuitBreakerOpen && 
+           (now - realtimeState.lastFailureTime) < CIRCUIT_BREAKER_TIMEOUT
+  }, [realtimeState.circuitBreakerOpen, realtimeState.lastFailureTime])
+
+  // Reset circuit breaker
+  const resetCircuitBreaker = useCallback(() => {
+    setRealtimeState(prev => ({
+      ...prev,
+      circuitBreakerOpen: false,
+      reconnectAttempts: 0,
+      error: null
+    }))
+  }, [])
+
+  // Reconnection logic with circuit breaker
   const attemptReconnect = useCallback(() => {
-    if (realtimeState.reconnectAttempts >= opts.maxReconnectAttempts) {
-      setRealtimeState(prev => ({
-        ...prev,
-        error: `Maksimum ${opts.maxReconnectAttempts} percobaan reconnect tercapai`,
-        isConnecting: false
-      }))
+    // Check if circuit breaker is open
+    if (isCircuitBreakerOpen()) {
+      console.warn('Circuit breaker is open, skipping reconnection attempt')
       return
     }
 
-    const delay = Math.min(1000 * Math.pow(2, realtimeState.reconnectAttempts), 30000)
+    // Check max attempts
+    if (realtimeState.reconnectAttempts >= opts.maxReconnectAttempts) {
+      setRealtimeState(prev => ({
+        ...prev,
+        error: `Realtime connection failed after ${opts.maxReconnectAttempts} attempts`,
+        isConnecting: false,
+        circuitBreakerOpen: true,
+        lastFailureTime: Date.now()
+      }))
+      console.warn('Opening circuit breaker due to consecutive failures')
+      return
+    }
+
+    // Calculate exponential backoff delay
+    const baseDelay = INITIAL_RETRY_DELAY * Math.pow(2, realtimeState.reconnectAttempts)
+    const delay = Math.min(baseDelay, MAX_RETRY_DELAY)
+    
+    console.log(`Attempting reconnection in ${delay}ms (attempt ${realtimeState.reconnectAttempts + 1}/${opts.maxReconnectAttempts})`)
     
     reconnectTimerRef.current = setTimeout(() => {
       setRealtimeState(prev => ({
@@ -148,7 +189,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       // Create new channel
       setupRealtimeChannel()
     }, delay)
-  }, [realtimeState.reconnectAttempts, opts.maxReconnectAttempts, supabase])
+  }, [realtimeState.reconnectAttempts, realtimeState.circuitBreakerOpen, realtimeState.lastFailureTime, opts.maxReconnectAttempts, supabase, isCircuitBreakerOpen])
 
   // Setup realtime channel
   const setupRealtimeChannel = useCallback(() => {
@@ -169,7 +210,12 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         handleRealtimeChange
       )
       .subscribe((status: string) => {
-        console.log('Casino realtime status:', status)
+        // Only log important status changes, not every status update
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Realtime connection established')
+        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+          console.warn(`⚠️ Realtime connection ${status.toLowerCase()}`)
+        }
         
         switch (status) {
           case 'SUBSCRIBED':
@@ -178,7 +224,9 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
               isConnected: true,
               isConnecting: false,
               error: null,
-              reconnectAttempts: 0
+              reconnectAttempts: 0,
+              circuitBreakerOpen: false,
+              lastFailureTime: 0
             }))
             actions.setLoading('realtime', false)
             break
@@ -190,48 +238,83 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
               ...prev,
               isConnected: false,
               isConnecting: false,
-              error: `Koneksi realtime error: ${status}`
+              error: `Realtime connection ${status.toLowerCase()}`,
+              lastFailureTime: Date.now()
             }))
             actions.setLoading('realtime', false)
-            actions.setError('realtime', `Koneksi realtime error: ${status}`)
+            actions.setError('realtime', `Realtime connection ${status.toLowerCase()}`)
             
-            // Attempt reconnection
-            attemptReconnect()
+            // Only attempt reconnection if not already trying and circuit breaker is closed
+            if (!realtimeState.isConnecting && !isCircuitBreakerOpen()) {
+              attemptReconnect()
+            }
             break
         }
       })
 
     channelRef.current = channel
-  }, [opts.enabled, supabase, handleRealtimeChange, actions, attemptReconnect])
+  }, [opts.enabled, supabase, handleRealtimeChange, actions, attemptReconnect, realtimeState.isConnecting, isCircuitBreakerOpen])
 
   // Manual reconnect function
   const reconnect = useCallback(() => {
+    console.log('🔄 Manual reconnection initiated')
+    
+    // Reset circuit breaker and state
     setRealtimeState(prev => ({
       ...prev,
       reconnectAttempts: 0,
-      error: null
+      error: null,
+      circuitBreakerOpen: false,
+      lastFailureTime: 0,
+      isConnecting: false
     }))
     
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current)
+    // Clear any existing timers
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current)
+      reconnectTimerRef.current = null
     }
     
-    setupRealtimeChannel()
-  }, [supabase, setupRealtimeChannel])
-
-  // Disconnect function
-  const disconnect = useCallback(() => {
+    // Cleanup existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
     
+    // Setup new channel
+    setupRealtimeChannel()
+  }, [supabase, setupRealtimeChannel])
+
+  // Disconnect function
+  const disconnect = useCallback(() => {
+    console.log('🔌 Disconnecting realtime connection')
+    
+    // Clear any existing timers
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current)
+      reconnectTimerRef.current = null
+    }
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
+    
+    // Remove channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current)
+      channelRef.current = null
+    }
+    
+    // Reset state with all required properties
     setRealtimeState({
       isConnected: false,
       isConnecting: false,
       error: null,
       lastUpdate: 0,
-      reconnectAttempts: 0
+      reconnectAttempts: 0,
+      circuitBreakerOpen: false,
+      lastFailureTime: 0
     })
     
     actions.setLoading('realtime', false)
@@ -287,6 +370,11 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     }
   }, [opts.enabled, setupRealtimeChannel, supabase])
 
+  // Fallback mechanism - disable realtime if circuit breaker is open for too long
+  const isRealtimeAvailable = useCallback(() => {
+    return opts.enabled && !isCircuitBreakerOpen()
+  }, [opts.enabled, isCircuitBreakerOpen])
+
   return {
     // State
     isConnected: realtimeState.isConnected,
@@ -294,10 +382,13 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     error: realtimeState.error,
     lastUpdate: realtimeState.lastUpdate,
     reconnectAttempts: realtimeState.reconnectAttempts,
+    circuitBreakerOpen: realtimeState.circuitBreakerOpen,
+    isRealtimeAvailable: isRealtimeAvailable(),
     
     // Actions
     reconnect,
     disconnect,
+    resetCircuitBreaker,
     
     // Queue info untuk debugging
     queueSize: updateQueueRef.current.length

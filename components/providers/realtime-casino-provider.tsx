@@ -1,5 +1,5 @@
-// Provider untuk mengelola Supabase Realtime connection secara global
-// Memastikan proper error handling dan reconnection management
+// Provider for managing Supabase Realtime connection globally
+// Ensures proper error handling and reconnection management
 
 'use client'
 
@@ -41,13 +41,13 @@ export function RealtimeCasinoProvider({
   const [hasShownConnectedToast, setHasShownConnectedToast] = useState(false)
   const [hasShownErrorToast, setHasShownErrorToast] = useState(false)
 
-  // Handle connection status changes dengan toast notifications
+  // Handle connection status changes with toast notifications
   useEffect(() => {
     if (!showToasts) return
 
     if (realtime.isConnected && !hasShownConnectedToast) {
-      toast.success('Casino data realtime terhubung', {
-        description: 'Data casino akan diperbarui secara otomatis',
+      toast.success('Casino data realtime connected', {
+        description: 'Casino data will be updated automatically',
         duration: 3000
       })
       setHasShownConnectedToast(true)
@@ -55,11 +55,11 @@ export function RealtimeCasinoProvider({
     }
 
     if (realtime.error && !hasShownErrorToast) {
-      toast.error('Koneksi realtime bermasalah', {
+      toast.error('Realtime connection issue', {
         description: realtime.error,
         duration: 5000,
         action: {
-          label: 'Coba Lagi',
+          label: 'Try Again',
           onClick: () => {
             realtime.reconnect()
             setHasShownErrorToast(false)
@@ -70,7 +70,7 @@ export function RealtimeCasinoProvider({
     }
   }, [realtime.isConnected, realtime.error, hasShownConnectedToast, hasShownErrorToast, showToasts, realtime.reconnect])
 
-  // Reset toast flags ketika reconnecting
+  // Reset toast flags when reconnecting
   useEffect(() => {
     if (realtime.isConnecting) {
       setHasShownConnectedToast(false)
@@ -85,7 +85,7 @@ export function RealtimeCasinoProvider({
   )
 }
 
-// Hook untuk menggunakan realtime casino context
+// Hook for using realtime casino context
 export function useRealtimeCasinoContext() {
   const context = useContext(RealtimeCasinoContext)
   
@@ -96,7 +96,7 @@ export function useRealtimeCasinoContext() {
   return context
 }
 
-// Hook untuk status realtime (optional, untuk komponen yang hanya perlu status)
+// Hook for realtime status (optional, for components that only need status)
 export function useRealtimeCasinoStatus() {
   const context = useContext(RealtimeCasinoContext)
   
