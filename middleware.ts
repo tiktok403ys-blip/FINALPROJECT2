@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { jwtVerify } from 'jose'
 
 // Rate limiting store (in production, use Redis or similar)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
@@ -30,7 +31,11 @@ const securityHeaders = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
 }
 
-export function middleware(request: NextRequest) {
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+)
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ip = request.headers.get('x-forwarded-for') ||
              request.headers.get('x-real-ip') ||
@@ -89,7 +94,25 @@ export function middleware(request: NextRequest) {
     const adminToken = request.cookies.get('admin_session')
 
     if (!adminToken) {
-      return NextResponse.redirect(new URL('/auth/admin-pin', request.url))
+      // Fallback to PIN verification cookie
+      const pinCookie = request.cookies.get('admin-pin-verified')?.value
+      let pinVerified = false
+
+      if (pinCookie) {
+        try {
+          const { payload } = await jwtVerify(pinCookie, JWT_SECRET)
+          pinVerified = payload.verified === true
+        } catch {
+          pinVerified = false
+        }
+      }
+
+      if (!pinVerified) {
+        const url = new URL('/auth/admin-pin', request.url)
+        // Preserve intended destination
+        url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+        return NextResponse.redirect(url)
+      }
     }
   }
 
