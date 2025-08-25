@@ -39,6 +39,7 @@ import { CasinoFilterMobileFirst } from '@/components/casino-filter-mobile-first
 import { QueryProvider } from '@/components/providers/query-provider'
 import { RealtimeCasinoProvider } from '@/components/providers/realtime-casino-provider'
 import { RealtimeConnectionStatus } from '@/components/realtime-connection-status'
+import { UnifiedCasinoRealtime } from '@/components/realtime/unified-casino-realtime'
 import { getCasinosServer } from '@/lib/server/casino-server'
 
 // Server Actions
@@ -342,11 +343,16 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
               <CasinoFilterMobileFirst currentFilter={filter as 'all' | 'high-rated' | 'new' | 'live'} />
             </Suspense>
 
-            {/* Streaming Casino Grid - Advanced React Server Components */}
-            <StreamingCasinoGrid
+            {/* Enhanced Unified Casino Realtime Grid */}
+            <UnifiedCasinoRealtime
               initialCasinos={casinos}
               enableStreaming={true}
               enableProgressiveLoading={true}
+              showConnectionStatus={true}
+              filterOptions={{
+                sortBy: 'rating',
+                minRating: 0
+              }}
             />
 
             {/* Pagination Info */}

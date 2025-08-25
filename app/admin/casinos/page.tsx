@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
 import ImageUpload from '@/components/admin/ImageUpload'
+import { CasinoCrudManager } from '@/components/admin/casino-crud-manager'
 import {
   Building2,
   Plus,

@@ -1,5 +1,5 @@
-// Provider for managing Supabase Realtime connection globally
-// Ensures proper error handling and reconnection management
+// Enhanced Provider for managing Supabase Realtime connection globally
+// Optimized for public pages with advanced error handling and performance monitoring
 
 'use client'
 
@@ -18,6 +18,17 @@ interface RealtimeCasinoContextType {
   resetCircuitBreaker: () => void
   queueSize: number
   initialLoading: boolean
+  // Enhanced features for public pages
+  totalCasinos: number
+  cacheTimestamp: number | null
+  invalidateCache: () => void
+  // CRUD helpers for admin operations
+  createCasino: (data: any) => Promise<any>
+  updateCasino: (id: string, data: any) => Promise<any>
+  deleteCasino: (id: string) => Promise<any>
+  // Performance metrics
+  connectionUptime: number
+  messagesReceived: number
 }
 
 const RealtimeCasinoContext = createContext<RealtimeCasinoContextType | null>(null)
@@ -28,19 +39,27 @@ interface RealtimeCasinoProviderProps {
   showToasts?: boolean
 }
 
-export function RealtimeCasinoProvider({ 
-  children, 
-  enabled = true, 
-  showToasts = true 
+export function RealtimeCasinoProvider({
+  children,
+  enabled = true,
+  showToasts = true
 }: RealtimeCasinoProviderProps) {
-  // Gunakan hook withData agar initial load dan realtime berada di satu tempat (menghindari koneksi ganda)
-  const realtime = useCasinoRealtimeWithData({ 
+  // Enhanced realtime configuration for public pages
+  const realtime = useCasinoRealtimeWithData({
     enabled,
     debounceMs: 300,
     maxReconnectAttempts: 5,
     batchSize: 10,
-    debug: false
+    debug: false,
+    enableSelectiveUpdates: true,
+    enableCRUDOptimizations: true,
+    retryOnFailure: true,
+    cacheTimeout: 5 * 60 * 1000 // 5 minutes
   })
+
+  // Performance tracking
+  const [connectionStartTime, setConnectionStartTime] = useState<number | null>(null)
+  const [messagesReceived, setMessagesReceived] = useState(0)
 
   const [hasShownConnectedToast, setHasShownConnectedToast] = useState(false)
   const [hasShownErrorToast, setHasShownErrorToast] = useState(false)
@@ -82,6 +101,23 @@ export function RealtimeCasinoProvider({
     }
   }, [realtime.isConnecting])
 
+  // Track connection uptime and message count
+  useEffect(() => {
+    if (realtime.isConnected && !connectionStartTime) {
+      setConnectionStartTime(Date.now())
+      setMessagesReceived(0)
+    } else if (!realtime.isConnected && connectionStartTime) {
+      setConnectionStartTime(null)
+    }
+  }, [realtime.isConnected, connectionStartTime])
+
+  // Track messages received (increment on each update)
+  useEffect(() => {
+    if (realtime.lastUpdate > 0) {
+      setMessagesReceived(prev => prev + 1)
+    }
+  }, [realtime.lastUpdate])
+
   return (
     <RealtimeCasinoContext.Provider value={{
       isConnected: realtime.isConnected,
@@ -93,7 +129,18 @@ export function RealtimeCasinoProvider({
       disconnect: realtime.disconnect,
       resetCircuitBreaker: realtime.resetCircuitBreaker,
       queueSize: realtime.queueSize,
-      initialLoading: realtime.initialLoading
+      initialLoading: realtime.initialLoading,
+      // Enhanced features
+      totalCasinos: realtime.totalCasinos,
+      cacheTimestamp: realtime.cacheTimestamp,
+      invalidateCache: realtime.invalidateCache,
+      // CRUD helpers
+      createCasino: realtime.createCasino,
+      updateCasino: realtime.updateCasino,
+      deleteCasino: realtime.deleteCasino,
+      // Performance metrics
+      connectionUptime: connectionStartTime ? Date.now() - connectionStartTime : 0,
+      messagesReceived
     }}>
       {children}
     </RealtimeCasinoContext.Provider>

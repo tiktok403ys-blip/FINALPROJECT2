@@ -156,7 +156,7 @@ export function StreamingCasinoGrid({
   )
 }
 
-// Streaming wrapper for server components
+// Enhanced Streaming wrapper with error boundaries
 export function StreamingWrapper({
   children,
   fallback
@@ -166,9 +166,54 @@ export function StreamingWrapper({
 }) {
   return (
     <Suspense fallback={fallback || <CasinoCardSkeleton />}>
-      {children}
+      <CasinoErrorBoundary>
+        {children}
+      </CasinoErrorBoundary>
     </Suspense>
   )
+}
+
+// Error boundary for streaming components
+export function CasinoErrorBoundary({
+  children,
+  fallback
+}: {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+}) {
+  const [hasError, setHasError] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Casino streaming error:', event.error)
+      setHasError(true)
+      setError(event.error)
+    }
+
+    window.addEventListener('error', handleError)
+    return () => window.removeEventListener('error', handleError)
+  }, [])
+
+  if (hasError) {
+    return fallback || (
+      <div className="text-center py-8 text-red-400">
+        <p>⚠️ Error loading casino data</p>
+        <button
+          onClick={() => {
+            setHasError(false)
+            setError(null)
+            window.location.reload()
+          }}
+          className="mt-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
+  return <>{children}</>
 }
 
 // Performance monitoring for streaming

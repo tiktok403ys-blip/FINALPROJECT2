@@ -1,5 +1,5 @@
-// Hook untuk Supabase Realtime integration dengan casino store
-// Mengoptimalkan untuk mobile dengan debouncing dan batching updates
+// Enhanced Unified Casino Realtime Hook
+// Optimized for public pages with selective updates and CRUD operations
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -23,14 +23,22 @@ interface UseCasinoRealtimeOptions {
   maxReconnectAttempts?: number
   batchSize?: number
   debug?: boolean
+  enableSelectiveUpdates?: boolean
+  enableCRUDOptimizations?: boolean
+  retryOnFailure?: boolean
+  cacheTimeout?: number
 }
 
 const DEFAULT_OPTIONS: Required<UseCasinoRealtimeOptions> = {
   enabled: true,
   debounceMs: 300,
-  maxReconnectAttempts: 3,
+  maxReconnectAttempts: 5,
   batchSize: 10,
-  debug: process.env.NODE_ENV !== 'production'
+  debug: process.env.NODE_ENV !== 'production',
+  enableSelectiveUpdates: true,
+  enableCRUDOptimizations: true,
+  retryOnFailure: true,
+  cacheTimeout: 5 * 60 * 1000 // 5 minutes
 }
 
 // Circuit breaker constants
@@ -101,36 +109,93 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     }, opts.debounceMs)
   }, [processBatchedUpdates, opts.debounceMs])
 
-  // Handle realtime changes
+  // Enhanced realtime change handler with selective updates
   const handleRealtimeChange = useCallback((payload: RealtimePostgresChangesPayload<Casino>) => {
     const { eventType, new: newRecord, old: oldRecord } = payload
 
     switch (eventType) {
       case 'INSERT':
-      case 'UPDATE':
         if (newRecord) {
-          // Tambahkan ke queue untuk batch processing
-          updateQueueRef.current.push(newRecord)
-          
-          // Trigger debounced update jika queue sudah mencapai batch size
-          if (updateQueueRef.current.length >= opts.batchSize) {
-            processBatchedUpdates()
+          if (opts.enableSelectiveUpdates) {
+            // Selective update: Add new casino to the beginning if it doesn't exist
+            const currentCasinos = state.casinos
+            const exists = currentCasinos.some(c => c.id === newRecord.id)
+
+            if (!exists) {
+              actions.setCasinos([newRecord, ...currentCasinos])
+              setRealtimeState(prev => ({
+                ...prev,
+                lastUpdate: Date.now()
+              }))
+
+              if (opts.debug) {
+                console.log('✅ New casino added via realtime:', newRecord.name)
+              }
+            }
           } else {
-            debouncedUpdate()
+            // Legacy batch processing
+            updateQueueRef.current.push(newRecord)
+            if (updateQueueRef.current.length >= opts.batchSize) {
+              processBatchedUpdates()
+            } else {
+              debouncedUpdate()
+            }
           }
         }
         break
-        
+
+      case 'UPDATE':
+        if (newRecord) {
+          if (opts.enableSelectiveUpdates) {
+            // Selective update: Replace specific casino
+            const currentCasinos = state.casinos
+            const index = currentCasinos.findIndex(c => c.id === newRecord.id)
+
+            if (index >= 0) {
+              const updatedCasinos = [...currentCasinos]
+              updatedCasinos[index] = newRecord
+              actions.setCasinos(updatedCasinos)
+
+              setRealtimeState(prev => ({
+                ...prev,
+                lastUpdate: Date.now()
+              }))
+
+              if (opts.debug) {
+                console.log('🔄 Casino updated via realtime:', newRecord.name)
+              }
+            }
+          } else {
+            // Legacy batch processing
+            updateQueueRef.current.push(newRecord)
+            if (updateQueueRef.current.length >= opts.batchSize) {
+              processBatchedUpdates()
+            } else {
+              debouncedUpdate()
+            }
+          }
+        }
+        break
+
       case 'DELETE':
         if (oldRecord) {
-          // Handle delete immediately (tidak perlu debounce)
+          // Immediate delete for better UX
           const currentCasinos = state.casinos
           const filteredCasinos = currentCasinos.filter(c => c.id !== oldRecord.id)
           actions.setCasinos(filteredCasinos)
+
+          setRealtimeState(prev => ({
+            ...prev,
+            lastUpdate: Date.now()
+          }))
+
+          if (opts.debug) {
+            console.log('🗑️ Casino deleted via realtime:', oldRecord.name)
+          }
         }
         break
     }
-  }, [state.casinos, actions, opts.batchSize, processBatchedUpdates, debouncedUpdate])
+  }, [state.casinos, actions, opts.batchSize, opts.enableSelectiveUpdates, opts.debug, processBatchedUpdates, debouncedUpdate])
 
   // Circuit breaker check
   const isCircuitBreakerOpen = useCallback(() => {
@@ -402,30 +467,39 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
   }
 }
 
-// Hook untuk casino realtime dengan auto-fetch initial data
+// Enhanced hook for casino realtime with auto-fetch initial data and CRUD optimizations
 export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}) {
   const realtime = useCasinoRealtime(options)
   const { state, actions } = useCasinoStore()
   const [initialLoading, setInitialLoading] = useState(true)
+  const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(null)
 
-  // Fetch initial data jika belum ada
+  // Fetch initial data dengan caching strategy
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (state.casinos.length > 0) {
+      const now = Date.now()
+      const cacheValid = cacheTimestamp && (now - cacheTimestamp) < options.cacheTimeout!
+
+      // Use cached data if available and valid
+      if (state.casinos.length > 0 && cacheValid && options.enableCRUDOptimizations) {
         setInitialLoading(false)
+        if (options.debug) {
+          console.log('📦 Using cached casino data, skipping fetch')
+        }
         return
       }
 
       try {
         actions.setLoading('initial', true)
-        
+
         const supabase = createClient()
         const { data: casinos, error } = await supabase
           .from('casinos')
           .select('*')
+          .eq('is_active', true) // Only fetch active casinos for public
           .order('display_order', { ascending: true, nullsFirst: false })
           .order('rating', { ascending: false, nullsFirst: false })
-          .limit(50) // Load first 50 casinos
+          .limit(100) // Load more casinos for better UX
 
         if (error) {
           throw error
@@ -433,11 +507,26 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
 
         actions.setCasinos(casinos || [])
         actions.setError('initial', null)
+        setCacheTimestamp(now)
+
+        if (options.debug) {
+          console.log(`📥 Fetched ${casinos?.length || 0} casinos from server`)
+        }
       } catch (error) {
         if (process.env.NODE_ENV !== 'production') {
           console.error('Error fetching initial casino data:', error)
         }
         actions.setError('initial', error instanceof Error ? error.message : 'Unknown error')
+
+        // Retry logic for failed requests
+        if (options.retryOnFailure && state.casinos.length === 0) {
+          setTimeout(() => {
+            if (options.debug) {
+              console.log('🔄 Retrying initial data fetch...')
+            }
+            fetchInitialData()
+          }, 3000)
+        }
       } finally {
         actions.setLoading('initial', false)
         setInitialLoading(false)
@@ -445,12 +534,83 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
     }
 
     fetchInitialData()
-  }, [state.casinos.length, actions])
+  }, [state.casinos.length, actions, cacheTimestamp, options])
+
+  // CRUD operation helpers for optimistic updates
+  const createCasino = useCallback(async (casinoData: Partial<Casino>) => {
+    if (!options.enableCRUDOptimizations) return null
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('casinos')
+        .insert(casinoData)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Optimistic update will be handled by realtime subscription
+      return data
+    } catch (error) {
+      console.error('Error creating casino:', error)
+      throw error
+    }
+  }, [options.enableCRUDOptimizations])
+
+  const updateCasino = useCallback(async (id: string, updates: Partial<Casino>) => {
+    if (!options.enableCRUDOptimizations) return null
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('casinos')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Optimistic update will be handled by realtime subscription
+      return data
+    } catch (error) {
+      console.error('Error updating casino:', error)
+      throw error
+    }
+  }, [options.enableCRUDOptimizations])
+
+  const deleteCasino = useCallback(async (id: string) => {
+    if (!options.enableCRUDOptimizations) return null
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('casinos')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Optimistic update will be handled by realtime subscription
+      return true
+    } catch (error) {
+      console.error('Error deleting casino:', error)
+      throw error
+    }
+  }, [options.enableCRUDOptimizations])
 
   return {
     ...realtime,
     initialLoading,
     casinos: state.casinos,
-    totalCasinos: state.casinos.length
+    totalCasinos: state.casinos.length,
+    // CRUD helpers for admin operations
+    createCasino,
+    updateCasino,
+    deleteCasino,
+    // Cache info
+    cacheTimestamp,
+    invalidateCache: () => setCacheTimestamp(null)
   }
 }
