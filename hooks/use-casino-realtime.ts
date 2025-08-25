@@ -213,8 +213,11 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         // Only log important status changes, not every status update
         if (status === 'SUBSCRIBED') {
           console.log('✅ Realtime connection established')
-        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+        } else if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) {
           console.warn(`⚠️ Realtime connection ${status.toLowerCase()}`)
+        } else if (status === 'CLOSED' && realtimeState.isConnected) {
+          // Only log CLOSED status if we were previously connected (to avoid spam)
+          console.warn('⚠️ Realtime connection closed')
         }
         
         switch (status) {
