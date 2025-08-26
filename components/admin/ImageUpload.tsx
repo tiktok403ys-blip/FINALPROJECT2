@@ -72,20 +72,20 @@ export default function ImageUpload({
       return publicUrl
     })()
 
-    // Show promise-based toast with glass card theme
-    toast.promise(uploadPromise, {
-      loading: 'Uploading Image...',
-      success: 'Image Uploaded Successfully',
-      error: 'Upload Failed'
-    })
+    // Show loading toast with glass card theme
+    const loadingToastId = toast.loading('Uploading Image...')
 
-    // Handle promise completion
+    // Handle promise completion with proper glass card theme
     uploadPromise
       .then((url) => {
         console.log('Image uploaded successfully:', url)
+        // Update loading toast to success
+        toast.success('Image Uploaded Successfully', 'Image has been uploaded to storage')
       })
       .catch((error) => {
         console.error('Upload error:', error)
+        // Update loading toast to error
+        toast.error('Upload Failed', 'Unable to upload image. Please check file format and size.')
       })
       .finally(() => {
         setUploading(false)
