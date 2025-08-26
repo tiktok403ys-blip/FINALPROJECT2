@@ -5,19 +5,23 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Security Configuration
 export const SECURITY_CONFIG = {
-  // Content Security Policy - Hardened without unsafe directives
+  // Content Security Policy - Compatible with Next.js while maintaining security
   csp: {
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
       "'strict-dynamic'", // Allows scripts loaded by trusted scripts
+      "'unsafe-eval'", // Required for Next.js webpack and development
+      "'unsafe-inline'", // Required for Next.js inline scripts
       "www.googletagmanager.com",
       "www.google-analytics.com",
       "googletagmanager.com",
-      "*.googletagmanager.com"
+      "*.googletagmanager.com",
+      "'wasm-unsafe-eval'" // Required for WebAssembly
     ],
     'style-src': [
       "'self'",
+      "'unsafe-inline'", // Required for CSS-in-JS and Next.js styles
       "fonts.googleapis.com",
       "fonts.gstatic.com"
     ],
