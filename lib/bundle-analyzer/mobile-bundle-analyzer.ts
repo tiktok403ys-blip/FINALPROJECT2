@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useMobileFirst } from '@/hooks/use-mobile-first'
+import { logger } from '@/lib/logger'
 
 interface BundleMetrics {
   totalSize: number
@@ -149,7 +150,7 @@ export class MobileBundleAnalyzer {
       return metrics
 
     } catch (error) {
-      console.error('Bundle analysis error:', error)
+      logger.error('Bundle analysis error:', error as Error)
       return this.getEmptyMetrics()
     }
   }
@@ -273,7 +274,7 @@ export class MobileBundleAnalyzer {
       this.performanceObserver.observe({ entryTypes: ['resource'] })
 
     } catch (error) {
-      console.error('Performance observer initialization failed:', error)
+      logger.error('Performance observer initialization failed:', error as Error)
     }
   }
 
@@ -295,7 +296,7 @@ export class MobileBundleAnalyzer {
 
     // Log slow resources
     if (loadTime > 1000) { // 1 second
-      console.warn(`🚨 Slow critical resource: ${entry.name} (${Math.round(loadTime)}ms)`)
+      logger.warn(`🚨 Slow critical resource: ${entry.name} (${Math.round(loadTime)}ms)`)
     }
   }
 
@@ -344,7 +345,7 @@ export function useBundleAnalysis() {
       const result = await analyzer.analyzeCurrentBundle()
       setMetrics(result)
     } catch (error) {
-      console.error('Bundle analysis failed:', error)
+      logger.error('Bundle analysis failed:', error as Error)
     } finally {
       setIsAnalyzing(false)
     }
@@ -377,12 +378,12 @@ export function BundleSizeTracker({ children }: { children: React.ReactNode }) {
       // Log recommendations
       if (metrics.recommendations.length > 0) {
         console.group('📊 Bundle Analysis Recommendations')
-        metrics.recommendations.forEach(rec => console.log(rec))
+        metrics.recommendations.forEach(rec => logger.log(rec))
         console.groupEnd()
       }
 
       // Log mobile score
-      console.log(`📱 Mobile Bundle Score: ${metrics.mobileScore}/100`)
+      logger.log(`📱 Mobile Bundle Score: ${metrics.mobileScore}/100`)
     }
   }, [metrics])
 

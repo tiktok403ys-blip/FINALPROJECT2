@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminAuth } from '@/lib/auth/admin-middleware'
 import { SignJWT } from 'jose'
+import { logger } from '@/lib/logger'
 
 const PIN_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
 // Reduce TTL to 15 minutes for better UX with per-section prompts
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (rpcError) {
-      console.error('PIN verification error:', rpcError)
+      logger.error('PIN verification error:', rpcError)
       return NextResponse.json(
         { error: 'PIN verification failed' },
         { status: 500 }
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
     return response
 
   } catch (error) {
-    console.error('PIN verification error:', error)
+    logger.error('PIN verification error:', error as Error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

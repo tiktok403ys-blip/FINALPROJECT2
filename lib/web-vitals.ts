@@ -1,4 +1,5 @@
 import { onCLS, onFID, onFCP, onLCP, onTTFB } from 'web-vitals';
+import { logger } from '@/lib/logger';
 
 // Extend Window interface for Sentry
 declare global {
@@ -25,7 +26,7 @@ function sendToAnalytics(metric: any) {
   }
 
   // You can also send to other analytics services here
-  console.log('Web Vital:', metric);
+  logger.log('Web Vital:', metric);
 }
 
 export function reportWebVitals() {

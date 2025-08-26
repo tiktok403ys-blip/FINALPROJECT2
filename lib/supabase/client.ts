@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr"
+import { logger } from '@/lib/logger'
 
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
 
@@ -14,7 +15,7 @@ function resolveCookieDomain(): string | undefined {
   // Use apex domain in production to share cookies across subdomains
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN
   if (!siteDomain) {
-    console.warn('NEXT_PUBLIC_SITE_DOMAIN not set, using host-only cookies')
+    logger.warn('NEXT_PUBLIC_SITE_DOMAIN not set, using host-only cookies')
     return undefined
   }
   if (host.endsWith(siteDomain)) return siteDomain

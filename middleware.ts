@@ -1,34 +1,27 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
+import { enhancedCSPMiddleware } from './lib/security/csp-utils'
+import { getEnhancedSecurityHeaders } from './lib/security'
+import { logger } from './lib/logger'
+import { 
+  persistentApiRateLimiter, 
+  persistentAdminRateLimiter, 
+  persistentStrictRateLimiter 
+} from './lib/security/persistent-rate-limiter'
 
-// Rate limiting store (in production, use Redis or similar)
-const rateLimit = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT = 100 // requests per minute
-const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
-
-// Security headers
-const securityHeaders = {
-  'Content-Security-Policy': `
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com *.gstatic.com;
-    style-src 'self' 'unsafe-inline' fonts.googleapis.com;
-    font-src 'self' fonts.gstatic.com;
-    img-src 'self' data: https: *.supabase.co *.googleusercontent.com *.google-analytics.com *.gstatic.com;
-    connect-src 'self' *.supabase.co *.google-analytics.com wss://*.supabase.co https://*.google-analytics.com;
-    frame-src 'self' *.youtube.com *.vimeo.com;
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    upgrade-insecure-requests;
-  `.replace(/\s+/g, ' ').trim(),
-
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+// Generate cryptographically secure nonce
+function generateNonce(): string {
+  const array = new Uint8Array(16)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(array)
+  } else {
+    // Fallback for environments without crypto
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 256)
+    }
+  }
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -41,52 +34,23 @@ export async function middleware(request: NextRequest) {
              request.headers.get('x-real-ip') ||
              'unknown'
 
-  // Rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
-    const now = Date.now()
-    const userKey = `${ip}-${pathname}`
-
-    const userLimit = rateLimit.get(userKey) || {
-      count: 0,
-      resetTime: now + RATE_LIMIT_WINDOW
-    }
-
-    // Reset counter if window has passed
-    if (now > userLimit.resetTime) {
-      userLimit.count = 0
-      userLimit.resetTime = now + RATE_LIMIT_WINDOW
-    }
-
-    // Check rate limit
-    if (userLimit.count >= RATE_LIMIT) {
-      return NextResponse.json(
-        {
-          error: 'Too many requests',
-          retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': Math.ceil((userLimit.resetTime - now) / 1000).toString(),
-            'X-RateLimit-Limit': RATE_LIMIT.toString(),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(userLimit.resetTime).toISOString()
-          }
-        }
-      )
-    }
-
-    userLimit.count++
-    rateLimit.set(userKey, userLimit)
-
-    // Clean up old entries every 100 requests
-    if (Math.random() < 0.01) {
-      for (const [key, value] of rateLimit.entries()) {
-        if (now > value.resetTime) {
-          rateLimit.delete(key)
-        }
-      }
-    }
+  // Apply persistent rate limiting based on route type
+  let rateLimitResponse: NextResponse | null = null
+  
+  if (pathname.startsWith('/api/admin')) {
+    // Strict rate limiting for admin API routes
+    rateLimitResponse = await persistentStrictRateLimiter(request)
+  } else if (pathname.startsWith('/admin')) {
+    // Admin panel rate limiting
+    rateLimitResponse = await persistentAdminRateLimiter(request)
+  } else if (pathname.startsWith('/api/')) {
+    // General API rate limiting
+    rateLimitResponse = await persistentApiRateLimiter(request)
+  }
+  
+  // If rate limit exceeded, return the rate limit response
+  if (rateLimitResponse) {
+    return rateLimitResponse
   }
 
   // Admin route protection
@@ -121,28 +85,81 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Add security headers to all responses
-  const response = NextResponse.next()
+  // Apply enhanced CSP middleware
+  const response = enhancedCSPMiddleware(request)
 
-  // Apply security headers
+  // Determine security context based on path
+  let securityContext: 'api' | 'admin' | 'public' | 'static' = 'public'
+  
+  if (pathname.startsWith('/api/')) {
+    securityContext = 'api'
+  } else if (pathname.startsWith('/admin')) {
+    securityContext = 'admin'
+  } else if (pathname.startsWith('/_next/static') || pathname.startsWith('/static') || 
+             pathname.endsWith('.js') || pathname.endsWith('.css') || 
+             pathname.endsWith('.png') || pathname.endsWith('.jpg') || 
+             pathname.endsWith('.jpeg') || pathname.endsWith('.webp') || 
+             pathname.endsWith('.svg') || pathname.endsWith('.ico')) {
+    securityContext = 'static'
+  }
+
+  // Apply enhanced security headers based on context
+  const securityHeaders = getEnhancedSecurityHeaders(securityContext)
   Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value)
+    if (value) { // Only set non-empty values
+      response.headers.set(key, value)
+    }
   })
 
-  // Add additional headers
-  response.headers.set('X-Request-ID', crypto.randomUUID())
+  // Add request tracking
+  const requestId = crypto.randomUUID()
+  response.headers.set('X-Request-ID', requestId)
+  
+  // Log security context for monitoring
+  logger.info('Security headers applied', {
+    component: 'middleware',
+    action: 'apply-security-headers',
+    metadata: {
+      path: pathname,
+      context: securityContext,
+      requestId,
+      userAgent: request.headers.get('user-agent')?.substring(0, 100),
+      ip: ip
+    }
+  })
 
   // PWA headers for manifest and service worker
   if (pathname === '/manifest.json') {
     response.headers.set('Content-Type', 'application/manifest+json')
+    response.headers.set('Cache-Control', 'public, max-age=86400') // 24 hours
+  }
+  
+  if (pathname === '/sw.js') {
+    response.headers.set('Content-Type', 'application/javascript')
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Service-Worker-Allowed', '/')
   }
 
-  // CORS headers for API routes
+  // Enhanced CORS headers for API routes
   if (pathname.startsWith('/api/')) {
-    response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_SITE_DOMAIN || '*')
+    const allowedOrigins = process.env.NEXT_PUBLIC_SITE_DOMAIN || 'http://localhost:3000'
+    const origin = request.headers.get('origin')
+    
+    // More restrictive CORS for production
+    if (process.env.NODE_ENV === 'production') {
+      if (origin && allowedOrigins.includes(origin)) {
+        response.headers.set('Access-Control-Allow-Origin', origin)
+      }
+    } else {
+      // Allow localhost in development
+      response.headers.set('Access-Control-Allow-Origin', origin || allowedOrigins)
+    }
+    
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token')
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
     response.headers.set('Access-Control-Max-Age', '86400')
+    response.headers.set('Vary', 'Origin')
   }
 
   return response

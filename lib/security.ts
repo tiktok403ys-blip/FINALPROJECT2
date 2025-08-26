@@ -5,13 +5,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Security Configuration
 export const SECURITY_CONFIG = {
-  // Content Security Policy
+  // Content Security Policy - Hardened without unsafe directives
   csp: {
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
-      "'unsafe-inline'", // Required for Next.js
-      "'unsafe-eval'",   // Required for Next.js development
+      "'strict-dynamic'", // Allows scripts loaded by trusted scripts
       "www.googletagmanager.com",
       "www.google-analytics.com",
       "googletagmanager.com",
@@ -19,7 +18,6 @@ export const SECURITY_CONFIG = {
     ],
     'style-src': [
       "'self'",
-      "'unsafe-inline'", // Required for Next.js styled-jsx
       "fonts.googleapis.com",
       "fonts.gstatic.com"
     ],
@@ -34,9 +32,10 @@ export const SECURITY_CONFIG = {
       "data:",
       "blob:",
       "https:",
-      "http:",
       "*.googletagmanager.com",
       "*.google-analytics.com",
+      "*.supabase.co",
+      "*.supabase.com",
       "*.cloudflare.com",
       "*.cloudfront.net",
       "*.amazonaws.com"
@@ -46,10 +45,11 @@ export const SECURITY_CONFIG = {
       "www.google-analytics.com",
       "*.googletagmanager.com",
       "*.google-analytics.com",
-      "*.cloudflare.com",
       "*.supabase.co",
-      "api.supabase.co",
-      "supabase.co"
+      "*.supabase.com",
+      "wss://*.supabase.co",
+      "wss://*.supabase.com",
+      "*.cloudflare.com"
     ],
     'frame-src': [
       "'self'",
@@ -58,6 +58,8 @@ export const SECURITY_CONFIG = {
       "player.vimeo.com",
       "www.googletagmanager.com"
     ],
+    'worker-src': ["'self'", "blob:"],
+    'manifest-src': ["'self'"],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
     'form-action': ["'self'"],
@@ -66,7 +68,7 @@ export const SECURITY_CONFIG = {
     'block-all-mixed-content': [] // Blocks HTTP content on HTTPS
   },
 
-  // Security Headers
+  // Enhanced Security Headers
   headers: {
     // Prevent clickjacking
     'X-Frame-Options': 'DENY',
@@ -75,30 +77,65 @@ export const SECURITY_CONFIG = {
     // Prevent MIME type sniffing
     'X-Content-Type-Options': 'nosniff',
 
-    // Enable XSS protection
+    // Enable XSS protection (deprecated but still useful for older browsers)
     'X-XSS-Protection': '1; mode=block',
 
-    // Referrer Policy
+    // Referrer Policy - Enhanced for privacy
     'Referrer-Policy': 'strict-origin-when-cross-origin',
 
-    // Permissions Policy (formerly Feature Policy)
+    // Enhanced Permissions Policy with more restrictions
     'Permissions-Policy': [
-      'camera=()',
-      'microphone=()',
-      'geolocation=()',
-      'payment=(self)',
-      'usb=()',
+      'accelerometer=()',
+      'ambient-light-sensor=()',
       'autoplay=()',
+      'battery=()',
+      'camera=()',
+      'cross-origin-isolated=()',
+      'display-capture=()',
+      'document-domain=()',
+      'encrypted-media=()',
+      'execution-while-not-rendered=()',
+      'execution-while-out-of-viewport=()',
       'fullscreen=(self)',
-      'picture-in-picture=()'
+      'geolocation=()',
+      'gyroscope=()',
+      'keyboard-map=()',
+      'magnetometer=()',
+      'microphone=()',
+      'midi=()',
+      'navigation-override=()',
+      'payment=(self)',
+      'picture-in-picture=()',
+      'publickey-credentials-get=()',
+      'screen-wake-lock=()',
+      'sync-xhr=()',
+      'usb=()',
+      'web-share=()',
+      'xr-spatial-tracking=()'
     ].join(', '),
 
-    // HSTS (HTTP Strict Transport Security)
-    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+    // HSTS (HTTP Strict Transport Security) - Enhanced
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
 
-    // Security Headers for mobile
+    // Cross-Origin Policies for enhanced security
+    'Cross-Origin-Embedder-Policy': 'require-corp',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Resource-Policy': 'same-origin',
+
+    // Security Headers for mobile and legacy browsers
     'X-Download-Options': 'noopen', // IE8+ prevent downloads opening automatically
     'X-Permitted-Cross-Domain-Policies': 'none', // Prevent Flash/PDF exploits
+    'X-DNS-Prefetch-Control': 'off', // Disable DNS prefetching for privacy
+    
+    // Cache Control for sensitive pages
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    
+    // Additional security headers
+    'X-Robots-Tag': 'noindex, nofollow, nosnippet, noarchive, notranslate, noimageindex',
+    'Server': '', // Hide server information
+    'X-Powered-By': '', // Hide technology stack
   },
 
   // Rate Limiting
@@ -121,13 +158,14 @@ export function generateCSP(directives: typeof SECURITY_CONFIG.csp): string {
     .join('; ')
 }
 
-// Enhanced CSP with nonce support for scripts
+// Enhanced CSP with nonce support for scripts and styles
 export function generateCSPWithNonce(nonce?: string): string {
   const csp = { ...SECURITY_CONFIG.csp }
 
-  // Add nonce to script-src if provided
+  // Add nonce to script-src and style-src if provided
   if (nonce) {
     csp['script-src'] = [...csp['script-src'], `'nonce-${nonce}'`]
+    csp['style-src'] = [...csp['style-src'], `'nonce-${nonce}'`]
   }
 
   return generateCSP(csp)
@@ -369,16 +407,65 @@ export const securityUtils = {
   }
 }
 
-// Security headers for API routes
-export function getApiSecurityHeaders(): Record<string, string> {
-  return {
+// Enhanced security headers for different contexts
+export function getEnhancedSecurityHeaders(context: 'api' | 'admin' | 'public' | 'static' = 'public'): Record<string, string> {
+  const baseHeaders = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
-    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+    'X-Download-Options': 'noopen',
+    'X-Permitted-Cross-Domain-Policies': 'none',
+    'X-DNS-Prefetch-Control': 'off',
+    'Server': '',
+    'X-Powered-By': ''
   }
+
+  switch (context) {
+    case 'api':
+      return {
+        ...baseHeaders,
+        'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Cross-Origin-Resource-Policy': 'same-origin',
+        'Cross-Origin-Opener-Policy': 'same-origin'
+      }
+    
+    case 'admin':
+      return {
+        ...baseHeaders,
+        'Content-Security-Policy': generateCSPWithNonce(),
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Robots-Tag': 'noindex, nofollow, nosnippet, noarchive, notranslate, noimageindex',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Resource-Policy': 'same-origin'
+      }
+    
+    case 'static':
+      return {
+        ...baseHeaders,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cross-Origin-Resource-Policy': 'cross-origin'
+      }
+    
+    default: // public
+      return {
+        ...baseHeaders,
+        'Content-Security-Policy': generateCSPWithNonce(),
+        'Cache-Control': 'public, max-age=3600, must-revalidate'
+      }
+  }
+}
+
+// Legacy function for backward compatibility
+export function getApiSecurityHeaders(): Record<string, string> {
+  return getEnhancedSecurityHeaders('api')
 }
 
 // Security middleware for API routes

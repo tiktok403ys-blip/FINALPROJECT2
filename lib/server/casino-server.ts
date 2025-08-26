@@ -3,6 +3,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Casino } from '@/lib/types'
+import { logger } from '@/lib/logger'
 
 export async function getCasinosServer(filter?: string, searchParams?: URLSearchParams) {
   const supabase = await createClient()
@@ -46,7 +47,7 @@ export async function getCasinosServer(filter?: string, searchParams?: URLSearch
   const { data: casinos, error, count } = await query
 
   if (error) {
-    console.error('Server error fetching casinos:', error)
+    logger.error('Server error fetching casinos:', error)
     return { casinos: [], total: 0, error: error.message }
   }
 
@@ -69,7 +70,7 @@ export async function getCasinoByIdServer(id: string) {
     .single()
 
   if (error) {
-    console.error('Server error fetching casino:', error)
+    logger.error('Server error fetching casino:', error)
     return { casino: null, error: error.message }
   }
 
@@ -88,7 +89,7 @@ export async function getFeaturedCasinosServer(limit = 6) {
     .limit(limit)
 
   if (error) {
-    console.error('Server error fetching featured casinos:', error)
+    logger.error('Server error fetching featured casinos:', error)
     return { casinos: [], error: error.message }
   }
 

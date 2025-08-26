@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 export type AdminRole = 'super_admin' | 'admin'
 
@@ -79,7 +80,7 @@ export class AdminAuth {
 
       return { user: this.currentUser, profile: this.currentProfile }
     } catch (error) {
-      console.error('Error getting current user:', error)
+      logger.error('Error getting current user:', error as Error)
       this.currentUser = null
       this.currentProfile = null
       return { user: null, profile: null }
@@ -137,7 +138,7 @@ export class AdminAuth {
     details?: any
   ): Promise<void> {
     if (!this.currentUser || !this.currentProfile) {
-      console.warn('Cannot log admin action: User not authenticated')
+      logger.warn('Cannot log admin action: User not authenticated')
       return
     }
 
@@ -152,7 +153,7 @@ export class AdminAuth {
         timestamp: new Date().toISOString()
       })
     } catch (error) {
-      console.error('Failed to log admin action:', error)
+      logger.error('Failed to log admin action:', error as Error)
     }
   }
 
@@ -168,7 +169,7 @@ export class AdminAuth {
       })
 
       if (error || !data.user) {
-        console.error('Auth error:', error)
+        logger.error('Auth error:', error)
         return false
       }
 
@@ -180,7 +181,7 @@ export class AdminAuth {
         .single()
 
       if (adminError || !adminData) {
-        console.error('Admin verification error:', adminError)
+        logger.error('Admin verification error:', adminError)
         // Sign out if not admin
         await this.supabase.auth.signOut()
         return false
@@ -210,7 +211,7 @@ export class AdminAuth {
 
       return true
     } catch (error) {
-      console.error('Sign in error:', error)
+      logger.error('Sign in error:', error as Error)
       return false
     }
   }

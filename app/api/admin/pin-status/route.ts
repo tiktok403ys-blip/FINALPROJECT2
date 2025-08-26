@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validatePinVerification, validateAdminAuth } from '@/lib/auth/admin-middleware';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/pin-status
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
       .rpc('admin_has_pin_set');
     
     if (pinError) {
-      console.error('Error checking admin PIN status:', pinError);
+      logger.error('Error checking admin PIN status:', pinError);
       return NextResponse.json(
         { error: 'Failed to check PIN status' },
         { status: 500 }
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error in pin-status endpoint:', error);
+    logger.error('Error in pin-status endpoint:', error as Error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

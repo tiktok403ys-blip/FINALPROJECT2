@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { logger } from '@/lib/logger'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -28,7 +29,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    logger.error('ErrorBoundary caught an error:', error, { metadata: { errorInfo } })
 
     this.setState({
       error,
@@ -40,13 +41,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       this.props.onError(error, errorInfo)
     } else {
       // Default error reporting - in production, send to analytics service
-      console.error('Uncaught error in component tree:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-        timestamp: Date.now(),
-        userAgent: navigator.userAgent,
-        url: window.location.href
+      logger.error('Uncaught error in component tree:', error, {
+        metadata: {
+          componentStack: errorInfo.componentStack,
+          timestamp: new Date().toISOString(),
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+          url: typeof window !== 'undefined' ? window.location.href : 'unknown'
+        }
       })
     }
   }
@@ -119,11 +120,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 export function CasinoErrorBoundary({ children }: { children: React.ReactNode }) {
   const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
     // Report casino-specific errors
-    console.error('Casino Component Error:', {
-      error,
-      errorInfo,
-      component: 'casino-related',
-      timestamp: Date.now()
+    logger.error('Casino Component Error:', error, {
+      metadata: {
+        componentStack: errorInfo.componentStack,
+        timestamp: new Date().toISOString(),
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+        url: typeof window !== 'undefined' ? window.location.href : 'unknown'
+      }
     })
 
     // Could send to analytics service

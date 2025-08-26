@@ -2,6 +2,7 @@
 // Enhanced for performance, offline support, and mobile-specific features
 
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 // Simple database interface for mobile optimization
 interface Database {
@@ -141,7 +142,7 @@ export class MobileOptimizedSupabase {
     const { data, error } = await query
 
     if (error) {
-      console.error('Mobile optimized casino query error:', error)
+      logger.error('Mobile optimized casino query error:', error)
       throw error
     }
 
@@ -176,7 +177,7 @@ export class MobileOptimizedSupabase {
       .single()
 
     if (error) {
-      console.error('Mobile optimized casino fetch error:', error)
+      logger.error('Mobile optimized casino fetch error:', error)
       throw error
     }
 
@@ -223,7 +224,7 @@ export class MobileOptimizedSupabase {
     const { data, error } = await query
 
     if (error) {
-      console.error('Mobile optimized search error:', error)
+      logger.error('Mobile optimized search error:', error)
       throw error
     }
 
@@ -249,7 +250,7 @@ export class MobileOptimizedSupabase {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Mobile optimized favorites error:', error)
+      logger.error('Mobile optimized favorites error:', error)
       throw error
     }
 

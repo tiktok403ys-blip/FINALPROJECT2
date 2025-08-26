@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Upload, Loader2, CheckCircle2 } from "lucide-react"
+import { logger } from "@/lib/logger"
 
 interface UploadInputProps {
   bucket?: string
@@ -61,7 +62,7 @@ export function UploadInput({
       onUploaded(data.publicUrl)
       setUploadedInfo({ name: file.name, size: file.size, url: data.publicUrl })
     } catch (err) {
-      console.error("Upload failed", err)
+      logger.error("Upload failed", err as Error)
       onError ? onError("Upload failed. Please try again.") : alert("Upload failed. Please try again.")
     } finally {
       setUploading(false)

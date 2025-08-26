@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import type { Casino } from '@/lib/types'
+import { logger } from '@/lib/logger'
 
 // Types for store state
 interface CasinoFilters {
@@ -154,7 +155,7 @@ if (typeof localStorage !== 'undefined') {
       };
     }
   } catch (error) {
-    console.error('Failed to load persisted casino data:', error);
+    logger.error('Failed to load persisted casino data:', error as Error);
   }
 }
 
@@ -391,7 +392,7 @@ function persistData() {
       };
       localStorage.setItem('casino-store', JSON.stringify(dataToPersist));
     } catch (error) {
-      console.error('Failed to persist casino data:', error);
+      logger.error('Failed to persist casino data:', error as Error);
     }
   }
 }

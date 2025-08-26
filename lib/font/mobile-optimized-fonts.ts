@@ -2,6 +2,9 @@
 // Designed to minimize font loading impact on mobile performance
 
 import { Inter, Roboto_Mono } from 'next/font/google'
+import { useEffect, useState, useCallback } from 'react'
+import { useMobileFirst } from '@/hooks/use-mobile-first'
+import { logger } from '@/lib/logger'
 
 // Base font configuration optimized for mobile
 const baseFontConfig = {
@@ -83,7 +86,7 @@ export class MobileFontLoader {
     return new Promise((resolve, reject) => {
       // Check if Font Loading API is available
       if (!('fonts' in document)) {
-        console.warn('Font Loading API not supported')
+        logger.warn('Font Loading API not supported')
         resolve()
         return
       }
@@ -303,15 +306,15 @@ export const mobileFontUtils = {
     if (typeof window === 'undefined' || !('fonts' in document)) return
 
     document.fonts.addEventListener('loading', (event) => {
-      console.log('Font loading started:', event.fontfaces?.[0]?.family || 'Unknown font')
+      logger.log('Font loading started:', { metadata: { fontFamily: event.fontfaces?.[0]?.family || 'Unknown font' } })
     })
 
     document.fonts.addEventListener('loadingdone', (event) => {
-      console.log('Font loaded successfully:', event.fontfaces?.[0]?.family || 'Unknown font')
+      logger.log('Font loaded successfully:', { metadata: { fontFamily: event.fontfaces?.[0]?.family || 'Unknown font' } })
     })
 
     document.fonts.addEventListener('loadingerror', (event) => {
-      console.error('Font loading error:', event.fontfaces?.[0]?.family || 'Unknown font')
+      logger.error('Font loading error:', new Error('Font loading failed'), { metadata: { fontFamily: event.fontfaces?.[0]?.family || 'Unknown font' } })
     })
   },
 
@@ -334,18 +337,18 @@ export function useMobileOptimizedFonts() {
   const loadCriticalFonts = async () => {
     try {
       await fontLoader.preloadCriticalFonts()
-      console.log('Critical fonts loaded successfully')
+      logger.log('Critical fonts loaded successfully')
     } catch (error) {
-      console.error('Failed to load critical fonts:', error)
+      logger.error('Failed to load critical fonts:', error as Error)
     }
   }
 
   const loadNonCriticalFonts = async () => {
     try {
       await fontLoader.loadNonCriticalFonts()
-      console.log('Non-critical fonts loaded successfully')
+      logger.log('Non-critical fonts loaded successfully')
     } catch (error) {
-      console.warn('Some non-critical fonts failed to load:', error)
+      logger.warn('Some non-critical fonts failed to load:', { metadata: { error: String(error) } })
     }
   }
 

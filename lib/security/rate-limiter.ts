@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 // Rate limiting configuration
 interface RateLimitConfig {
@@ -89,7 +90,7 @@ function calculateBackoffDuration(violations: number): number {
 // Log abuse attempts
 function logAbuseAttempt(key: string, violations: number, ip: string) {
   const timestamp = new Date().toISOString()
-  console.warn(`[RATE_LIMIT_VIOLATION] ${timestamp} - IP: ${ip}, Key: ${key}, Violations: ${violations}`)
+  logger.warn(`[RATE_LIMIT_VIOLATION] ${timestamp} - IP: ${ip}, Key: ${key}, Violations: ${violations}`)
   
   // In production, you might want to send this to a monitoring service
   // or write to a dedicated security log file

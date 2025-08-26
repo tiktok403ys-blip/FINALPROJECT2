@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase as createSupabaseClient } from '@/lib/supabase'
 import { toast } from '@/components/ui/sonner'
+import { logger } from '@/lib/logger'
 
 interface QueryOptions {
   table: string
@@ -120,7 +121,7 @@ export function useOptimizedQuery<T = any>(options: QueryOptions): QueryResult<T
       setCount(resultCount)
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.error('Query error:', err)
+        logger.error('Query error:', err)
         setError(err.message || 'An error occurred while fetching data')
         toast.error('Load Failed', 'Unable to load data. Please check your connection and try again.')
       }
@@ -247,7 +248,7 @@ export function useOptimizedMutation<T = any>(options: {
       options.onSuccess?.(result)
       return result
     } catch (err: any) {
-      console.error('Mutation error:', err)
+      logger.error('Mutation error:', err)
       setError(err.message || 'An error occurred')
       options.onError?.(err)
       throw err

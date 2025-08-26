@@ -23,6 +23,7 @@ import { createClient } from "@/lib/supabase/client"
 import { AdminPinDialog } from "@/components/admin-pin-dialog"
 import { useAuth } from "@/components/auth-provider"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { logger } from "@/lib/logger"
 
 interface Profile {
   id: string
@@ -86,7 +87,7 @@ export function Navbar() {
     if (!currentUser || profileFetchedRef.current || !mountedRef.current) return
 
     try {
-      console.log("🔄 Fetching profile for:", currentUser.email)
+      logger.log("🔄 Fetching profile for:", { metadata: { email: currentUser.email } })
       profileFetchedRef.current = true
       setProfileError(null)
 
@@ -95,10 +96,10 @@ export function Navbar() {
       })
 
       if (error) {
-        console.error("❌ Profile fetch error:", error)
+        logger.error("❌ Profile fetch error:", error)
 
         if (error.code === "PGRST116") {
-          console.log("🔄 Creating new profile...")
+          logger.log("🔄 Creating new profile...")
           const newProfile = {
             id: currentUser.id,
             email: currentUser.email,
@@ -115,12 +116,12 @@ export function Navbar() {
             .single()
 
           if (createError) {
-            console.error("❌ Error creating profile:", createError)
+            logger.error("❌ Error creating profile:", createError)
             if (mountedRef.current) {
               setProfile(newProfile)
             }
           } else {
-            console.log("✅ Profile created successfully")
+            logger.log("✅ Profile created successfully")
             if (mountedRef.current) {
               setProfile(createdProfile)
             }
@@ -141,14 +142,14 @@ export function Navbar() {
           }
         }
       } else {
-        console.log("✅ Profile loaded successfully:", profileData)
+        logger.log("✅ Profile loaded successfully:", profileData)
         const row = Array.isArray(profileData) ? profileData?.[0] : profileData
         if (mountedRef.current) {
           setProfile(row ?? null)
         }
       }
     } catch (error) {
-      console.error("❌ Unexpected error fetching profile:", error)
+      logger.error("❌ Unexpected error fetching profile:", error as Error)
 
       const fallbackProfile: Profile = {
         id: currentUser.id,
@@ -192,7 +193,7 @@ export function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-      console.log("Navbar - Auth state changed:", event, session?.user?.email)
+      logger.log("Navbar - Auth state changed:", { metadata: { event, userEmail: session?.user?.email } })
 
       if (event === "SIGNED_IN" && session?.user) {
         profileFetchedRef.current = false
@@ -259,7 +260,7 @@ export function Navbar() {
     try {
       setIsSigningOut(true)
       setShowUserMenu(false)
-      console.log("🔄 Starting sign out process...")
+      logger.log("🔄 Starting sign out process...")
 
       // Clear admin session
       sessionStorage.removeItem("admin_pin_verified")
@@ -272,10 +273,10 @@ export function Navbar() {
 
       await authSignOut()
 
-      console.log("✅ Sign out completed, redirecting...")
+      logger.log("✅ Sign out completed, redirecting...")
       window.location.href = "/"
     } catch (error) {
-      console.error("❌ Sign out failed:", error)
+      logger.error("❌ Sign out failed:", error as Error)
       setIsSigningOut(false)
       window.location.href = "/"
     }

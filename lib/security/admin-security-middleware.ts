@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, getClientIdentifier, RATE_LIMIT_CONFIGS } from './rate-limiter';
 import { validateCSRFToken, requiresCSRFProtection, createCSRFErrorResponse } from './csrf-protection';
+import { logger } from '@/lib/logger';
 
 interface SecurityCheckResult {
   allowed: boolean;
@@ -186,7 +187,7 @@ export function logSecurityEvent(
   };
   
   // In production, send to logging service (e.g., Sentry, CloudWatch)
-  console.warn('[SECURITY EVENT]', JSON.stringify(logEntry, null, 2));
+  logger.warn('[SECURITY EVENT]', { metadata: { logEntry: JSON.stringify(logEntry, null, 2) } });
 }
 
 /**

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useCasinoStore } from '@/lib/store/casino-store'
 import type { Casino } from '@/lib/types'
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 interface RealtimeState {
   isConnected: boolean
@@ -129,7 +130,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
               }))
 
               if (opts.debug) {
-                console.log('✅ New casino added via realtime:', newRecord.name)
+                logger.log('✅ New casino added via realtime:', { metadata: { casinoName: newRecord.name } })
               }
             }
           } else {
@@ -162,7 +163,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
               }))
 
               if (opts.debug) {
-                console.log('🔄 Casino updated via realtime:', newRecord.name)
+                logger.log('🔄 Casino updated via realtime:', { metadata: { casinoName: newRecord.name } })
               }
             }
           } else {
@@ -190,7 +191,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
           }))
 
           if (opts.debug) {
-            console.log('🗑️ Casino deleted via realtime:', oldRecord.name)
+            logger.log('🗑️ Casino deleted via realtime:', { metadata: { casinoName: oldRecord.name } })
           }
         }
         break
@@ -220,7 +221,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     if (isCircuitBreakerOpen()) {
       // Only log circuit breaker status occasionally to reduce spam
       if (opts.debug && realtimeState.reconnectAttempts === 0) {
-        console.warn('⚡ Circuit breaker active, reconnection paused')
+        logger.warn('⚡ Circuit breaker active, reconnection paused')
       }
       return
     }
@@ -234,7 +235,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         circuitBreakerOpen: true,
         lastFailureTime: Date.now()
       }))
-      if (opts.debug) console.warn('⚡ Circuit breaker activated after max attempts')
+      if (opts.debug) logger.warn('⚡ Circuit breaker activated after max attempts')
       return
     }
 
@@ -244,7 +245,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     
     // Only log on first attempt or every 3rd attempt to reduce console spam
     if (opts.debug && (realtimeState.reconnectAttempts === 0 || realtimeState.reconnectAttempts % 3 === 0)) {
-      console.log(`🔄 Reconnecting... (attempt ${realtimeState.reconnectAttempts + 1}/${opts.maxReconnectAttempts})`)
+      logger.log(`🔄 Reconnecting... (attempt ${realtimeState.reconnectAttempts + 1}/${opts.maxReconnectAttempts})`)
     }
     
     reconnectTimerRef.current = setTimeout(() => {
@@ -285,12 +286,12 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       .subscribe((status: string) => {
         // Only log important status changes, not every status update
         if (opts.debug && status === 'SUBSCRIBED') {
-          console.log('✅ Realtime connection established')
+          logger.log('✅ Realtime connection established')
         } else if (opts.debug && ['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) {
-          console.warn(`⚠️ Realtime connection ${status.toLowerCase()}`)
+          logger.warn(`⚠️ Realtime connection ${status.toLowerCase()}`)
         } else if (opts.debug && status === 'CLOSED' && realtimeState.isConnected) {
           // Only log CLOSED status if we were previously connected (to avoid spam)
-          console.warn('⚠️ Realtime connection closed')
+          logger.warn('⚠️ Realtime connection closed')
         }
         
         switch (status) {
@@ -484,7 +485,7 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
       if (state.casinos.length > 0 && cacheValid && options.enableCRUDOptimizations) {
         setInitialLoading(false)
         if (options.debug) {
-          console.log('📦 Using cached casino data, skipping fetch')
+          logger.log('📦 Using cached casino data, skipping fetch')
         }
         return
       }
@@ -510,11 +511,11 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
         setCacheTimestamp(now)
 
         if (options.debug) {
-          console.log(`📥 Fetched ${casinos?.length || 0} casinos from server`)
+          logger.log(`📥 Fetched ${casinos?.length || 0} casinos from server`)
         }
       } catch (error) {
         if (process.env.NODE_ENV !== 'production') {
-          console.error('Error fetching initial casino data:', error)
+          logger.error('Error fetching initial casino data:', error as Error)
         }
         actions.setError('initial', error instanceof Error ? error.message : 'Unknown error')
 
@@ -522,7 +523,7 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
         if (options.retryOnFailure && state.casinos.length === 0) {
           setTimeout(() => {
             if (options.debug) {
-              console.log('🔄 Retrying initial data fetch...')
+              logger.log('🔄 Retrying initial data fetch...')
             }
             fetchInitialData()
           }, 3000)
@@ -553,7 +554,7 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
       // Optimistic update will be handled by realtime subscription
       return data
     } catch (error) {
-      console.error('Error creating casino:', error)
+      logger.error('Error creating casino:', error as Error)
       throw error
     }
   }, [options.enableCRUDOptimizations])
@@ -575,7 +576,7 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
       // Optimistic update will be handled by realtime subscription
       return data
     } catch (error) {
-      console.error('Error updating casino:', error)
+      logger.error('Error updating casino:', error as Error)
       throw error
     }
   }, [options.enableCRUDOptimizations])
@@ -595,7 +596,7 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
       // Optimistic update will be handled by realtime subscription
       return true
     } catch (error) {
-      console.error('Error deleting casino:', error)
+      logger.error('Error deleting casino:', error as Error)
       throw error
     }
   }, [options.enableCRUDOptimizations])

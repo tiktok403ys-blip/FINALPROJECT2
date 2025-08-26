@@ -6,6 +6,7 @@ import { useMobileFirst } from '@/hooks/use-mobile-first'
 import { mobileCriticalCSS, pageCriticalCSS } from '@/lib/critical-css/mobile-critical-css'
 import { useFontPreloading, useFontPerformanceMonitoring } from '@/lib/font-preloader'
 import { trackEvent } from '@/lib/analytics'
+import { logger } from '@/lib/logger'
 
 interface CriticalCSSApplierProps {
   children: React.ReactNode
@@ -117,7 +118,7 @@ export function CriticalCSSApplier({
       })
     }
 
-    console.log(`[CriticalCSS] Applied ${criticalCSS.length} bytes in ${Math.round(loadTime)}ms for ${pageType || 'unknown'} page`)
+    logger.log(`[CriticalCSS] Applied ${criticalCSS.length} bytes in ${Math.round(loadTime)}ms for ${pageType || 'unknown'} page`)
 
   }, [criticalCSS, pageType, isMobile, pathname, enablePerformanceTracking])
 
@@ -132,7 +133,7 @@ export function CriticalCSSApplier({
 
         // Preload critical fonts
         const criticalMetrics = await preloadCriticalFonts()
-        console.log('[FontLoader] Critical fonts loaded:', criticalMetrics)
+        logger.log('[FontLoader] Critical fonts loaded:', { metadata: { criticalMetrics } })
 
         if (enablePerformanceTracking) {
           trackEvent({
@@ -150,11 +151,11 @@ export function CriticalCSSApplier({
         // Load secondary fonts after a delay
         setTimeout(async () => {
           const secondaryMetrics = await preloadCriticalFonts()
-          console.log('[FontLoader] Secondary fonts loaded:', secondaryMetrics)
+          logger.log('[FontLoader] Secondary fonts loaded:', { metadata: { secondaryMetrics } })
         }, 1000)
 
       } catch (error) {
-        console.error('[FontLoader] Failed to preload fonts:', error)
+        logger.error('[FontLoader] Failed to preload fonts:', error as Error)
       }
     }
 
@@ -194,7 +195,7 @@ export function CriticalCSSApplier({
         // Small delay to ensure smooth transition
         setTimeout(() => {
           styleElement.remove()
-          console.log('[CriticalCSS] Removed after fonts loaded')
+          logger.log('[CriticalCSS] Removed after fonts loaded')
         }, 100)
       }
     }
@@ -302,7 +303,7 @@ export function useCriticalCSS() {
       }
     })
 
-    console.log(`[CriticalCSS] Applied ${css.length} bytes for ${pageType} in ${Math.round(loadTime)}ms`)
+    logger.log(`[CriticalCSS] Applied ${css.length} bytes for ${pageType} in ${Math.round(loadTime)}ms`)
   }, [isMobile])
 
   const removePageCriticalCSS = useCallback((pageType: string) => {
@@ -311,7 +312,7 @@ export function useCriticalCSS() {
     const styleElement = document.getElementById(`critical-css-${pageType}`)
     if (styleElement) {
       styleElement.remove()
-      console.log(`[CriticalCSS] Removed for ${pageType}`)
+      logger.log(`[CriticalCSS] Removed for ${pageType}`)
     }
   }, [])
 
@@ -374,7 +375,7 @@ export function CriticalCSSPerformanceMonitor() {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
       fidObserver.observe({ entryTypes: ['first-input'] })
     } catch (error) {
-      console.warn('Performance observer not supported:', error)
+      logger.warn('Performance observer not supported:', { metadata: { error: String(error) } })
     }
 
     return () => {

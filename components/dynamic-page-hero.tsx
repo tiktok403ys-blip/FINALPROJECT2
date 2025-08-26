@@ -4,6 +4,7 @@ import { usePageSectionSingle } from '@/hooks/use-page-section'
 import { PageHero } from '@/components/page-hero'
 import { LoadingSpinner } from '@/components/loading-spinner'
 import { useMemo } from 'react'
+import { logger } from '@/lib/logger'
 
 interface DynamicPageHeroProps {
   pageName: string
@@ -77,7 +78,7 @@ export function DynamicPageHero({
   // If no dynamic content and no fallback, show error or empty state
   if (!content.title && !content.description) {
     if (error) {
-      console.error('Error loading page section:', error)
+      logger.error('Error loading page section:', new Error(error))
     }
     return (
       <div className="py-12 text-center text-gray-500">
@@ -130,7 +131,7 @@ export function SimpleDynamicHero({
 
   if (!title && !description) {
     if (error) {
-      console.error('Error loading page section:', error)
+      logger.error('Error loading page section:', new Error(error))
     }
     return null
   }

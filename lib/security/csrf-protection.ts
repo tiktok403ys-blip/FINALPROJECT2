@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { headers } from 'next/headers'
+import crypto from 'crypto'
+import { logger } from '@/lib/logger'
 
 // CSRF configuration
 interface CSRFConfig {
@@ -91,7 +94,7 @@ function logCSRFViolation(req: NextRequest, reason: string) {
   const userAgent = req.headers.get('user-agent') || 'unknown'
   const referer = req.headers.get('referer') || 'none'
   
-  console.warn(`[CSRF_VIOLATION] ${timestamp} - IP: ${ip}, Reason: ${reason}, UA: ${userAgent}, Referer: ${referer}`)
+  logger.warn(`[CSRF_VIOLATION] ${timestamp} - IP: ${ip}, Reason: ${reason}, UA: ${userAgent}, Referer: ${referer}`)
   
   // In production, send to security monitoring service
 }
