@@ -9,10 +9,7 @@
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com www.googletagmanager.com www.google-analytics.com googletagmanager.com analytics.google.com tagmanager.google.com *.doubleclick.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.googleapis.com fonts.gstatic.com data:; img-src 'self' data: blob: https: *.googletagmanager.com *.google-analytics.com *.supabase.co *.supabase.com *.cloudflare.com *.cloudfront.net *.amazonaws.com; connect-src 'self' *.google-analytics.com *.googletagmanager.com analytics.google.com stats.g.doubleclick.net *.doubleclick.net region1.google-analytics.com *.supabase.co *.supabase.com https://gzslsakmkoxfhcyifgtb.supabase.co wss://gzslsakmkoxfhcyifgtb.supabase.co wss://*.supabase.co wss://*.supabase.com *.cloudflare.com; frame-src 'self' www.google.com www.youtube.com player.vimeo.com www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content"
-        },
+
         {
           "key": "X-Frame-Options",
           "value": "DENY"
@@ -31,7 +28,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()"
+          "value": "accelerometer=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()"
         },
         {
           "key": "Strict-Transport-Security",

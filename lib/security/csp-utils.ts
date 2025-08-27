@@ -9,71 +9,40 @@ type CSPDirectives = typeof SECURITY_CONFIG.csp
  */
 export function enhancedCSPMiddleware(request: NextRequest): NextResponse {
   const response = NextResponse.next()
+  const nonce = generateCSPNonce()
+  
+  // Store nonce in response headers for use in components
+  response.headers.set('X-Nonce', nonce)
+  
+  // Skip CSP in development to avoid Next.js conflicts
+  if (process.env.NODE_ENV === 'development') {
+    // Only apply minimal security headers in development
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    return response
+  }
   
   try {
-    // Generate cryptographically secure nonce
-    const nonce = generateCSPNonce()
+    const cspDirectives = getProductionCSP()
     
-    // Use development CSP in dev mode, production CSP in production
-    let securityHeaders: Record<string, string>
-    
-    if (process.env.NODE_ENV === 'development') {
-      const devCSP = getDevelopmentCSP()
-      // Add nonce to development CSP for inline scripts
-      const devCSPWithNonce = {
-        ...devCSP,
-        'script-src': [...devCSP['script-src'], `'nonce-${nonce}'`],
-        'style-src': [...devCSP['style-src'], `'nonce-${nonce}'`]
-      }
-      
-      securityHeaders = {
-        'Content-Security-Policy': generateCSP(devCSPWithNonce),
-        'X-Frame-Options': 'DENY',
-        'X-Content-Type-Options': 'nosniff',
-        'X-XSS-Protection': '1; mode=block',
-        'Referrer-Policy': 'strict-origin-when-cross-origin'
-      }
-    } else {
-      // In production, vercel.json handles CSP headers
-      // Only set additional security headers that aren't in vercel.json
-      securityHeaders = {
-        'X-DNS-Prefetch-Control': 'off',
-        'X-Download-Options': 'noopen',
-        'X-Permitted-Cross-Domain-Policies': 'none',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
+    // Add nonce to script-src and style-src
+    if (cspDirectives['script-src']) {
+      cspDirectives['script-src'].push(`'nonce-${nonce}'`)
+    }
+    if (cspDirectives['style-src']) {
+      cspDirectives['style-src'].push(`'nonce-${nonce}'`)
     }
     
-    // Apply security headers
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      if (value) { // Only set non-empty values
-        response.headers.set(key, value)
-      }
-    })
+    // Build CSP header string
+    const cspHeader = Object.entries(cspDirectives)
+      .filter(([_, values]) => values.length > 0)
+      .map(([directive, values]) => `${directive} ${values.join(' ')}`)
+      .join('; ')
     
-    // Set nonce for client-side access
-    response.headers.set('x-nonce', nonce)
-    
-    // Add CSP report endpoint if in production
-    if (process.env.NODE_ENV === 'production') {
-      const csp = response.headers.get('Content-Security-Policy')
-      if (csp) {
-        const cspWithReporting = `${csp}; report-uri /api/csp-report; report-to csp-endpoint`
-        response.headers.set('Content-Security-Policy', cspWithReporting)
-      }
-    }
+    response.headers.set('Content-Security-Policy', cspHeader)
     
   } catch (error) {
-    console.error('CSP middleware error:', error)
-    // Fallback to very permissive CSP for development if generation fails
-    if (process.env.NODE_ENV === 'development') {
-      response.headers.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: ws: wss: localhost:* 127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' localhost:* 127.0.0.1:* *.google-analytics.com *.googletagmanager.com; style-src 'self' 'unsafe-inline' localhost:* 127.0.0.1:* fonts.googleapis.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' localhost:* 127.0.0.1:* ws: wss: *.supabase.co *.google-analytics.com; frame-ancestors 'none';")
-    }
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-XSS-Protection', '1; mode=block')
+    console.error('Failed to generate CSP:', error)
   }
   
   return response
@@ -155,6 +124,76 @@ export function processCSPViolation(report: CSPViolationReport): void {
 }
 
 /**
+ * Production mode CSP configuration (strict security)
+ */
+export function getProductionCSP(): CSPDirectives {
+  return {
+    'default-src': ["'self'"],
+    'script-src': [
+      "'self'",
+      "'strict-dynamic'",
+      "*.gurusingapore.com",
+      "*.googletagmanager.com",
+      "*.google-analytics.com",
+      "www.googletagmanager.com",
+      "www.google-analytics.com",
+      "googletagmanager.com",
+      "analytics.google.com",
+      "tagmanager.google.com",
+      "*.doubleclick.net"
+    ],
+    'style-src': [
+      "'self'",
+      "'unsafe-inline'", // Required for Next.js CSS-in-JS
+      "fonts.googleapis.com",
+      "fonts.gstatic.com",
+      "*.gurusingapore.com"
+    ],
+    'font-src': ["'self'", "fonts.googleapis.com", "fonts.gstatic.com", "data:"],
+    'img-src': [
+      "'self'", 
+      "data:", 
+      "blob:", 
+      "https:",
+      "*.googletagmanager.com",
+      "*.google-analytics.com",
+      "*.supabase.co",
+      "*.supabase.com",
+      "*.cloudflare.com",
+      "*.cloudfront.net",
+      "*.amazonaws.com",
+      "*.gurusingapore.com"
+    ],
+    'connect-src': [
+      "'self'", 
+      "*.google-analytics.com",
+      "*.googletagmanager.com",
+      "analytics.google.com",
+      "stats.g.doubleclick.net",
+      "*.doubleclick.net",
+      "region1.google-analytics.com",
+      "*.supabase.co",
+      "*.supabase.com",
+      "https://gzslsakmkoxfhcyifgtb.supabase.co",
+      "wss://gzslsakmkoxfhcyifgtb.supabase.co",
+      "wss://*.supabase.co",
+      "wss://*.supabase.com",
+      "*.cloudflare.com",
+      "*.gurusingapore.com"
+    ],
+    'frame-src': ["'self'", "www.google.com", "www.youtube.com", "player.vimeo.com", "www.googletagmanager.com"],
+    'worker-src': ["'self'", "blob:"],
+    'manifest-src': ["'self'"],
+    'object-src': ["'none'"],
+    'base-uri': ["'self'"],
+    'form-action': ["'self'"],
+    'frame-ancestors': ["'none'"],
+    'upgrade-insecure-requests': [],
+    'block-all-mixed-content': []
+  } as CSPDirectives
+}
+
+/**
  * Development mode CSP configuration (more permissive for Next.js)
  */
 export function getDevelopmentCSP(): CSPDirectives {
@@ -164,7 +203,6 @@ export function getDevelopmentCSP(): CSPDirectives {
       "'self'",
       "'unsafe-eval'", // Required for Next.js webpack and HMR
       "'unsafe-inline'", // Required for Next.js inline scripts
-      "'strict-dynamic'", // Allows scripts loaded by trusted scripts
       "localhost:*", // Allow localhost for Next.js dev server
       "127.0.0.1:*", // Allow local IP for dev server
       "*.googletagmanager.com",
