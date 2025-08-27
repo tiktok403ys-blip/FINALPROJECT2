@@ -19,21 +19,38 @@ export function enhancedCSPMiddleware(request: NextRequest): NextResponse {
     
     if (process.env.NODE_ENV === 'development') {
       const devCSP = getDevelopmentCSP()
+      // Add nonce to development CSP for inline scripts
+      const devCSPWithNonce = {
+        ...devCSP,
+        'script-src': [...devCSP['script-src'], `'nonce-${nonce}'`],
+        'style-src': [...devCSP['style-src'], `'nonce-${nonce}'`]
+      }
+      
       securityHeaders = {
-        'Content-Security-Policy': generateCSP(devCSP),
+        'Content-Security-Policy': generateCSP(devCSPWithNonce),
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',
         'X-XSS-Protection': '1; mode=block',
         'Referrer-Policy': 'strict-origin-when-cross-origin'
       }
     } else {
-      // Get production security headers with nonce
-      securityHeaders = generateSecurityHeaders(nonce)
+      // In production, vercel.json handles CSP headers
+      // Only set additional security headers that aren't in vercel.json
+      securityHeaders = {
+        'X-DNS-Prefetch-Control': 'off',
+        'X-Download-Options': 'noopen',
+        'X-Permitted-Cross-Domain-Policies': 'none',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     }
     
     // Apply security headers
     Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
+      if (value) { // Only set non-empty values
+        response.headers.set(key, value)
+      }
     })
     
     // Set nonce for client-side access
@@ -50,7 +67,10 @@ export function enhancedCSPMiddleware(request: NextRequest): NextResponse {
     
   } catch (error) {
     console.error('CSP middleware error:', error)
-    // Fallback to basic security headers if CSP generation fails
+    // Fallback to very permissive CSP for development if generation fails
+    if (process.env.NODE_ENV === 'development') {
+      response.headers.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: ws: wss: localhost:* 127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' localhost:* 127.0.0.1:* *.google-analytics.com *.googletagmanager.com; style-src 'self' 'unsafe-inline' localhost:* 127.0.0.1:* fonts.googleapis.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' localhost:* 127.0.0.1:* ws: wss: *.supabase.co *.google-analytics.com; frame-ancestors 'none';")
+    }
     response.headers.set('X-Content-Type-Options', 'nosniff')
     response.headers.set('X-Frame-Options', 'DENY')
     response.headers.set('X-XSS-Protection', '1; mode=block')
@@ -135,28 +155,59 @@ export function processCSPViolation(report: CSPViolationReport): void {
 }
 
 /**
- * Development mode CSP configuration (more permissive)
+ * Development mode CSP configuration (more permissive for Next.js)
  */
 export function getDevelopmentCSP(): CSPDirectives {
   return {
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
-      "'unsafe-eval'", // Required for Next.js dev mode
-      "'unsafe-inline'", // Required for Next.js dev mode
+      "'unsafe-eval'", // Required for Next.js webpack and HMR
+      "'unsafe-inline'", // Required for Next.js inline scripts
+      "'strict-dynamic'", // Allows scripts loaded by trusted scripts
+      "localhost:*", // Allow localhost for Next.js dev server
+      "127.0.0.1:*", // Allow local IP for dev server
       "*.googletagmanager.com",
-      "*.google-analytics.com"
+      "*.google-analytics.com",
+      "www.googletagmanager.com",
+      "www.google-analytics.com",
+      "googletagmanager.com",
+      "analytics.google.com",
+      "*.analytics.google.com"
     ],
     'style-src': [
       "'self'",
-      "'unsafe-inline'", // Required for Next.js dev mode
+      "'unsafe-inline'", // Required for Next.js CSS-in-JS and dev mode
       "localhost:*", // Allow localhost for Next.js dev server
-      "fonts.googleapis.com"
+      "127.0.0.1:*", // Allow local IP for dev server
+      "fonts.googleapis.com",
+      "fonts.gstatic.com"
     ],
-    'font-src': ["'self'", "fonts.gstatic.com", "data:"],
-    'img-src': ["'self'", "data:", "blob:", "https:"],
-    'connect-src': ["'self'", "*.supabase.co", "wss://*.supabase.co"],
-    'frame-src': ["'self'"],
+    'font-src': ["'self'", "fonts.googleapis.com", "fonts.gstatic.com", "data:"],
+    'img-src': [
+      "'self'", 
+      "data:", 
+      "blob:", 
+      "https:",
+      "*.googletagmanager.com",
+      "*.google-analytics.com",
+      "*.supabase.co",
+      "*.supabase.com"
+    ],
+    'connect-src': [
+      "'self'", 
+      "localhost:*", // Allow localhost for Next.js dev server
+      "127.0.0.1:*", // Allow local IP for dev server
+      "ws://localhost:*", // WebSocket for HMR
+      "wss://localhost:*", // Secure WebSocket for HMR
+      "*.supabase.co", 
+      "wss://*.supabase.co",
+      "*.google-analytics.com",
+      "*.googletagmanager.com",
+      "analytics.google.com",
+      "stats.g.doubleclick.net"
+    ],
+    'frame-src': ["'self'", "www.google.com", "www.googletagmanager.com"],
     'worker-src': ["'self'", "blob:"],
     'manifest-src': ["'self'"],
     'object-src': ["'none'"],

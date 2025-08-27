@@ -13,6 +13,8 @@ export const SECURITY_CONFIG = {
       "'strict-dynamic'", // Allows scripts loaded by trusted scripts
       "'unsafe-eval'", // Required for Next.js webpack and development
       "'unsafe-inline'", // Required for Next.js inline scripts
+      "localhost:*", // Allow localhost for Next.js dev server
+      "127.0.0.1:*", // Allow local IP for dev server
       "www.googletagmanager.com",
       "www.google-analytics.com",
       "googletagmanager.com",
@@ -20,6 +22,8 @@ export const SECURITY_CONFIG = {
       "*.google-analytics.com",
       "analytics.google.com",
       "*.analytics.google.com",
+      "tagmanager.google.com",
+      "*.doubleclick.net",
       "'wasm-unsafe-eval'" // Required for WebAssembly
     ],
     'style-src': [
@@ -50,12 +54,18 @@ export const SECURITY_CONFIG = {
     ],
     'connect-src': [
       "'self'",
+      "localhost:*", // Allow localhost for Next.js dev server
+      "127.0.0.1:*", // Allow local IP for dev server
+      "ws://localhost:*", // WebSocket for HMR
+      "wss://localhost:*", // Secure WebSocket for HMR
       "www.google-analytics.com",
       "*.googletagmanager.com",
       "*.google-analytics.com",
       "analytics.google.com",
       "*.analytics.google.com",
       "stats.g.doubleclick.net",
+      "*.doubleclick.net",
+      "region1.google-analytics.com",
       "*.supabase.co",
       "*.supabase.com",
       "https://gzslsakmkoxfhcyifgtb.supabase.co",
