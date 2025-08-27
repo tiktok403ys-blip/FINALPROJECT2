@@ -9,6 +9,7 @@ import {
   persistentAdminRateLimiter, 
   persistentStrictRateLimiter 
 } from './lib/security/persistent-rate-limiter'
+import { getRateLimitConfig } from './lib/config/env-validator'
 
 // Generate cryptographically secure nonce
 function generateNonce(): string {
@@ -34,23 +35,43 @@ export async function middleware(request: NextRequest) {
              request.headers.get('x-real-ip') ||
              'unknown'
 
-  // Apply persistent rate limiting based on route type
+  // Apply persistent rate limiting based on route type (only if enabled)
   let rateLimitResponse: NextResponse | null = null
   
-  if (pathname.startsWith('/api/admin')) {
-    // Strict rate limiting for admin API routes
-    rateLimitResponse = await persistentStrictRateLimiter(request)
-  } else if (pathname.startsWith('/admin')) {
-    // Admin panel rate limiting
-    rateLimitResponse = await persistentAdminRateLimiter(request)
-  } else if (pathname.startsWith('/api/')) {
-    // General API rate limiting
-    rateLimitResponse = await persistentApiRateLimiter(request)
-  }
-  
-  // If rate limit exceeded, return the rate limit response
-  if (rateLimitResponse) {
-    return rateLimitResponse
+  try {
+    const rateLimitConfig = getRateLimitConfig()
+    
+    if (rateLimitConfig.enabled) {
+      if (pathname.startsWith('/api/admin')) {
+        // Strict rate limiting for admin API routes
+        rateLimitResponse = await persistentStrictRateLimiter(request)
+      } else if (pathname.startsWith('/admin')) {
+        // Admin panel rate limiting
+        rateLimitResponse = await persistentAdminRateLimiter(request)
+      } else if (pathname.startsWith('/api/')) {
+        // General API rate limiting
+        rateLimitResponse = await persistentApiRateLimiter(request)
+      }
+      
+      // If rate limit exceeded, return the rate limit response
+      if (rateLimitResponse) {
+        return rateLimitResponse
+      }
+    } else {
+      // Rate limiting is disabled for development
+      logger.info('Rate limiting disabled', {
+        component: 'middleware',
+        action: 'skip-rate-limiting',
+        metadata: { path: pathname, ip }
+      })
+    }
+  } catch (error) {
+    // If rate limit config fails, continue without rate limiting
+    logger.warn('Rate limit configuration failed, continuing without rate limiting', {
+      component: 'middleware',
+      action: 'rate-limit-config-error',
+      metadata: { error: error instanceof Error ? error.message : 'Unknown error', path: pathname }
+    })
   }
 
   // Admin route protection

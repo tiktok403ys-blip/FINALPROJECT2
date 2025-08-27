@@ -274,7 +274,25 @@ class StoreFactory {
       return this.instance
     }
 
-    const env = getValidatedEnv()
+    let env
+    try {
+      env = getValidatedEnv()
+    } catch (error) {
+      // Fallback to environment variables directly if validation fails in Edge Runtime
+      logger.warn('Environment validation failed in Edge Runtime, using fallback', {
+        component: 'persistent-rate-limiter',
+        action: 'getStore',
+        metadata: { error: error instanceof Error ? error.message : 'Unknown error' }
+      })
+      
+      // Use direct environment variables as fallback
+      env = {
+        REDIS_URL: process.env.REDIS_URL,
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
+      }
+    }
     
     // Try Redis first
     if (env.REDIS_URL) {
@@ -339,16 +357,41 @@ function calculateBackoffDuration(violations: number, baseDuration: number): num
   return Math.max(minutes * 60 * 1000, baseDuration)
 }
 
-// Main persistent rate limiter function
-export function createPersistentRateLimiter(config: Partial<PersistentRateLimitConfig> = {}) {
-  const finalConfig = { ...DEFAULT_CONFIG, ...config }
+// Types for the rate limiter
+interface PersistentRateLimiterOptions {
+  windowMs?: number
+  maxRequests?: number
+  keyGenerator?: (req: NextRequest) => string
+  skipSuccessfulRequests?: boolean
+  skipFailedRequests?: boolean
+  blockDuration?: number
+  maxBlockDuration?: number
+  blockMultiplier?: number
+}
 
-  return async function persistentRateLimitMiddleware(req: NextRequest): Promise<NextResponse | null> {
+type RateLimiterFunction = (req: NextRequest) => Promise<NextResponse | null>
+
+// Main persistent rate limiter function
+export function createPersistentRateLimiter({
+  windowMs = 15 * 60 * 1000, // 15 minutes
+  maxRequests = 100,
+  keyGenerator = (req) => {
+    const forwarded = req.headers.get('x-forwarded-for')
+    return forwarded ? forwarded.split(',')[0].trim() : 'anonymous'
+  },
+  skipSuccessfulRequests = false,
+  skipFailedRequests = false,
+  blockDuration = 60 * 60 * 1000, // 1 hour
+  maxBlockDuration = 24 * 60 * 60 * 1000, // 24 hours
+  blockMultiplier = 2,
+}: PersistentRateLimiterOptions = {}): RateLimiterFunction {
+  return async (req: NextRequest): Promise<NextResponse | null> => {
+    const key = keyGenerator(req)
+    const now = Date.now()
+
     try {
       const store = await StoreFactory.getStore()
-      const key = finalConfig.keyGenerator!(req)
-      const now = Date.now()
-      const windowStart = now - finalConfig.windowMs
+      const windowStart = now - windowMs
 
       // Get current entry
       let entry = await store.get(key)
@@ -383,7 +426,7 @@ export function createPersistentRateLimiter(config: Partial<PersistentRateLimitC
             status: 429,
             headers: {
               'Retry-After': remainingTime.toString(),
-              'X-RateLimit-Limit': finalConfig.maxRequests.toString(),
+              'X-RateLimit-Limit': maxRequests.toString(),
               'X-RateLimit-Remaining': '0',
               'X-RateLimit-Reset': new Date(entry.blockUntil).toISOString()
             }
@@ -395,18 +438,18 @@ export function createPersistentRateLimiter(config: Partial<PersistentRateLimitC
       entry.requests = entry.requests.filter(timestamp => timestamp > windowStart)
 
       // Check rate limit
-      if (entry.requests.length >= finalConfig.maxRequests) {
+      if (entry.requests.length >= maxRequests) {
         // Rate limit exceeded
         entry.violations++
         entry.lastViolation = now
 
         // Calculate block duration with exponential backoff
-        const blockDuration = calculateBackoffDuration(entry.violations, finalConfig.blockDuration || 15 * 60 * 1000)
+        const calculatedBlockDuration = calculateBackoffDuration(entry.violations, blockDuration)
         entry.blocked = true
-        entry.blockUntil = now + blockDuration
+        entry.blockUntil = now + calculatedBlockDuration
 
         // Save updated entry
-        await store.set(key, entry, Math.ceil(blockDuration / 1000))
+        await store.set(key, entry, Math.ceil(calculatedBlockDuration / 1000))
 
         logger.security('Rate limit exceeded, blocking client', {
           component: 'persistent-rate-limiter',
@@ -414,7 +457,7 @@ export function createPersistentRateLimiter(config: Partial<PersistentRateLimitC
           metadata: {
             key,
             violations: entry.violations,
-            blockDuration: blockDuration / 1000,
+            blockDuration: calculatedBlockDuration / 1000,
             requests: entry.requests.length
           }
         })
@@ -422,14 +465,14 @@ export function createPersistentRateLimiter(config: Partial<PersistentRateLimitC
         return NextResponse.json(
           {
             error: 'Too many requests',
-            retryAfter: Math.ceil(blockDuration / 1000),
+            retryAfter: Math.ceil(calculatedBlockDuration / 1000),
             blocked: true
           },
           {
             status: 429,
             headers: {
-              'Retry-After': Math.ceil(blockDuration / 1000).toString(),
-              'X-RateLimit-Limit': finalConfig.maxRequests.toString(),
+              'Retry-After': Math.ceil(calculatedBlockDuration / 1000).toString(),
+              'X-RateLimit-Limit': maxRequests.toString(),
               'X-RateLimit-Remaining': '0',
               'X-RateLimit-Reset': new Date(entry.blockUntil).toISOString()
             }
@@ -443,19 +486,12 @@ export function createPersistentRateLimiter(config: Partial<PersistentRateLimitC
       entry.blockUntil = undefined
 
       // Save updated entry
-      const ttl = Math.ceil(finalConfig.windowMs / 1000)
+      const ttl = Math.ceil(windowMs / 1000)
       await store.set(key, entry, ttl)
 
       // Calculate remaining requests
-      const remaining = Math.max(0, finalConfig.maxRequests - entry.requests.length)
-      const resetTime = Math.ceil((windowStart + finalConfig.windowMs) / 1000)
-
-      // Add rate limit headers to response (will be added by the calling code)
-      const headers = {
-        'X-RateLimit-Limit': finalConfig.maxRequests.toString(),
-        'X-RateLimit-Remaining': remaining.toString(),
-        'X-RateLimit-Reset': new Date(resetTime * 1000).toISOString()
-      }
+      const remaining = Math.max(0, maxRequests - entry.requests.length)
+      const resetTime = Math.ceil((windowStart + windowMs) / 1000)
 
       // Log successful request
       logger.info('Rate limit check passed', {

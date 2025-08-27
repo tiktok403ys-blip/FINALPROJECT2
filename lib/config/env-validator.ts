@@ -254,11 +254,8 @@ export function initializeEnvironment(): ValidatedEnv {
       action: 'initialize'
     })
     
-    // In production, we should fail fast
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1)
-    }
-    
+    // In production, we should fail fast but Edge Runtime doesn't support process.exit
+    // Instead, we throw the error and let the application handle it
     throw error
   }
 }
