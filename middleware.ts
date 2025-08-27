@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
-import { enhancedCSPMiddleware } from './lib/security/csp-utils'
-import { getEnhancedSecurityHeaders } from './lib/security'
 import { logger } from './lib/logger'
-import { 
-  persistentApiRateLimiter, 
-  persistentAdminRateLimiter, 
-  persistentStrictRateLimiter 
-} from './lib/security/persistent-rate-limiter'
-import { getRateLimitConfig } from './lib/config/env-validator'
+import { minimalSecurity } from './lib/security/minimal-security'
 
 // Generate cryptographically secure nonce
 function generateNonce(): string {
@@ -35,60 +28,30 @@ export async function middleware(request: NextRequest) {
              request.headers.get('x-real-ip') ||
              'unknown'
 
-  // Block Vite development server requests to reduce noise
-  if (pathname.startsWith('/@vite/') || 
-      pathname === '/@vite/client' ||
-      pathname.startsWith('/@fs/') ||
-      pathname.startsWith('/__vite') ||
-      pathname.includes('vite.svg') ||
-      pathname.includes('hot-update')) {
-    // Return a clean 404 response without logging
-    return new NextResponse(null, { 
-      status: 404,
-      statusText: 'Not Found',
-      headers: {
-        'Content-Type': 'text/plain',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    })
-  }
+  // Create response
+  const response = NextResponse.next()
 
-  // Apply persistent rate limiting based on route type (only if enabled)
-  let rateLimitResponse: NextResponse | null = null
-  
+  // Simple rate limiting check (no complex logic)
   try {
-    const rateLimitConfig = getRateLimitConfig()
+    const rateLimitResult = minimalSecurity.checkRateLimit(ip, 100, 15 * 60 * 1000)
     
-    if (rateLimitConfig.enabled) {
-      if (pathname.startsWith('/api/admin')) {
-        // Strict rate limiting for admin API routes
-        rateLimitResponse = await persistentStrictRateLimiter(request)
-      } else if (pathname.startsWith('/admin')) {
-        // Admin panel rate limiting
-        rateLimitResponse = await persistentAdminRateLimiter(request)
-      } else if (pathname.startsWith('/api/')) {
-        // General API rate limiting
-        rateLimitResponse = await persistentApiRateLimiter(request)
-      }
-      
-      // If rate limit exceeded, return the rate limit response
-      if (rateLimitResponse) {
-        return rateLimitResponse
-      }
-    } else {
-      // Rate limiting is disabled for development
-      logger.info('Rate limiting disabled', {
-        component: 'middleware',
-        action: 'skip-rate-limiting',
-        metadata: { path: pathname, ip }
-      })
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
     }
+
+    // Apply rate limit headers
+    response.headers.set('X-RateLimit-Limit', '100')
+    response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString())
+
   } catch (error) {
-    // If rate limit config fails, continue without rate limiting
-    logger.warn('Rate limit configuration failed, continuing without rate limiting', {
+    // If rate limiting fails, continue without it
+    logger.warn('Rate limiting failed, continuing without rate limiting', {
       component: 'middleware',
-      action: 'rate-limit-config-error',
-      metadata: { path: pathname, error: error instanceof Error ? error.message : 'Unknown error' }
+      action: 'rate-limit-error',
+      metadata: { error: error instanceof Error ? error.message : 'Unknown error', path: pathname }
     })
   }
 
@@ -124,63 +87,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Apply enhanced CSP middleware
-  const response = enhancedCSPMiddleware(request)
-
-  // Determine security context based on path
-  let securityContext: 'api' | 'admin' | 'public' | 'static' = 'public'
-  
-  if (pathname.startsWith('/api/')) {
-    securityContext = 'api'
-  } else if (pathname.startsWith('/admin')) {
-    securityContext = 'admin'
-  } else if (pathname.startsWith('/_next/static') || pathname.startsWith('/static') || 
-             pathname.endsWith('.js') || pathname.endsWith('.css') || 
-             pathname.endsWith('.png') || pathname.endsWith('.jpg') || 
-             pathname.endsWith('.jpeg') || pathname.endsWith('.webp') || 
-             pathname.endsWith('.svg') || pathname.endsWith('.ico')) {
-    securityContext = 'static'
-  }
-
-  // Apply enhanced security headers based on context
-  const securityHeaders = getEnhancedSecurityHeaders(securityContext)
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    if (value) { // Only set non-empty values
-      response.headers.set(key, value)
-    }
-  })
+  // Apply minimal security headers (no CSP, no complex features)
+  const securityContext = minimalSecurity.getSecurityContext(request)
+  minimalSecurity.applyHeaders(request, response, securityContext)
 
   // Add request tracking
   const requestId = crypto.randomUUID()
   response.headers.set('X-Request-ID', requestId)
   
-  // Log security context for monitoring (exclude static assets and common noise)
-  const shouldLog = !pathname.startsWith('/_next/static') && 
-                   !pathname.startsWith('/_next/image') && 
-                   !pathname.endsWith('.ico') && 
-                   !pathname.endsWith('.png') && 
-                   !pathname.endsWith('.jpg') && 
-                   !pathname.endsWith('.jpeg') && 
-                   !pathname.endsWith('.webp') && 
-                   !pathname.endsWith('.svg') && 
-                   !pathname.endsWith('.css') && 
-                   !pathname.endsWith('.js') &&
-                   !pathname.includes('hot-update') &&
-                   securityContext !== 'static'
-  
-  if (shouldLog) {
-    logger.info('Security headers applied', {
-      component: 'middleware',
-      action: 'apply-security-headers',
-      metadata: {
-        path: pathname,
-        context: securityContext,
-        requestId,
-        userAgent: request.headers.get('user-agent')?.substring(0, 100),
-        ip: ip
-      }
-    })
-  }
+  // Log security context for monitoring
+  logger.info('Minimal security headers applied successfully', {
+    component: 'middleware',
+    action: 'apply-security-headers',
+    metadata: {
+      path: pathname,
+      context: securityContext.type,
+      requestId,
+      userAgent: request.headers.get('user-agent')?.substring(0, 100),
+      ip: ip
+    }
+  })
 
   // PWA headers for manifest and service worker
   if (pathname === '/manifest.json') {

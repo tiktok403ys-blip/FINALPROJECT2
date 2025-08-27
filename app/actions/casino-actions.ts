@@ -6,8 +6,13 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { sanitize } from '@/lib/security'
 import { trackEvent } from '@/lib/analytics'
+
+// Simple sanitization function to replace security import
+function sanitizeHtml(input: string): string {
+  if (!input) return ''
+  return input.replace(/[<>]/g, '')
+}
 
 // Types for server actions
 interface CasinoReviewData {
@@ -40,10 +45,10 @@ export async function submitCasinoReview(formData: FormData) {
     }
 
     // Extract and sanitize form data
-    const casinoId = sanitize.html(formData.get('casinoId') as string)
+    const casinoId = sanitizeHtml(formData.get('casinoId') as string)
     const rating = parseInt(formData.get('rating') as string)
-    const title = sanitize.html(formData.get('title') as string)
-    const content = sanitize.html(formData.get('content') as string)
+    const title = sanitizeHtml(formData.get('title') as string)
+    const content = sanitizeHtml(formData.get('content') as string)
     const prosRaw = formData.get('pros') as string
     const consRaw = formData.get('cons') as string
 
@@ -146,13 +151,13 @@ export async function updateCasinoReview(reviewId: string, formData: FormData) {
 
     // Extract and sanitize form data
     const rating = parseInt(formData.get('rating') as string)
-    const title = sanitize.html(formData.get('title') as string)
-    const content = sanitize.html(formData.get('content') as string)
+    const title = sanitizeHtml(formData.get('title') as string)
+    const content = sanitizeHtml(formData.get('content') as string)
     const prosRaw = formData.get('pros') as string
     const consRaw = formData.get('cons') as string
 
     const pros = prosRaw ? JSON.parse(prosRaw).filter((p: string) => p.trim()) : []
-    const cons = consRaw ? JSON.parse(consRaw).filter((c: string) => c.trim()) : []
+    const cons = consRaw ? JSON.parse(prosRaw).filter((c: string) => c.trim()) : []
 
     // Validate input
     if (!title || !content || rating < 1 || rating > 10) {
@@ -219,7 +224,7 @@ export async function searchCasinos(searchParams: SearchFilters) {
 
     // Apply search query
     if (searchParams.query) {
-      const sanitizedQuery = sanitize.sql(searchParams.query)
+      const sanitizedQuery = sanitizeHtml(searchParams.query)
       query = query.or(`name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%,bonus_info.ilike.%${sanitizedQuery}%`)
     }
 
