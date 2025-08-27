@@ -1,44 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validatePinVerification, validateAdminAuth } from '@/lib/auth/admin-middleware';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from 'next/server'
+import { jwtVerify } from 'jose'
 
-/**
- * GET /api/admin/pin-status
- * Returns the current PIN verification status and whether admin has PIN set
- */
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+)
+
 export async function GET(request: NextRequest) {
   try {
-    // Check if PIN is currently verified
-    const isPinVerified = await validatePinVerification(request);
+    // Check if admin PIN is already verified via cookie
+    const adminPinCookie = request.cookies.get('admin-pin-verified')
     
-    // Validate admin authentication before calling RPC
-    const auth = await validateAdminAuth(request);
-    if (auth instanceof NextResponse) {
-      return auth; // Return auth error response
+    if (!adminPinCookie) {
+      return NextResponse.json({ 
+        hasPinSet: false,
+        isVerified: false 
+      })
     }
-    
-    const { supabase } = auth;
-    const { data: hasPinData, error: pinError } = await supabase
-      .rpc('admin_has_pin_set');
-    
-    if (pinError) {
-      logger.error('Error checking admin PIN status:', pinError);
-      return NextResponse.json(
-        { error: 'Failed to check PIN status' },
-        { status: 500 }
-      );
+
+    try {
+      // Verify the JWT token
+      const { payload } = await jwtVerify(adminPinCookie.value, JWT_SECRET)
+      
+      if (payload.verified === true && payload.type === 'admin') {
+        return NextResponse.json({ 
+          hasPinSet: true,
+          isVerified: true 
+        })
+      } else {
+        return NextResponse.json({ 
+          hasPinSet: false,
+          isVerified: false 
+        })
+      }
+    } catch (jwtError) {
+      // JWT verification failed
+      return NextResponse.json({ 
+        hasPinSet: false,
+        isVerified: false 
+      })
     }
-    
-    return NextResponse.json({
-      verified: isPinVerified,
-      hasPinSet: hasPinData || false
-    });
-    
+
   } catch (error) {
-    logger.error('Error in pin-status endpoint:', error as Error);
+    console.error('PIN status check error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Failed to check PIN status' },
       { status: 500 }
-    );
+    )
   }
 }

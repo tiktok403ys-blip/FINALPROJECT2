@@ -35,7 +35,7 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
           const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
           if (res.ok) {
             const data = await res.json()
-            setCsrfToken(data?.csrfToken || null)
+            setCsrfToken(data?.token || null) // Fixed: use 'token' not 'csrfToken'
           }
         } catch {}
         finally {
@@ -48,17 +48,19 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
   const checkPinStatus = async () => {
     try {
       setCheckingPinStatus(true)
-      const response = await fetch('/api/admin/set-pin', {
+      // FIXED: Use the correct PIN status endpoint
+      const response = await fetch('/api/admin/pin-status', {
         method: 'GET',
         credentials: 'include'
       })
 
       if (response.ok) {
         const data = await response.json()
-        setHasPinSet(data.hasPinSet)
+        setHasPinSet(data.hasPinSet || false)
       }
     } catch (error) {
       console.error('Failed to check PIN status:', error)
+      setHasPinSet(false) // Fallback to false
     } finally {
       setCheckingPinStatus(false)
     }
@@ -107,12 +109,12 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(csrfToken ? { 'x-admin-csrf-token': csrfToken } : {}),
+          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}), // Fixed: use correct header name
         },
         credentials: 'include',
         body: JSON.stringify({
-          newPin,
-          confirmPin
+          pin: newPin,           // FIXED: Backend expects 'pin' not 'newPin'
+          confirmPin: confirmPin // FIXED: Backend expects 'confirmPin'
         })
       })
 
