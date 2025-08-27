@@ -34,7 +34,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters').optional(),
   
   // Rate Limiting
-  REDIS_URL: z.string().url('Invalid Redis URL').optional(),
+  REDIS_URL: z.string().url('Invalid Redis URL').optional().or(z.literal('')),
   RATE_LIMIT_WINDOW_MS: z.string().regex(/^\d+$/, 'Must be a number').transform(Number).default('900000'), // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: z.string().regex(/^\d+$/, 'Must be a number').transform(Number).default('100'),
   

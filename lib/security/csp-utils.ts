@@ -150,6 +150,7 @@ export function getDevelopmentCSP(): CSPDirectives {
     'style-src': [
       "'self'",
       "'unsafe-inline'", // Required for Next.js dev mode
+      "localhost:*", // Allow localhost for Next.js dev server
       "fonts.googleapis.com"
     ],
     'font-src': ["'self'", "fonts.gstatic.com", "data:"],

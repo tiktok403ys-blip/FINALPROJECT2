@@ -17,11 +17,15 @@ export const SECURITY_CONFIG = {
       "www.google-analytics.com",
       "googletagmanager.com",
       "*.googletagmanager.com",
+      "*.google-analytics.com",
+      "analytics.google.com",
+      "*.analytics.google.com",
       "'wasm-unsafe-eval'" // Required for WebAssembly
     ],
     'style-src': [
       "'self'",
       "'unsafe-inline'", // Required for CSS-in-JS and Next.js styles
+      "localhost:*", // Allow localhost for Next.js dev server
       "fonts.googleapis.com",
       "fonts.gstatic.com"
     ],
@@ -49,8 +53,13 @@ export const SECURITY_CONFIG = {
       "www.google-analytics.com",
       "*.googletagmanager.com",
       "*.google-analytics.com",
+      "analytics.google.com",
+      "*.analytics.google.com",
+      "stats.g.doubleclick.net",
       "*.supabase.co",
       "*.supabase.com",
+      "https://gzslsakmkoxfhcyifgtb.supabase.co",
+      "wss://gzslsakmkoxfhcyifgtb.supabase.co",
       "wss://*.supabase.co",
       "wss://*.supabase.com",
       "*.cloudflare.com"

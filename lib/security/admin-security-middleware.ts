@@ -239,12 +239,12 @@ export function getSecurityHeaders(isAdminDomain: boolean = false): Record<strin
     // Content Security Policy - Development friendly
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://localhost:* http://localhost:*",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://localhost:* http://localhost:* https://www.googletagmanager.com https://www.google-analytics.com https://*.googletagmanager.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-      "img-src 'self' data: blob: https: http: https://localhost:* http://localhost:*",
+      "img-src 'self' data: blob: https: http: https://localhost:* http://localhost:* https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net",
       "media-src 'self' data: blob:",
-      "connect-src 'self' https://localhost:* http://localhost:* ws://localhost:* wss://localhost:* https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://*.googleapis.com",
+      "connect-src 'self' https://localhost:* http://localhost:* ws://localhost:* wss://localhost:* https://*.supabase.co wss://*.supabase.co https://gzslsakmkoxfhcyifgtb.supabase.co wss://gzslsakmkoxfhcyifgtb.supabase.co https://accounts.google.com https://*.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self' https://gzslsakmkoxfhcyifgtb.supabase.co https://*.supabase.co https://accounts.google.com",

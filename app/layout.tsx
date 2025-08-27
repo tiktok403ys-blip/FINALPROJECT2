@@ -15,6 +15,7 @@ import { PWAInstaller } from "@/components/pwa-installer"
 import { GoogleAnalytics } from "@/components/google-analytics"
 import { headers } from "next/headers"
 import type { Viewport } from "next"
+import { validateEnvironment } from "@/lib/config/env-validator"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -66,6 +67,13 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Initialize environment validation on app startup
+  try {
+    validateEnvironment()
+  } catch (error) {
+    console.warn('Environment validation failed:', error)
+  }
+  
   const host = (await headers()).get("host") || ""
   const isAdminSubdomain = host === process.env.ADMIN_SUBDOMAIN
   return (
