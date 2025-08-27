@@ -55,6 +55,28 @@ export class MinimalSecurity {
     headers['X-Permitted-Cross-Domain-Policies'] = 'none'
     headers['X-DNS-Prefetch-Control'] = 'off'
 
+    // Permissions Policy - only use supported features
+    headers['Permissions-Policy'] = [
+      'accelerometer=()',
+      'ambient-light-sensor=()',
+      'autoplay=()',
+      'camera=()',
+      'display-capture=()',
+      'encrypted-media=()',
+      'fullscreen=(self)',
+      'geolocation=()',
+      'gyroscope=()',
+      'microphone=()',
+      'midi=()',
+      'payment=(self)',
+      'picture-in-picture=()',
+      'publickey-credentials-get=()',
+      'screen-wake-lock=()',
+      'sync-xhr=()',
+      'usb=()',
+      'web-share=()'
+    ].join(', ')
+
     // Hide server information
     headers['Server'] = ''
     headers['X-Powered-By'] = ''
