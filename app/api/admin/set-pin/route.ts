@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify, SignJWT } from 'jose'
+import { createClient } from '@supabase/supabase-js'
+import { hash, compare } from 'bcryptjs'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+)
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function POST(request: NextRequest) {
@@ -48,27 +55,80 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get user ID from auth context (you might need to implement this based on your auth system)
+    const authHeader = request.headers.get('authorization')
+    let userId: string | null = null
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7)
+        const { payload } = await jwtVerify(token, JWT_SECRET)
+        userId = payload.sub as string
+      } catch (jwtError) {
+        console.error('JWT verification failed:', jwtError)
+      }
+    }
+
+    // If no user ID from JWT, try to get from cookie
+    if (!userId) {
+      const adminPinCookie = request.cookies.get('admin-pin-verified')
+      if (adminPinCookie) {
+        try {
+          const { payload } = await jwtVerify(adminPinCookie.value, JWT_SECRET)
+          userId = payload.sub as string
+        } catch (cookieError) {
+          console.error('Cookie verification failed:', cookieError)
+        }
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'User not authenticated' },
+        { status: 401 }
+      )
+    }
+
+    // Hash the PIN before storing
+    const saltRounds = 12
+    const hashedPin = await hash(pin, saltRounds)
+
+    // Store PIN in database using RPC function
+    const { data: pinResult, error: pinError } = await supabase.rpc('set_admin_pin', {
+      user_uuid: userId,
+      pin_hash: hashedPin
+    })
+
+    if (pinError || !pinResult) {
+      console.error('Failed to store PIN in database:', pinError)
+      return NextResponse.json(
+        { success: false, error: 'Failed to store PIN in database' },
+        { status: 500 }
+      )
+    }
+
     // Create admin session token
     const adminToken = await new SignJWT({ 
       verified: true, 
       type: 'admin',
+      userId: userId,
       timestamp: Date.now()
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('24h')
+      .setExpirationTime('7d') // Extended to 7 days for better UX
       .sign(JWT_SECRET)
 
     // Set cookie
     const response = NextResponse.json({ 
       success: true, 
-      message: 'Admin PIN set successfully' 
+      message: 'Admin PIN set successfully and stored permanently' 
     })
 
     response.cookies.set('admin-pin-verified', adminToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60 // 24 hours
+      maxAge: 7 * 24 * 60 * 60 // 7 days
     })
 
     return response
