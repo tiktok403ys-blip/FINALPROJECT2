@@ -99,16 +99,47 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     }))
   }, [actions])
 
-  // Debounced update function
+  // Enhanced debounced update function with rate limiting
+  const lastUpdateTimeRef = useRef<number>(0)
+  const updateCountRef = useRef<number>(0)
+  const rateLimitWindowRef = useRef<number>(Date.now())
+  
   const debouncedUpdate = useCallback(() => {
+    const now = Date.now()
+    
+    // Rate limiting for production: max 10 updates per 5 seconds
+    if (process.env.NODE_ENV === 'production') {
+      if (now - rateLimitWindowRef.current > 5000) {
+        // Reset rate limit window
+        rateLimitWindowRef.current = now
+        updateCountRef.current = 0
+      }
+      
+      if (updateCountRef.current >= 10) {
+        if (opts.debug) {
+          logger.warn('🚫 Rate limit exceeded, skipping update')
+        }
+        return
+      }
+      
+      updateCountRef.current++
+    }
+    
+    // Enhanced debouncing: minimum 100ms between updates
+    const timeSinceLastUpdate = now - lastUpdateTimeRef.current
+    const minDelay = Math.max(opts.debounceMs, 100)
+    
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     
+    const delay = timeSinceLastUpdate < minDelay ? minDelay - timeSinceLastUpdate : 0
+    
     debounceTimerRef.current = setTimeout(() => {
+      lastUpdateTimeRef.current = Date.now()
       processBatchedUpdates()
-    }, opts.debounceMs)
-  }, [processBatchedUpdates, opts.debounceMs])
+    }, delay)
+  }, [processBatchedUpdates, opts.debounceMs, opts.debug])
 
   // Enhanced realtime change handler with selective updates
   const handleRealtimeChange = useCallback((payload: RealtimePostgresChangesPayload<Casino>) => {
@@ -384,22 +415,36 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     setupRealtimeChannel()
     
     return () => {
-      // Cleanup
+      // Comprehensive cleanup to prevent memory leaks
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
       }
       
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = null
       }
       
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current)
+        channelRef.current = null
       }
       
-      // Process any remaining updates
+      // Process any remaining updates before cleanup
       if (updateQueueRef.current.length > 0) {
         processBatchedUpdates()
+        updateQueueRef.current = []
+      }
+      
+      // Clear rate limiting refs
+      lastUpdateTimeRef.current = 0
+      updateCountRef.current = 0
+      rateLimitWindowRef.current = Date.now()
+      
+      // Clear localStorage rate limiting data in production
+      if (process.env.NODE_ENV === 'production') {
+        localStorage.removeItem('casino_last_fetch')
       }
     }
   }, []) // Empty dependency array to run only once
@@ -460,22 +505,53 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
   const [initialLoading, setInitialLoading] = useState(true)
   const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(null)
 
-  // Fetch initial data dengan caching strategy
+  // Fetch initial data dengan enhanced caching strategy
+  const fetchInitialDataRef = useRef(false)
+  const lastFetchRef = useRef<number>(0)
+  
   useEffect(() => {
+    // Prevent multiple calls during component lifecycle
+    if (fetchInitialDataRef.current) return
+    
     const fetchInitialData = async () => {
       const now = Date.now()
-      const cacheValid = cacheTimestamp && (now - cacheTimestamp) < options.cacheTimeout!
-
-      // Use cached data if available and valid
-      if (state.casinos.length > 0 && cacheValid && options.enableCRUDOptimizations) {
+      const cacheTimeout = options.cacheTimeout || 300000 // Default 5 minutes
+      const cacheValid = cacheTimestamp && (now - cacheTimestamp) < cacheTimeout
+      const hasValidData = state.casinos.length > 0
+      const timeSinceLastFetch = now - lastFetchRef.current
+      
+      // Enhanced cache validation - check multiple conditions
+      if (hasValidData && cacheValid && options.enableCRUDOptimizations && timeSinceLastFetch > 1000) {
         setInitialLoading(false)
         if (options.debug) {
-          logger.log('📦 Using cached casino data, skipping fetch')
+          logger.log(`📦 Using cached casino data (${state.casinos.length} items), skipping fetch`)
+        }
+        return
+      }
+      
+      // Prevent rapid successive calls
+      if (timeSinceLastFetch < 1000) {
+        if (options.debug) {
+          logger.log('⏱️ Throttling: too soon since last fetch')
         }
         return
       }
 
+      // Rate limiting for production
+      if (process.env.NODE_ENV === 'production') {
+        const lastFetch = localStorage.getItem('casino_last_fetch')
+        if (lastFetch && (now - parseInt(lastFetch)) < 5000) {
+          if (options.debug) {
+            logger.log('🚫 Rate limited: skipping fetch')
+          }
+          return
+        }
+        localStorage.setItem('casino_last_fetch', now.toString())
+      }
+
       try {
+        fetchInitialDataRef.current = true
+        lastFetchRef.current = now
         actions.setLoading('initial', true)
 
         const supabase = createClient()
@@ -491,12 +567,17 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
           throw error
         }
 
-        actions.setCasinos(casinos || [])
-        actions.setError('initial', null)
-        setCacheTimestamp(now)
-
-        if (options.debug) {
-          logger.log(`📥 Fetched ${casinos?.length || 0} casinos from server`)
+        // Only update if we got valid data
+        if (casinos && casinos.length > 0) {
+          actions.setCasinos(casinos)
+          actions.setError('initial', null)
+          setCacheTimestamp(now)
+          
+          if (options.debug) {
+            logger.log(`📥 Fetched ${casinos.length} casinos from server (cache updated)`)
+          }
+        } else if (options.debug) {
+          logger.log('⚠️ No casinos returned from server')
         }
       } catch (error) {
         if (process.env.NODE_ENV !== 'production') {
@@ -504,14 +585,22 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
         }
         actions.setError('initial', error instanceof Error ? error.message : 'Unknown error')
 
-        // Retry logic for failed requests
+        // Retry logic for failed requests with exponential backoff
         if (options.retryOnFailure && state.casinos.length === 0) {
-          setTimeout(() => {
+          const retryDelay = Math.min(3000 * Math.pow(2, realtime.reconnectAttempts), 30000)
+          const timeoutId = setTimeout(() => {
             if (options.debug) {
               logger.log('🔄 Retrying initial data fetch...')
             }
+            fetchInitialDataRef.current = false
             fetchInitialData()
-          }, 3000)
+          }, retryDelay)
+          
+          // Track timeout for cleanup
+          if (!(globalThis as any).__casinoRetryTimeouts) {
+            (globalThis as any).__casinoRetryTimeouts = []
+          }
+          ;(globalThis as any).__casinoRetryTimeouts.push(timeoutId)
         }
       } finally {
         actions.setLoading('initial', false)
@@ -520,7 +609,23 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
     }
 
     fetchInitialData()
-  }, [state.casinos.length, actions, cacheTimestamp, options])
+    
+    // Enhanced cleanup function to prevent memory leaks
+    return () => {
+      fetchInitialDataRef.current = false
+      
+      // Clear any pending timeouts from retry logic
+      const timeoutIds = (globalThis as any).__casinoRetryTimeouts || []
+      timeoutIds.forEach((id: NodeJS.Timeout) => clearTimeout(id))
+      ;(globalThis as any).__casinoRetryTimeouts = []
+      
+      // Reset loading states
+      setInitialLoading(false)
+      
+      // Clear cache timestamp to force fresh data on remount
+      setCacheTimestamp(null)
+    }
+  }, [actions, cacheTimestamp, options.cacheTimeout, options.enableCRUDOptimizations, options.debug, options.retryOnFailure]) // Removed state.casinos.length to prevent infinite loop
 
   // CRUD operation helpers for optimistic updates
   const createCasino = useCallback(async (casinoData: Partial<Casino>) => {
@@ -586,6 +691,27 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
     }
   }, [options.enableCRUDOptimizations])
 
+  // Smart cache invalidation
+  const invalidateCache = useCallback(() => {
+    setCacheTimestamp(null)
+    lastFetchRef.current = 0
+    fetchInitialDataRef.current = false
+    
+    if (options.debug) {
+      logger.log('🗑️ Cache invalidated - next fetch will be fresh')
+    }
+  }, [options.debug])
+  
+  // Force refresh with cache bypass
+  const forceRefresh = useCallback(async () => {
+    invalidateCache()
+    fetchInitialDataRef.current = false
+    
+    // Trigger a fresh fetch
+    const event = new CustomEvent('casino-force-refresh')
+    window.dispatchEvent(event)
+  }, [invalidateCache])
+
   return {
     ...realtime,
     initialLoading,
@@ -595,8 +721,10 @@ export function useCasinoRealtimeWithData(options: UseCasinoRealtimeOptions = {}
     createCasino,
     updateCasino,
     deleteCasino,
-    // Cache info
+    // Enhanced cache management
     cacheTimestamp,
-    invalidateCache: () => setCacheTimestamp(null)
+    invalidateCache,
+    forceRefresh,
+    isCacheValid: cacheTimestamp && (Date.now() - cacheTimestamp) < (options.cacheTimeout || 300000)
   }
 }
