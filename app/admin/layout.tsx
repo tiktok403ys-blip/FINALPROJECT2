@@ -133,19 +133,7 @@ export default function AdminLayout({
           onSuccess={handleSetPinSuccess}
         />
         
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              backdropFilter: 'blur(20px) saturate(180%)',
-              background: 'rgba(0, 0, 0, 0.5)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-              color: 'white',
-            },
-          }}
-        />
+        <Toaster position="top-right" />
       </ErrorBoundary>
     </ProtectedRoute>
   )
