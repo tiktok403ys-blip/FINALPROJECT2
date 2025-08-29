@@ -153,7 +153,7 @@ export function HeroBanner({
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8 md:mb-12">
           <Button
             size="lg"
-            className="bg-[#00ff88] hover:bg-[#00ff88]/80 text-black font-semibold px-8 py-3 rounded-lg transition-all duration-300 hover:scale-105 text-base md:text-lg px-6 md:px-8 py-4 md:py-6 w-full sm:w-auto"
+            className="bg-[#00ff88] hover:bg-[#00ff88]/80 text-black font-semibold px-8 py-3 rounded-lg transition-all duration-300 text-base md:text-lg px-6 md:px-8 py-4 md:py-6 w-full sm:w-auto"
             asChild
           >
             <Link href={ctaPrimaryLink || "/"}>{ctaPrimaryText || "Explore"}</Link>
