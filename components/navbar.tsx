@@ -332,6 +332,7 @@ export function Navbar() {
   ]
 
   const isSuperAdmin = profile?.role === "super_admin"
+  const hasAdminAccess = isSuperAdmin || profile?.admin_pin !== null
 
   return (
     <>
@@ -438,7 +439,7 @@ export function Navbar() {
               ) : user ? (
                 <div className="flex items-center gap-3">
                   {/* Admin Panel Button */}
-                  {isSuperAdmin && (
+                  {hasAdminAccess && (
                     <Button
                       onClick={handleAdminAccess}
                       variant="outline"
@@ -499,7 +500,7 @@ export function Navbar() {
                           <Settings className="w-4 h-4" />
                           Settings
                         </Link>
-                        {isSuperAdmin && (
+                        {hasAdminAccess && (
                           <>
                             <hr className="my-2 border-white/10" />
                             <button
@@ -644,7 +645,7 @@ export function Navbar() {
               ) : user ? (
                 <div className="space-y-1">
                   {/* Admin Panel for Mobile */}
-                  {isSuperAdmin && (
+                  {hasAdminAccess && (
                     <button
                       onClick={() => {
                         setIsOpen(false)

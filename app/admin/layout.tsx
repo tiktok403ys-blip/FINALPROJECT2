@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminPinDialog } from '@/components/admin-pin-dialog'
 import { AdminSetPinDialog } from '@/components/admin-set-pin-dialog'
+import { ProtectedRoute } from '@/components/admin/protected-route'
 import ErrorBoundary from '@/components/admin/error-boundary'
 import '@/styles/admin.css'
 
@@ -104,40 +105,42 @@ export default function AdminLayout({
   }
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-black admin-theme">
-        <AdminSidebar />
-        <main className="lg:ml-64 md:ml-16 sm:ml-0 p-3 sm:p-4 md:p-6 lg:p-8">
-          {children}
-        </main>
-      </div>
-      
-      {/* Admin PIN Dialogs */}
-      <AdminPinDialog
-        open={showPinDialog}
-        onOpenChange={setShowPinDialog}
-        onSuccess={handlePinSuccess}
-      />
-      
-      <AdminSetPinDialog
-        open={showSetPinDialog}
-        onOpenChange={setShowSetPinDialog}
-        onSuccess={handleSetPinSuccess}
-      />
-      
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            backdropFilter: 'blur(20px) saturate(180%)',
-            background: 'rgba(0, 0, 0, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            color: 'white',
-          },
-        }}
-      />
-    </ErrorBoundary>
+    <ProtectedRoute requiredRole="admin">
+      <ErrorBoundary>
+        <div className="min-h-screen bg-black admin-theme">
+          <AdminSidebar />
+          <main className="lg:ml-64 md:ml-16 sm:ml-0 p-3 sm:p-4 md:p-6 lg:p-8">
+            {children}
+          </main>
+        </div>
+        
+        {/* Admin PIN Dialogs */}
+        <AdminPinDialog
+          open={showPinDialog}
+          onOpenChange={setShowPinDialog}
+          onSuccess={handlePinSuccess}
+        />
+        
+        <AdminSetPinDialog
+          open={showSetPinDialog}
+          onOpenChange={setShowSetPinDialog}
+          onSuccess={handleSetPinSuccess}
+        />
+        
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              backdropFilter: 'blur(20px) saturate(180%)',
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              color: 'white',
+            },
+          }}
+        />
+      </ErrorBoundary>
+    </ProtectedRoute>
   )
 }

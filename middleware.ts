@@ -18,8 +18,6 @@ function generateNonce(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-// Remove JWT_SECRET as we're using Supabase auth
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
@@ -56,6 +54,61 @@ export async function middleware(request: NextRequest) {
       action: 'rate-limit-error',
       metadata: { error: error instanceof Error ? error.message : 'Unknown error', path: pathname }
     })
+  }
+
+  // CRITICAL FIX: Block ALL /admin access on main domain for unauthorized users
+  if (pathname.startsWith('/admin') && !isAdminSubdomain) {
+    try {
+      // Check if user is authenticated
+      const supabase = await createClient()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (error || !user) {
+        // Return 404 for unauthorized users trying to access /admin
+        logger.warn('Unauthorized access attempt to admin route', {
+          component: 'middleware',
+          action: 'block-unauthorized-admin-access',
+          metadata: { path: pathname, ip, userAgent: request.headers.get('user-agent')?.substring(0, 100) }
+        })
+        return new NextResponse('Not Found', { status: 404 })
+      }
+      
+      // Check if user has admin role
+      const { data: adminUser } = await supabase
+        .from('admin_users')
+        .select('id, is_active, role')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single()
+      
+      if (!adminUser || !['admin', 'super_admin'].includes(adminUser.role)) {
+        // Return 404 for non-admin users
+        logger.warn('Non-admin user attempting to access admin route', {
+          component: 'middleware',
+          action: 'block-non-admin-access',
+          metadata: { path: pathname, userId: user.id, ip }
+        })
+        return new NextResponse('Not Found', { status: 404 })
+      }
+      
+      // If user is authenticated admin, redirect to admin subdomain
+      const adminUrl = `https://sg44admin.gurusingapore.com${pathname}${request.nextUrl.search}`
+      logger.info('Redirecting authenticated admin to admin subdomain', {
+        component: 'middleware',
+        action: 'redirect-admin-to-subdomain',
+        metadata: { path: pathname, userId: user.id, role: adminUser.role }
+      })
+      return NextResponse.redirect(adminUrl)
+      
+    } catch (error) {
+      // If auth check fails, return 404
+      logger.error('Auth check failed for admin route', {
+        component: 'middleware',
+        action: 'auth-check-failed',
+        metadata: { path: pathname, error: error instanceof Error ? error.message : 'Unknown error', ip }
+      })
+      return new NextResponse('Not Found', { status: 404 })
+    }
   }
 
   // Protect entire admin subdomain (not just /admin paths)
@@ -97,13 +150,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
       }
     }
-  }
-  
-  // Handle /admin routes on main domain - redirect to admin subdomain
-  if (pathname.startsWith('/admin') && !isAdminSubdomain) {
-    // Redirect to admin subdomain
-    const adminUrl = `https://sg44admin.gurusingapore.com${pathname}${request.nextUrl.search}`
-    return NextResponse.redirect(adminUrl)
   }
 
   // PWA route handling

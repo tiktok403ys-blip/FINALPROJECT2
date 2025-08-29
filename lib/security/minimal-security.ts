@@ -115,7 +115,7 @@ export class MinimalSecurity {
 
     if (pathname.startsWith('/api/')) {
       type = 'api'
-    } else if (pathname.startsWith('/admin')) {
+    } else if (pathname.startsWith('/admin') || pathname.includes('admin')) {
       type = 'admin'
     } else if (
       pathname.startsWith('/_next/static') ||

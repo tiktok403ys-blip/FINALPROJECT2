@@ -11,7 +11,10 @@
     "start": "next start",
     "start:production": "NODE_ENV=production next start",
     "check": "npm run lint && npm run build",
-    "clean": "rm -rf .next out"
+    "clean": "rm -rf .next out",
+    "security:validate": "node scripts/validate-production-security.js",
+    "security:check": "npm run security:validate",
+    "deploy:check": "npm run security:validate && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
