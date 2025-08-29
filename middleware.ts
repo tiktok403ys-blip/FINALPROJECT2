@@ -22,9 +22,14 @@ function generateNonce(): string {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const host = request.headers.get('host') || ''
   const ip = request.headers.get('x-forwarded-for') ||
              request.headers.get('x-real-ip') ||
              'unknown'
+
+  // Check if this is admin subdomain
+  const adminSubdomain = process.env.ADMIN_SUBDOMAIN || process.env.NEXT_PUBLIC_ADMIN_SUBDOMAIN || 'admin'
+  const isAdminSubdomain = host.includes('sg44admin.gurusingapore.com') || host.startsWith(`${adminSubdomain}.`) || host === adminSubdomain
 
   // Create response
   const response = NextResponse.next()
@@ -53,38 +58,52 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  // Admin route protection using Supabase auth
-  if (pathname.startsWith('/admin') && !pathname.includes('/login')) {
-    try {
-      const supabase = await createClient()
-      const { data: { user }, error } = await supabase.auth.getUser()
-      
-      let isAuthenticated = false
-      
-      if (!error && user) {
-        // Check if user is in admin_users table
-        const { data: adminUser } = await supabase
-          .from('admin_users')
-          .select('id, is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single()
+  // Protect entire admin subdomain (not just /admin paths)
+  if (isAdminSubdomain) {
+    // Allow access to login page without authentication
+    if (pathname.includes('/login') || pathname === '/admin/login') {
+      // Continue to login page
+    } else {
+      // Require authentication and proper role for all other pages on admin subdomain
+      try {
+        const supabase = await createClient()
+        const { data: { user }, error } = await supabase.auth.getUser()
         
-        isAuthenticated = !!adminUser
-      }
-      
-      if (!isAuthenticated) {
+        let isAuthorized = false
+        
+        if (!error && user) {
+          // Check if user is in admin_users table with proper role
+          const { data: adminUser } = await supabase
+            .from('admin_users')
+            .select('id, is_active, role')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .single()
+          
+          // Only allow admin or super_admin roles
+          isAuthorized = !!adminUser && (adminUser.role === 'admin' || adminUser.role === 'super_admin')
+        }
+        
+        if (!isAuthorized) {
+          const url = new URL('/admin/login', request.url)
+          // Preserve intended destination
+          url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+          return NextResponse.redirect(url)
+        }
+      } catch (error) {
+        // If auth check fails, redirect to login
         const url = new URL('/admin/login', request.url)
-        // Preserve intended destination
         url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
         return NextResponse.redirect(url)
       }
-    } catch (error) {
-      // If auth check fails, redirect to login
-      const url = new URL('/admin/login', request.url)
-      url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
-      return NextResponse.redirect(url)
     }
+  }
+  
+  // Handle /admin routes on main domain - redirect to admin subdomain
+  if (pathname.startsWith('/admin') && !isAdminSubdomain) {
+    // Redirect to admin subdomain
+    const adminUrl = `https://sg44admin.gurusingapore.com${pathname}${request.nextUrl.search}`
+    return NextResponse.redirect(adminUrl)
   }
 
   // PWA route handling
