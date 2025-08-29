@@ -11,11 +11,13 @@ import { useRealtimeCasinoStatus } from '@/components/providers/realtime-casino-
 export function ProgressiveLoader({
   casinos,
   chunkSize = 4,
-  delay = 100
+  delay = 100,
+  isGridView = false
 }: {
   casinos: Casino[]
   chunkSize?: number
   delay?: number
+  isGridView?: boolean
 }) {
   const [visibleCount, setVisibleCount] = useState(chunkSize)
   const [isLoading, setIsLoading] = useState(false)
@@ -36,13 +38,13 @@ export function ProgressiveLoader({
   const hasMore = visibleCount < casinos.length
 
   return (
-    <div className="space-y-6">
+    <div className={isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-6"}>
       {visibleCasinos.map((casino, index) => (
         <CasinoStream key={casino.id} casino={casino} rank={index + 1} />
       ))}
       
       {hasMore && (
-        <div className="flex justify-center py-8">
+        <div className={isGridView ? "col-span-full flex justify-center py-8" : "flex justify-center py-8"}>
           <button
             onClick={loadMore}
             disabled={isLoading}
@@ -78,11 +80,13 @@ export function CasinoStream({
 export function StreamingCasinoGrid({
   initialCasinos = [],
   enableStreaming = true,
-  enableProgressiveLoading = true
+  enableProgressiveLoading = true,
+  isGridView = false
 }: {
   initialCasinos?: Casino[]
   enableStreaming?: boolean
   enableProgressiveLoading?: boolean
+  isGridView?: boolean
 }) {
   const { state: { casinos: storeCasinos } } = useCasinoStore()
   const { isConnected, initialLoading, error } = useRealtimeCasinoStatus()
@@ -128,13 +132,14 @@ export function StreamingCasinoGrid({
       <ProgressiveLoader
         casinos={activeCasinos}
         chunkSize={4}
+        isGridView={isGridView}
       />
     )
   }
 
   // Fallback to regular rendering
   return (
-    <div className="space-y-6">
+    <div className={isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-6"}>
       {visibleCasinos.map((casino, index) => (
         <CasinoCardMobileFirst
           key={casino.id}
@@ -144,7 +149,7 @@ export function StreamingCasinoGrid({
       ))}
 
       {hasMore && (
-        <div className="flex justify-center py-8">
+        <div className={isGridView ? "col-span-full flex justify-center py-8" : "flex justify-center py-8"}>
           <button
             onClick={loadMore}
             disabled={isLoadingMore}

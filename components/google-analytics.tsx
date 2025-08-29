@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from 'react'
-import Script from 'next/script'
+import { useRouter } from 'next/navigation'
 
 declare global {
   interface Window {
@@ -11,60 +11,52 @@ declare global {
 }
 
 export function GoogleAnalytics() {
-  const measurementId = process.env.NEXT_PUBLIC_GA_ID || 'GA_MEASUREMENT_ID'
+  const router = useRouter()
+  const measurementId = process.env.NEXT_PUBLIC_GA_ID
 
   useEffect(() => {
     // Only initialize if we have a valid measurement ID
-    if (measurementId && measurementId !== 'GA_MEASUREMENT_ID') {
-      window.dataLayer = window.dataLayer || []
+    if (!measurementId || measurementId === 'GA_MEASUREMENT_ID') {
+      return
+    }
 
-      function gtag(...args: any[]) {
-        window.dataLayer.push(args)
-      }
+    // Initialize dataLayer
+    window.dataLayer = window.dataLayer || []
 
-      window.gtag = gtag
+    function gtag(...args: any[]) {
+      window.dataLayer.push(args)
+    }
+
+    window.gtag = gtag
+
+    // Load Google Analytics script dynamically
+    const script = document.createElement('script')
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`
+    script.async = true
+    script.onload = () => {
       gtag('js', new Date())
       gtag('config', measurementId, {
         anonymize_ip: true,
         allow_ad_features: false,
         send_page_view: true
       })
+      console.log('Google Analytics loaded successfully')
+    }
+    script.onerror = () => {
+      console.warn('Failed to load Google Analytics')
+    }
+
+    document.head.appendChild(script)
+
+    // Cleanup function
+    return () => {
+      const existingScript = document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${measurementId}"]`)
+      if (existingScript) {
+        existingScript.remove()
+      }
     }
   }, [measurementId])
 
-  // Only load GA script if we have a valid measurement ID
-  if (!measurementId || measurementId === 'GA_MEASUREMENT_ID') {
-    return null
-  }
-
-  return (
-    <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
-        strategy="afterInteractive"
-        onLoad={() => {
-          console.log('Google Analytics loaded successfully')
-        }}
-        onError={() => {
-          console.warn('Failed to load Google Analytics')
-        }}
-      />
-      <Script
-        id="google-analytics"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${measurementId}', {
-              anonymize_ip: true,
-              allow_ad_features: false,
-              send_page_view: true
-            });
-          `,
-        }}
-      />
-    </>
-  )
+  // This component doesn't render anything visible
+  return null
 }

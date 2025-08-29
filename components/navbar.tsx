@@ -349,7 +349,7 @@ export function Navbar() {
               href="/"
               className={`flex items-center gap-2 group ${TOUCH_TARGET_SIZE}`}
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg flex items-center justify-center transition-transform">
                 <span className="text-black font-bold text-sm">G</span>
               </div>
               <span className="text-white font-bold text-lg">GuruSingapore</span>

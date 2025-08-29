@@ -355,7 +355,7 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="text-center">
                 <Award className="w-8 h-8 text-[#00ff88] mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">500+</div>
+                <div className="text-2xl font-bold text-white">21</div>
                 <div className="text-gray-400 text-sm">Casinos Reviewed</div>
               </div>
               <div className="text-center">

@@ -76,9 +76,8 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     updateQueueRef.current = []
 
     // Update casino store dengan batch updates
-    const currentCasinos = state.casinos
-    const updatedCasinos = [...currentCasinos]
-
+    const updatedCasinos: Casino[] = [...state.casinos]
+    
     updates.forEach(updatedCasino => {
       const index = updatedCasinos.findIndex(c => c.id === updatedCasino.id)
       if (index >= 0) {
@@ -88,8 +87,9 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         updatedCasinos.unshift(updatedCasino)
       }
     })
-
+    
     actions.setCasinos(updatedCasinos)
+    
     actions.setLoading('realtime', false)
     
     setRealtimeState(prev => ({
@@ -97,7 +97,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       lastUpdate: Date.now(),
       error: null
     }))
-  }, [state.casinos, actions])
+  }, [actions])
 
   // Debounced update function
   const debouncedUpdate = useCallback(() => {
@@ -119,19 +119,18 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         if (newRecord) {
           if (opts.enableSelectiveUpdates) {
             // Selective update: Add new casino to the beginning if it doesn't exist
-            const currentCasinos = state.casinos
-            const exists = currentCasinos.some(c => c.id === newRecord.id)
-
+            const exists = state.casinos.some(c => c.id === newRecord.id)
             if (!exists) {
-              actions.setCasinos([newRecord, ...currentCasinos])
-              setRealtimeState(prev => ({
-                ...prev,
-                lastUpdate: Date.now()
-              }))
+              actions.setCasinos([newRecord, ...state.casinos])
+            }
+            
+            setRealtimeState(prev => ({
+              ...prev,
+              lastUpdate: Date.now()
+            }))
 
-              if (opts.debug) {
-                logger.log('✅ New casino added via realtime:', { metadata: { casinoName: newRecord.name } })
-              }
+            if (opts.debug) {
+              logger.log('✅ New casino added via realtime:', { metadata: { casinoName: newRecord.name } })
             }
           } else {
             // Legacy batch processing
@@ -149,22 +148,20 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         if (newRecord) {
           if (opts.enableSelectiveUpdates) {
             // Selective update: Replace specific casino
-            const currentCasinos = state.casinos
-            const index = currentCasinos.findIndex(c => c.id === newRecord.id)
-
+            const index = state.casinos.findIndex(c => c.id === newRecord.id)
             if (index >= 0) {
-              const updatedCasinos = [...currentCasinos]
-              updatedCasinos[index] = newRecord
-              actions.setCasinos(updatedCasinos)
+              const updated = [...state.casinos]
+              updated[index] = newRecord
+              actions.setCasinos(updated)
+            }
 
-              setRealtimeState(prev => ({
-                ...prev,
-                lastUpdate: Date.now()
-              }))
+            setRealtimeState(prev => ({
+              ...prev,
+              lastUpdate: Date.now()
+            }))
 
-              if (opts.debug) {
-                logger.log('🔄 Casino updated via realtime:', { metadata: { casinoName: newRecord.name } })
-              }
+            if (opts.debug) {
+              logger.log('🔄 Casino updated via realtime:', { metadata: { casinoName: newRecord.name } })
             }
           } else {
             // Legacy batch processing
@@ -181,9 +178,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       case 'DELETE':
         if (oldRecord) {
           // Immediate delete for better UX
-          const currentCasinos = state.casinos
-          const filteredCasinos = currentCasinos.filter(c => c.id !== oldRecord.id)
-          actions.setCasinos(filteredCasinos)
+          actions.setCasinos(state.casinos.filter(c => c.id !== oldRecord.id))
 
           setRealtimeState(prev => ({
             ...prev,
@@ -196,7 +191,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         }
         break
     }
-  }, [state.casinos, actions, opts.batchSize, opts.enableSelectiveUpdates, opts.debug, processBatchedUpdates, debouncedUpdate])
+  }, [actions, state.casinos, opts.batchSize, opts.enableSelectiveUpdates, opts.debug, processBatchedUpdates, debouncedUpdate])
 
   // Circuit breaker check
   const isCircuitBreakerOpen = useCallback(() => {
@@ -214,56 +209,6 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
       error: null
     }))
   }, [])
-
-  // Reconnection logic with circuit breaker
-  const attemptReconnect = useCallback(() => {
-    // Check if circuit breaker is open
-    if (isCircuitBreakerOpen()) {
-      // Only log circuit breaker status occasionally to reduce spam
-      if (opts.debug && realtimeState.reconnectAttempts === 0) {
-        logger.warn('⚡ Circuit breaker active, reconnection paused')
-      }
-      return
-    }
-
-    // Check max attempts
-    if (realtimeState.reconnectAttempts >= opts.maxReconnectAttempts) {
-      setRealtimeState(prev => ({
-        ...prev,
-        error: `Realtime connection failed after ${opts.maxReconnectAttempts} attempts`,
-        isConnecting: false,
-        circuitBreakerOpen: true,
-        lastFailureTime: Date.now()
-      }))
-      if (opts.debug) logger.warn('⚡ Circuit breaker activated after max attempts')
-      return
-    }
-
-    // Calculate exponential backoff delay
-    const baseDelay = INITIAL_RETRY_DELAY * Math.pow(2, realtimeState.reconnectAttempts)
-    const delay = Math.min(baseDelay, MAX_RETRY_DELAY)
-    
-    // Only log on first attempt or every 3rd attempt to reduce console spam
-    if (opts.debug && (realtimeState.reconnectAttempts === 0 || realtimeState.reconnectAttempts % 3 === 0)) {
-      logger.log(`🔄 Reconnecting... (attempt ${realtimeState.reconnectAttempts + 1}/${opts.maxReconnectAttempts})`)
-    }
-    
-    reconnectTimerRef.current = setTimeout(() => {
-      setRealtimeState(prev => ({
-        ...prev,
-        isConnecting: true,
-        reconnectAttempts: prev.reconnectAttempts + 1
-      }))
-      
-      // Cleanup existing channel
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-      }
-      
-      // Create new channel
-      setupRealtimeChannel()
-    }, delay)
-  }, [realtimeState.reconnectAttempts, realtimeState.circuitBreakerOpen, realtimeState.lastFailureTime, opts.maxReconnectAttempts, supabase, isCircuitBreakerOpen])
 
   // Setup realtime channel
   const setupRealtimeChannel = useCallback(() => {
@@ -289,8 +234,8 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
           logger.log('✅ Realtime connection established')
         } else if (opts.debug && ['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) {
           logger.warn(`⚠️ Realtime connection ${status.toLowerCase()}`)
-        } else if (opts.debug && status === 'CLOSED' && realtimeState.isConnected) {
-          // Only log CLOSED status if we were previously connected (to avoid spam)
+        } else if (opts.debug && status === 'CLOSED') {
+          // Log CLOSED status without checking current connection state
           logger.warn('⚠️ Realtime connection closed')
         }
         
@@ -321,16 +266,56 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
             actions.setLoading('realtime', false)
             actions.setError('realtime', `Realtime connection ${status.toLowerCase()}`)
             
-            // Only attempt reconnection if not already trying and circuit breaker is closed
-            if (!realtimeState.isConnecting && !isCircuitBreakerOpen()) {
-              attemptReconnect()
-            }
+            // Schedule reconnection without circular dependency
+            setTimeout(() => {
+              setRealtimeState(currentState => {
+                if (!currentState.isConnecting && !isCircuitBreakerOpen()) {
+                  // Inline reconnection logic to avoid circular dependency
+                  if (currentState.reconnectAttempts >= opts.maxReconnectAttempts) {
+                    if (opts.debug) logger.warn('⚡ Circuit breaker activated after max attempts')
+                    return {
+                      ...currentState,
+                      error: `Realtime connection failed after ${opts.maxReconnectAttempts} attempts`,
+                      isConnecting: false,
+                      circuitBreakerOpen: true,
+                      lastFailureTime: Date.now()
+                    }
+                  }
+                  
+                  // Calculate exponential backoff delay
+                  const baseDelay = INITIAL_RETRY_DELAY * Math.pow(2, currentState.reconnectAttempts)
+                  const delay = Math.min(baseDelay, MAX_RETRY_DELAY)
+                  
+                  // Only log on first attempt or every 3rd attempt to reduce console spam
+                  if (opts.debug && (currentState.reconnectAttempts === 0 || currentState.reconnectAttempts % 3 === 0)) {
+                    logger.log(`🔄 Reconnecting... (attempt ${currentState.reconnectAttempts + 1}/${opts.maxReconnectAttempts})`)
+                  }
+                  
+                  reconnectTimerRef.current = setTimeout(() => {
+                    setRealtimeState(prev => ({
+                      ...prev,
+                      isConnecting: true,
+                      reconnectAttempts: prev.reconnectAttempts + 1
+                    }))
+                    
+                    // Cleanup existing channel
+                    if (channelRef.current) {
+                      supabase.removeChannel(channelRef.current)
+                    }
+                    
+                    // Create new channel
+                    setupRealtimeChannel()
+                  }, delay)
+                }
+                return currentState
+              })
+            }, 100) // Small delay to avoid immediate recursion
             break
         }
       })
 
     channelRef.current = channel
-  }, [opts.enabled, supabase, handleRealtimeChange, actions, attemptReconnect, isCircuitBreakerOpen, opts.debug, realtimeState.isConnected])
+  }, [opts.enabled, supabase, handleRealtimeChange, actions, isCircuitBreakerOpen, opts.debug, opts.maxReconnectAttempts])
 
   // Manual reconnect function
   const reconnect = useCallback(() => {
@@ -358,7 +343,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     
     // Setup new channel
     setupRealtimeChannel()
-  }, [supabase, setupRealtimeChannel])
+  }, [supabase]) // Remove setupRealtimeChannel from dependencies
 
   // Disconnect function
   const disconnect = useCallback(() => {
@@ -394,7 +379,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     actions.setError('realtime', null)
   }, [supabase, actions])
 
-  // Setup effect
+  // Setup effect - only run once on mount
   useEffect(() => {
     setupRealtimeChannel()
     
@@ -417,7 +402,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
         processBatchedUpdates()
       }
     }
-  }, [setupRealtimeChannel, supabase, processBatchedUpdates])
+  }, []) // Empty dependency array to run only once
 
   // Visibility change handler untuk pause/resume realtime
   useEffect(() => {
@@ -441,7 +426,7 @@ export function useCasinoRealtime(options: UseCasinoRealtimeOptions = {}) {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [opts.enabled, setupRealtimeChannel, supabase])
+  }, [opts.enabled, supabase]) // Remove setupRealtimeChannel from dependencies
 
   // Fallback mechanism - disable realtime if circuit breaker is open for too long
   const isRealtimeAvailable = useCallback(() => {

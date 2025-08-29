@@ -38,9 +38,10 @@ import { StreamingCasinoGrid } from '@/components/streaming/casino-stream'
 import { CasinoFilterMobileFirst } from '@/components/casino-filter-mobile-first'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { RealtimeCasinoProvider } from '@/components/providers/realtime-casino-provider'
-import { RealtimeConnectionStatus } from '@/components/realtime-connection-status'
 import { UnifiedCasinoRealtime } from '@/components/realtime/unified-casino-realtime'
 import { getCasinosServer } from '@/lib/server/casino-server'
+import { CasinoGridWrapper } from '@/components/casino/casino-grid-wrapper'
+
 
 // Server Actions
 import { searchCasinos } from '@/app/actions/casino-actions'
@@ -78,12 +79,6 @@ function FilterSkeleton() {
       </div>
     </GlassCard>
   )
-}
-
-export const metadata = {
-  title: "Best Online Casinos - GuruSingapore",
-  description:
-    "Discover the best online casinos with verified reviews, ratings, and exclusive bonuses. Find your perfect casino today.",
 }
 
 // Revalidate every 5 minutes for testing - reduces delay for established_year updates
@@ -328,11 +323,6 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
         />
 
         <div className="container mx-auto px-4 py-16">
-          {/* Realtime Connection Status */}
-          <div className="mb-6 flex justify-end">
-            <RealtimeConnectionStatus className="text-sm" />
-          </div>
-          
           {/* Performance Monitor - Development only */}
           <PerformanceMonitor />
 
@@ -343,8 +333,8 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
               <CasinoFilterMobileFirst currentFilter={filter as 'all' | 'high-rated' | 'new' | 'live'} />
             </Suspense>
 
-            {/* Enhanced Unified Casino Realtime Grid */}
-            <UnifiedCasinoRealtime
+            {/* Enhanced Unified Casino Realtime Grid with Grid Toggle */}
+            <CasinoGridWrapper
               initialCasinos={casinos}
               enableStreaming={true}
               enableProgressiveLoading={true}

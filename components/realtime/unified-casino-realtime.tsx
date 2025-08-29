@@ -21,6 +21,7 @@ interface UnifiedCasinoRealtimeProps {
     minRating?: number
     sortBy?: 'rating' | 'name' | 'newest'
   }
+  isGridView?: boolean
 }
 
 export function UnifiedCasinoRealtime({
@@ -29,7 +30,8 @@ export function UnifiedCasinoRealtime({
   enableProgressiveLoading = true,
   showConnectionStatus = false,
   onCasinoUpdate,
-  filterOptions
+  filterOptions,
+  isGridView = false
 }: UnifiedCasinoRealtimeProps) {
   const {
     isConnected,
@@ -169,39 +171,14 @@ export function UnifiedCasinoRealtime({
         />
       )}
 
-      {/* Debug Info - Only in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-xs font-mono">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-gray-400">
-            <div>
-              <span className="text-green-400">Status:</span>
-              <span className={`ml-2 ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
-                {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
-              </span>
-            </div>
-            <div>
-              <span className="text-blue-400">Uptime:</span>
-              <span className="ml-2 text-white">{performanceInfo.connectionUptime}s</span>
-            </div>
-            <div>
-              <span className="text-purple-400">Messages:</span>
-              <span className="ml-2 text-white">{performanceInfo.messagesReceived}</span>
-            </div>
-            <div>
-              <span className="text-yellow-400">Filtered:</span>
-              <span className="ml-2 text-white">
-                {performanceInfo.filteredCount}/{performanceInfo.totalCount}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Main Casino Grid */}
       <StreamingCasinoGrid
         initialCasinos={filteredCasinos}
         enableStreaming={enableStreaming}
         enableProgressiveLoading={enableProgressiveLoading}
+        isGridView={isGridView}
       />
 
       {/* Last Update Info */}
