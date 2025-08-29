@@ -102,10 +102,10 @@ export async function middleware(request: NextRequest) {
       
     } catch (error) {
       // If auth check fails, return 404
-      logger.error('Auth check failed for admin route', {
+      logger.error('Auth check failed for admin route', error instanceof Error ? error : undefined, {
         component: 'middleware',
         action: 'auth-check-failed',
-        metadata: { path: pathname, error: error instanceof Error ? error.message : 'Unknown error', ip }
+        metadata: { path: pathname, ip }
       })
       return new NextResponse('Not Found', { status: 404 })
     }
