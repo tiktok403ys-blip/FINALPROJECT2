@@ -43,25 +43,18 @@ export function ProtectedRoute({
         return
       }
 
-      // Check role requirement
-      if (requiredRole && !adminAuth.hasRole(requiredRole)) {
-        router.push('/admin/unauthorized')
-        return
-      }
-
-      // Check permission requirements
-      if (requiredPermissions.length > 0) {
-        const hasAllPermissions = requiredPermissions.every(permission => 
-          adminAuth.hasPermission(permission)
-        )
-        
-        if (!hasAllPermissions) {
-          router.push('/admin/unauthorized')
-          return
-        }
-      }
+      // Do NOT redirect to a non-existent unauthorized page.
+      // Role and permission mismatches are handled via inline fallback rendering below.
     }
   }, [user, loading, requiredRole, requiredPermissions, router, redirectTo, adminAuth])
+
+  // Helper: check role allowance (admin includes super_admin)
+  const isRoleAllowed = (): boolean => {
+    if (!requiredRole) return true
+    if (requiredRole === 'admin') return adminAuth.isAdmin()
+    if (requiredRole === 'super_admin') return adminAuth.isSuperAdmin()
+    return false
+  }
 
   // Show loading state
   if (loading) {
@@ -86,8 +79,8 @@ export function ProtectedRoute({
     )
   }
 
-  // Check role requirement
-  if (requiredRole && !adminAuth.hasRole(requiredRole)) {
+  // Check role requirement (admin includes super_admin)
+  if (!isRoleAllowed()) {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
@@ -160,9 +153,12 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const adminAuth = AdminAuth.getInstance()
 
-  // Check role requirement
-  if (role && !adminAuth.hasRole(role)) {
-    return <>{fallback}</>
+  // Check role requirement (admin includes super_admin)
+  if (role) {
+    const allowed = role === 'admin' ? adminAuth.isAdmin() : adminAuth.isSuperAdmin()
+    if (!allowed) {
+      return <>{fallback}</>
+    }
   }
 
   // Check permission requirements
