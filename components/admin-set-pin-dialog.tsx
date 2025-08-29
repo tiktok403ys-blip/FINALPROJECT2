@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Lock, Shield } from "lucide-react"
 import { toast } from "sonner"
+import { createClient } from "@/lib/supabase/client"
 
 interface AdminSetPinDialogProps {
   open: boolean
@@ -26,32 +27,26 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
   const [checkingPinStatus, setCheckingPinStatus] = useState(true)
   const [csrfToken, setCsrfToken] = useState<string | null>(null)
 
-  // Check if admin already has PIN set
-  useEffect(() => {
-    if (open) {
-      // Prefetch CSRF token for POST operations
-      ;(async () => {
-        try {
-          const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
-          if (res.ok) {
-            const data = await res.json()
-            setCsrfToken(data?.token || null) // Fixed: use 'token' not 'csrfToken'
-          }
-        } catch {}
-        finally {
-          checkPinStatus()
-        }
-      })()
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    } catch {
+      return {}
     }
-  }, [open])
+  }
 
-  const checkPinStatus = async () => {
+  const checkPinStatus = useCallback(async () => {
     try {
       setCheckingPinStatus(true)
       // FIXED: Use the correct PIN status endpoint
+      const headers = await getAuthHeaders()
       const response = await fetch('/api/admin/pin-status', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers,
       })
 
       if (response.ok) {
@@ -64,7 +59,27 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
     } finally {
       setCheckingPinStatus(false)
     }
-  }
+  }, [])
+
+  // Check if admin already has PIN set
+  useEffect(() => {
+    if (open) {
+      // Prefetch CSRF token for POST operations
+      ;(async () => {
+        try {
+          const headers = await getAuthHeaders()
+          const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include', headers })
+          if (res.ok) {
+            const data = await res.json()
+            setCsrfToken(data?.token || null) // Fixed: use 'token' not 'csrfToken'
+          }
+        } catch {}
+        finally {
+          checkPinStatus()
+        }
+      })()
+    }
+  }, [open, checkPinStatus])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,11 +120,13 @@ export function AdminSetPinDialog({ open, onOpenChange, onSuccess }: AdminSetPin
     setIsLoading(true)
 
     try {
+      const headers = await getAuthHeaders()
       const response = await fetch('/api/admin/set-pin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}), // Fixed: use correct header name
+          ...headers,
         },
         credentials: 'include',
         body: JSON.stringify({

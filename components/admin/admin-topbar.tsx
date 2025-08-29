@@ -6,6 +6,7 @@ import { Shield, LogOut, Menu, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AdminAuth } from "@/lib/auth/admin-auth"
 import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 interface AdminTopbarProps {
   onToggleSidebar: () => void
@@ -30,9 +31,22 @@ export function AdminTopbar({ onToggleSidebar }: AdminTopbarProps) {
 
   useEffect(() => {
     let timer: any
+
+    const getAuthHeaders = async (): Promise<Record<string, string>> => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase.auth.getSession()
+        const token = data.session?.access_token
+        return token ? { Authorization: `Bearer ${token}` } : {}
+      } catch {
+        return {}
+      }
+    }
+
     const poll = async () => {
       try {
-        const res = await fetch("/api/admin/pending-reviews-count", { cache: "no-store" })
+        const headers = await getAuthHeaders()
+        const res = await fetch("/api/admin/pending-reviews-count", { cache: "no-store", credentials: 'include', headers })
         const json = await res.json().catch(() => null)
         if (typeof json?.count === "number") setPendingCount(json.count)
       } catch {}

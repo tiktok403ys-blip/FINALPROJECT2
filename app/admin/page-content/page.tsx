@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LoadingSpinner } from '@/components/loading-spinner'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface PageSection {
   id: string
@@ -40,6 +41,17 @@ const SECTION_TYPE_OPTIONS = [
   { value: 'intro', label: 'Introduction' }
 ]
 
+// Helper to build Authorization header from Supabase session
+async function getAuthHeaders() {
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const headers: Record<string, string> = {}
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`
+  }
+  return headers
+}
+
 export default function PageContentAdmin() {
   const [sections, setSections] = useState<PageSection[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,7 +70,8 @@ export default function PageContentAdmin() {
   const fetchSections = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/page-sections')
+      const headers = await getAuthHeaders()
+      const response = await fetch('/api/admin/page-sections', { credentials: 'include', headers })
       if (!response.ok) {
         throw new Error('Failed to fetch sections')
       }
@@ -92,9 +105,12 @@ export default function PageContentAdmin() {
         ? { ...formData, id: editingSection.id }
         : formData
 
+      const baseHeaders = await getAuthHeaders()
       const response = await fetch(url, {
         method,
+        credentials: 'include',
         headers: {
+          ...baseHeaders,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
@@ -148,8 +164,11 @@ export default function PageContentAdmin() {
     }
 
     try {
+      const headers = await getAuthHeaders()
       const response = await fetch(`/api/admin/page-sections?id=${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include',
+        headers
       })
 
       if (!response.ok) {
@@ -173,9 +192,12 @@ export default function PageContentAdmin() {
 
   const toggleActive = async (section: PageSection) => {
     try {
+      const baseHeaders = await getAuthHeaders()
       const response = await fetch('/api/admin/page-sections', {
         method: 'PUT',
+        credentials: 'include',
         headers: {
+          ...baseHeaders,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

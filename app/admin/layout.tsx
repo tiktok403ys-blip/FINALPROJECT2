@@ -9,6 +9,7 @@ import { AdminSetPinDialog } from '@/components/admin-set-pin-dialog'
 import { ProtectedRoute } from '@/components/admin/protected-route'
 import ErrorBoundary from '@/components/admin/error-boundary'
 import '@/styles/admin.css'
+import { createClient } from '@/lib/supabase/client'
 
 interface PinStatus {
   verified: boolean
@@ -31,9 +32,14 @@ export default function AdminLayout({
   // Check PIN status on mount and periodically
   const checkPinStatus = async () => {
     try {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const response = await fetch('/api/admin/pin-status', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers,
       })
       
       if (response.ok) {

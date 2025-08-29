@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
 interface NavigationItem {
   title: string
@@ -129,9 +130,14 @@ export function AdminSidebar() {
       await adminAuth.signOut()
       
       // Clear admin PIN verification cookie
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       await fetch('/api/admin/logout', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers,
       })
       
       // Redirect to public site
@@ -248,7 +254,6 @@ export function AdminSidebar() {
                         )}
                         onClick={() => {
                           handleNavigation('/admin/home/top-rated-casinos')
-                          if (isMobile) setMobileMenuOpen(false)
                         }}
                       >
                         Top Rated Casinos
@@ -261,7 +266,6 @@ export function AdminSidebar() {
                         )}
                         onClick={() => {
                           handleNavigation('/admin/home/hero-banner')
-                          if (isMobile) setMobileMenuOpen(false)
                         }}
                       >
                         Hero Banner
@@ -274,10 +278,21 @@ export function AdminSidebar() {
                         )}
                         onClick={() => {
                           handleNavigation('/admin/home/exclusive-bonuses')
-                          if (isMobile) setMobileMenuOpen(false)
                         }}
                       >
                         Exclusive Bonuses
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/home/featured-casinos' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/home/featured-casinos')
+                        }}
+                      >
+                        Featured Casinos
                       </Button>
                     </div>
                   )}
@@ -294,10 +309,7 @@ export function AdminSidebar() {
                   isActive && "bg-white/20 text-white",
                   collapsed && "px-2"
                 )}
-                onClick={() => {
-                  handleNavigation(item.href)
-                  if (isMobile) setMobileMenuOpen(false)
-                }}
+                onClick={() => handleNavigation(item.href)}
               >
                 <IconComponent className={cn("w-4 h-4", (!collapsed || isMobile) && "mr-3")} />
                 {(!collapsed || isMobile) && (
@@ -307,22 +319,22 @@ export function AdminSidebar() {
             )
           })}
         </div>
-      </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-white/10">
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-white/70 hover:text-white hover:bg-red-500/20 transition-colors",
-            collapsed && "px-2"
-          )}
-          onClick={handleSignOut}
-        >
-          <LogOut className={cn("w-4 h-4", (!collapsed || isMobile) && "mr-3")} />
-          {(!collapsed || isMobile) && <span>Sign Out</span>}
-        </Button>
-      </div>
+        {/* Footer */}
+        <div className="p-4 border-t border-white/10">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-white/70 hover:text-white hover:bg-red-500/20 transition-colors",
+              collapsed && "px-2"
+            )}
+            onClick={handleSignOut}
+          >
+            <LogOut className={cn("w-4 h-4", (!collapsed || isMobile) && "mr-3")} />
+            {(!collapsed || isMobile) && <span>Sign Out</span>}
+          </Button>
+        </div>
+      </nav>
       </div>
     </>
   )

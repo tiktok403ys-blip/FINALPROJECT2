@@ -25,6 +25,17 @@ export function usePageSection(options: UsePageSectionOptions = {}) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Helper untuk mengambil Authorization header (Option B)
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const supabase = createClient()
+    const { data: sessionData } = await supabase.auth.getSession()
+    const accessToken = sessionData.session?.access_token
+
+    const headers: Record<string, string> = {}
+    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
+    return headers
+  }
+
   const fetchPageSections = async () => {
     if (!enabled) return
     
@@ -35,8 +46,12 @@ export function usePageSection(options: UsePageSectionOptions = {}) {
       const params = new URLSearchParams()
       if (pageName) params.append('page_name', pageName)
       if (sectionType) params.append('section_type', sectionType)
-      
-      const response = await fetch(`/api/admin/page-sections?${params.toString()}`)
+
+      const headers = await getAuthHeaders()
+      const response = await fetch(`/api/admin/page-sections?${params.toString()}`, {
+        credentials: 'include',
+        headers
+      })
       
       if (!response.ok) {
         throw new Error('Failed to fetch page sections')

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Shield, Settings } from "lucide-react"
 import { AdminSetPinDialog } from "./admin-set-pin-dialog"
+import { createClient } from "@/lib/supabase/client"
 
 interface AdminPinDialogProps {
   open: boolean
@@ -25,38 +26,30 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
   const [checkingPinStatus, setCheckingPinStatus] = useState(true)
   const [csrfToken, setCsrfToken] = useState<string | null>(null)
 
-  // Check if admin has PIN set when dialog opens
-  useEffect(() => {
-    if (!open) return
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    } catch {
+      return {}
+    }
+  }
 
-    // Pre-fetch CSRF token for subsequent POST
-    ;(async () => {
-      try {
-        const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
-        if (res.ok) {
-          const data = await res.json()
-          setCsrfToken(data?.csrfToken || null)
-        }
-      } catch {}
-      finally {
-        checkPinStatus()
-      }
-    })()
-  }, [open])
-
-  const checkPinStatus = async () => {
+  const checkPinStatus = useCallback(async () => {
     try {
       setCheckingPinStatus(true)
-      const response = await fetch('/api/admin/set-pin', {
+      const headers = await getAuthHeaders()
+      const response = await fetch('/api/admin/pin-status', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers,
       })
 
       if (response.ok) {
         const data = await response.json()
         setHasPinSet(data.hasPinSet)
-        
-        // If no PIN is set, show set PIN dialog
         if (!data.hasPinSet) {
           setShowSetPinDialog(true)
         }
@@ -66,7 +59,27 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
     } finally {
       setCheckingPinStatus(false)
     }
-  }
+  }, [])
+
+  // Check if admin has PIN set when dialog opens
+  useEffect(() => {
+    if (!open) return
+
+    // Pre-fetch CSRF token for subsequent POST
+    ;(async () => {
+      try {
+        const headers = await getAuthHeaders()
+        const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include', headers })
+        if (res.ok) {
+          const data = await res.json()
+          setCsrfToken(data?.token || null)
+        }
+      } catch {}
+      finally {
+        checkPinStatus()
+      }
+    })()
+  }, [open, checkPinStatus])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,20 +97,23 @@ export function AdminPinDialog({ open, onOpenChange, onSuccess }: AdminPinDialog
       let token = csrfToken
       if (!token) {
         try {
-          const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include' })
+          const headers = await getAuthHeaders()
+          const res = await fetch('/api/admin/csrf-token', { method: 'GET', credentials: 'include', headers })
           if (res.ok) {
             const data = await res.json()
-            token = data?.csrfToken || null
+            token = data?.token || null
             setCsrfToken(token)
           }
         } catch {}
       }
-      
+
+      const headers = await getAuthHeaders()
       const response = await fetch('/api/admin/pin-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'x-admin-csrf-token': token } : {}),
+          ...(token ? { 'x-csrf-token': token } : {}),
+          ...headers,
         },
         credentials: 'include',
         body: JSON.stringify({ pin })
