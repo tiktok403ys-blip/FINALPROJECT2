@@ -17,7 +17,7 @@ export default function NotFound() {
 
         {/* Message */}
         <p className="text-white/70 text-lg mb-8 leading-relaxed">
-          The page you're looking for doesn't exist or you don't have permission to access it.
+          The page you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to access it.
         </p>
 
         {/* Actions */}
