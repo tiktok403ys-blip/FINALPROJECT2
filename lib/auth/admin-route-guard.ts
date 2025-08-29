@@ -23,13 +23,9 @@ export async function guardAdminRoute(
     
     if (error || !user) {
       logger.warn('Unauthorized access attempt to admin route', {
-        component: 'admin-route-guard',
-        action: 'block-unauthorized-access',
-        metadata: { 
-          path: request.nextUrl.pathname, 
-          ip: request.headers.get('x-forwarded-for') || 'unknown',
-          userAgent: request.headers.get('user-agent')?.substring(0, 100)
-        }
+        path: request.nextUrl.pathname, 
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        userAgent: request.headers.get('user-agent')?.substring(0, 100)
       })
       
       // Return 404 for unauthorized users
@@ -46,13 +42,9 @@ export async function guardAdminRoute(
     
     if (adminError || !adminUser) {
       logger.warn('Non-admin user attempting to access admin route', {
-        component: 'admin-route-guard',
-        action: 'block-non-admin-access',
-        metadata: { 
-          path: request.nextUrl.pathname, 
-          userId: user.id,
-          ip: request.headers.get('x-forwarded-for') || 'unknown'
-        }
+        path: request.nextUrl.pathname, 
+        userId: user.id,
+        ip: request.headers.get('x-forwarded-for') || 'unknown'
       })
       
       // Return 404 for non-admin users
@@ -62,14 +54,10 @@ export async function guardAdminRoute(
     // Check role requirement
     if (requireRole === 'super_admin' && adminUser.role !== 'super_admin') {
       logger.warn('Admin user attempting to access super_admin route', {
-        component: 'admin-route-guard',
-        action: 'block-insufficient-role',
-        metadata: { 
-          path: request.nextUrl.pathname, 
-          userId: user.id,
-          userRole: adminUser.role,
-          requiredRole: requireRole
-        }
+        path: request.nextUrl.pathname, 
+        userId: user.id,
+        userRole: adminUser.role,
+        requiredRole: requireRole
       })
       
       // Return 404 for insufficient role
@@ -78,14 +66,10 @@ export async function guardAdminRoute(
     
     // User is authorized
     logger.info('Admin route access granted', {
-      component: 'admin-route-guard',
-      action: 'access-granted',
-      metadata: { 
-        path: request.nextUrl.pathname, 
-        userId: user.id,
-        userRole: adminUser.role,
-        requiredRole: requireRole
-      }
+      path: request.nextUrl.pathname, 
+      userId: user.id,
+      userRole: adminUser.role,
+      requiredRole: requireRole
     })
     
     return {
@@ -95,14 +79,7 @@ export async function guardAdminRoute(
     }
     
   } catch (error) {
-    logger.error('Admin route guard error', {
-      component: 'admin-route-guard',
-      action: 'guard-error',
-      metadata: { 
-        path: request.nextUrl.pathname,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
-    })
+    logger.error('Admin route guard error', error as Error)
     
     // Return 404 on error
     return new NextResponse('Not Found', { status: 404 })
