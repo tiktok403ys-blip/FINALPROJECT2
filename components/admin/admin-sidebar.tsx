@@ -1,4 +1,4 @@
-  'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
@@ -18,7 +18,8 @@ import {
   ChevronRight,
   ChevronDown,
   Star,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,6 +37,12 @@ const navigationItems: NavigationItem[] = [
     title: 'Dashboard',
     href: '/admin',
     icon: BarChart3
+  },
+  {
+    title: 'Security Monitoring',
+    href: '/admin/monitoring',
+    icon: Activity,
+    requireRole: 'super_admin'
   },
   {
     title: 'Home Content',

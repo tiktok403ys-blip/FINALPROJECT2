@@ -3,7 +3,7 @@
 import React, { Suspense, useState, useEffect } from 'react'
 import { Casino } from '@/lib/types'
 import { CasinoCardMobileFirst, CasinoCardSkeleton } from '@/components/casino-card-mobile-first'
-import { useCasinoMobileOptimization } from '@/hooks/use-casino-mobile-optimization'
+
 import { useCasinoStore } from '@/lib/store/casino-store'
 import { useRealtimeCasinoStatus } from '@/components/providers/realtime-casino-provider'
 
@@ -92,13 +92,15 @@ export function StreamingCasinoGrid({
     ? storeCasinos 
     : initialCasinos
 
-  // Use the mobile optimization hook
-  const {
-    visibleCasinos,
-    hasMore,
-    isLoadingMore,
-    loadMore
-  } = useCasinoMobileOptimization(activeCasinos, 'all')
+  // Simple pagination state
+  const [visibleCount, setVisibleCount] = useState(8)
+  const visibleCasinos = activeCasinos.slice(0, visibleCount)
+  const hasMore = visibleCount < activeCasinos.length
+  const isLoadingMore = false
+  
+  const loadMore = () => {
+    setVisibleCount(prev => Math.min(prev + 4, activeCasinos.length))
+  }
 
   // Show loading state ketika initial load dari provider masih berjalan
   if (initialLoading && activeCasinos.length === 0) {

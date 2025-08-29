@@ -1,3 +1,9 @@
+import bundleAnalyzer from '@next/bundle-analyzer'
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@supabase/ssr'],
@@ -8,16 +14,49 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: [
-      'localhost', 
-      'via.placeholder.com', 
-      'images.unsplash.com', 
-      'picsum.photos',
-      'cdn.jsdelivr.net',
-      'fonts.googleapis.com',
-      'fonts.gstatic.com'
-    ],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.jsdelivr.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fonts.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fonts.gstatic.com',
+        port: '',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: process.env.NEXT_PUBLIC_SUPABASE_URL 
@@ -53,4 +92,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withBundleAnalyzer(nextConfig)

@@ -28,15 +28,9 @@ BEGIN
   SELECT COALESCE(array_to_json(array_agg(row_to_json(t))), '[]'::json) INTO featured_data
   FROM (
     SELECT id, name::VARCHAR(255), logo_url, rating, description
-    FROM (
-      SELECT
-        c.id, c.name, c.logo_url, c.rating, c.description,
-        COALESCE(csm.average_rating, c.rating) as avg_rating
-      FROM casinos c
-      LEFT JOIN casino_stats_mobile csm ON c.id = csm.id
-      WHERE c.is_active = true AND c.is_featured_home = true
-    ) sub
-    ORDER BY avg_rating DESC
+    FROM casinos c
+    WHERE c.is_active = true AND c.is_featured_home = true
+    ORDER BY c.rating DESC
     LIMIT 6
   ) t;
 
@@ -44,15 +38,9 @@ BEGIN
   SELECT COALESCE(array_to_json(array_agg(row_to_json(t))), '[]'::json) INTO high_rated_data
   FROM (
     SELECT id, name::VARCHAR(255), logo_url, rating, description
-    FROM (
-      SELECT
-        c.id, c.name, c.logo_url, c.rating, c.description,
-        COALESCE(csm.average_rating, c.rating) as avg_rating
-      FROM casinos c
-      LEFT JOIN casino_stats_mobile csm ON c.id = csm.id
-      WHERE c.is_active = true AND c.rating >= 7
-    ) sub
-    ORDER BY avg_rating DESC
+    FROM casinos c
+    WHERE c.is_active = true AND c.rating >= 7
+    ORDER BY c.rating DESC
     LIMIT limit_count
   ) t;
 
@@ -91,7 +79,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION search_casinos_mobile TO public;
 GRANT EXECUTE ON FUNCTION get_casino_details_mobile TO public;
 GRANT EXECUTE ON FUNCTION get_mobile_dashboard TO public;
-GRANT SELECT ON casino_stats_mobile TO public;
+-- Removed: GRANT SELECT ON casino_stats_mobile TO public; (casino_stats_mobile has been dropped)
 
 -- ===========================================
 -- STEP 3: CREATE OPTIONAL FUNCTIONS (IF NEEDED)

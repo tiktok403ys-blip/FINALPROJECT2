@@ -40,7 +40,7 @@ const envSchema = z.object({
   
   // Analytics & Monitoring
   GOOGLE_ANALYTICS_ID: z.string().optional(),
-  SENTRY_DSN: z.string().url('Invalid Sentry DSN').optional(),
+  SENTRY_DSN: z.string().url('Invalid Sentry DSN').optional().or(z.literal('')),
   
   // External APIs
   CASINO_API_KEY: z.string().optional(),

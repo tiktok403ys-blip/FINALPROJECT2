@@ -84,6 +84,11 @@ export class MobileOptimizedSupabase {
     this.client = createMobileOptimizedClient()
   }
 
+  // Protected method to access client for extending classes
+  protected getClient() {
+    return this.client
+  }
+
   // Optimized casino query for mobile
   async getCasinosOptimized(options: {
     filter?: 'all' | 'high-rated' | 'new' | 'live'

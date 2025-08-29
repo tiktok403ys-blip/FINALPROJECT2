@@ -143,7 +143,7 @@ export default function ResponsibleGamblingPage() {
                     <Phone className="w-5 h-5 text-[#00ff88]" />
                     <h3 className="text-lg font-bold">Singapore Helpline</h3>
                   </div>
-                  <p className="text-2xl font-bold text-[#00ff88] mb-2">1800-6-668-668</p>
+                  <p className="text-2xl font-bold text-[#00ff88] mb-2">+6585769155</p>
                   <p className="text-sm text-gray-400">National Problem Gambling Helpline</p>
                   <p className="text-sm text-gray-400">24/7 Support Available</p>
                 </div>
@@ -153,9 +153,9 @@ export default function ResponsibleGamblingPage() {
                     <Globe className="w-5 h-5 text-[#00ff88]" />
                     <h3 className="text-lg font-bold">Online Support</h3>
                   </div>
-                  <p className="text-lg font-bold text-[#00ff88] mb-2">www.ncpg.org.sg</p>
-                  <p className="text-sm text-gray-400">National Council on Problem Gambling</p>
-                  <p className="text-sm text-gray-400">Resources & Self-Help Tools</p>
+                  <p className="text-lg font-bold text-[#00ff88] mb-2">www.gurusingapore.com</p>
+                  <p className="text-sm text-gray-400">Singapore Council on Problem Gambling</p>
+                  <p className="text-sm text-gray-400">Resources & Helpline</p>
                 </div>
               </div>
             </div>
