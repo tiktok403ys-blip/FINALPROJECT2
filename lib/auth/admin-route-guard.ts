@@ -22,11 +22,7 @@ export async function guardAdminRoute(
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error || !user) {
-      logger.warn('Unauthorized access attempt to admin route', {
-        path: request.nextUrl.pathname, 
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent')?.substring(0, 100)
-      })
+      logger.warn(`Unauthorized access attempt to admin route: ${request.nextUrl.pathname}`)
       
       // Return 404 for unauthorized users
       return new NextResponse('Not Found', { status: 404 })
@@ -41,11 +37,7 @@ export async function guardAdminRoute(
       .single()
     
     if (adminError || !adminUser) {
-      logger.warn('Non-admin user attempting to access admin route', {
-        path: request.nextUrl.pathname, 
-        userId: user.id,
-        ip: request.headers.get('x-forwarded-for') || 'unknown'
-      })
+      logger.warn(`Non-admin user attempting to access admin route: ${request.nextUrl.pathname}, User ID: ${user.id}`)
       
       // Return 404 for non-admin users
       return new NextResponse('Not Found', { status: 404 })
@@ -53,24 +45,14 @@ export async function guardAdminRoute(
     
     // Check role requirement
     if (requireRole === 'super_admin' && adminUser.role !== 'super_admin') {
-      logger.warn('Admin user attempting to access super_admin route', {
-        path: request.nextUrl.pathname, 
-        userId: user.id,
-        userRole: adminUser.role,
-        requiredRole: requireRole
-      })
+      logger.warn(`Admin user attempting to access super_admin route: ${request.nextUrl.pathname}, User ID: ${user.id}, Role: ${adminUser.role}`)
       
       // Return 404 for insufficient role
       return new NextResponse('Not Found', { status: 404 })
     }
     
     // User is authorized
-    logger.info('Admin route access granted', {
-      path: request.nextUrl.pathname, 
-      userId: user.id,
-      userRole: adminUser.role,
-      requiredRole: requireRole
-    })
+    logger.info(`Admin route access granted: ${request.nextUrl.pathname}, User ID: ${user.id}, Role: ${adminUser.role}`)
     
     return {
       isAuthorized: true,
