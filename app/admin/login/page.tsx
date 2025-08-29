@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AdminAuth } from '@/lib/auth/admin-auth'
 import { toast } from '@/components/ui/sonner'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -24,7 +24,6 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const adminAuth = AdminAuth.getInstance()
 
   const {
     register,
@@ -38,6 +37,8 @@ export default function AdminLoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true)
+      
+      const adminAuth = AdminAuth.getInstance()
       const success = await adminAuth.signIn(data.email, data.password)
       
       if (success) {
@@ -125,6 +126,8 @@ export default function AdminLoginPage() {
                   <p className="text-red-400 text-sm">{errors.password.message}</p>
                 )}
               </div>
+
+
 
               {errors.root && (
                 <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-md">

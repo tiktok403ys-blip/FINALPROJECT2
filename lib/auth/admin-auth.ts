@@ -11,11 +11,13 @@ export interface AdminUser extends User {
 
 export interface AdminProfile {
   id: string
+  user_id: string
   email: string
   role: AdminRole
   permissions: string[]
   created_at: string
   updated_at: string
+  is_active: boolean
 }
 
 /**
@@ -71,11 +73,13 @@ export class AdminAuth {
 
       this.currentProfile = {
         id: adminData.id,
-        email: adminData.email,
+        user_id: adminData.user_id,
+        email: user.email || '',
         role: adminData.role,
         permissions: adminData.permissions || [],
         created_at: adminData.created_at,
-        updated_at: adminData.updated_at
+        updated_at: adminData.updated_at,
+        is_active: adminData.is_active
       }
 
       return { user: this.currentUser, profile: this.currentProfile }
@@ -196,11 +200,13 @@ export class AdminAuth {
 
       this.currentProfile = {
         id: adminData.id,
-        email: adminData.email,
+        user_id: adminData.user_id,
+        email: data.user.email || '',
         role: adminData.role,
         permissions: adminData.permissions || [],
         created_at: adminData.created_at,
-        updated_at: adminData.updated_at
+        updated_at: adminData.updated_at,
+        is_active: adminData.is_active
       }
 
       // Log successful login

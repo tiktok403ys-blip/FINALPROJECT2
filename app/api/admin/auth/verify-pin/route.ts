@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
-import { enhancedAdminAuth } from '@/lib/auth/admin-auth-enhanced'
+import { AdminAuth } from '@/lib/auth/admin-auth'
 import { z } from 'zod'
 
 // Request validation schema
@@ -92,24 +92,39 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Verify session token first
-    const adminProfile = await enhancedAdminAuth.validateSession(sessionToken)
-    if (!adminProfile) {
+    // Check if admin is authenticated
+    const adminAuth = AdminAuth.getInstance()
+    const { user, profile } = await adminAuth.getCurrentUser()
+    
+    if (!user || !profile) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid or expired session'
+        {
+          success: false,
+          error: 'User not authenticated'
         },
         { status: 401 }
       )
     }
     
-    // Verify PIN using enhanced admin auth
-    const isPinValid = await enhancedAdminAuth.verifyAdminPin(
-      pin,
-      sessionToken,
-      ip
-    )
+    // Verify PIN against database
+    const supabase = await createClient()
+    const { data: adminData, error: adminError } = await supabase
+      .from('admin_users')
+      .select('pin')
+      .eq('user_id', user.id)
+      .single()
+    
+    if (adminError || !adminData) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Admin user not found'
+        },
+        { status: 404 }
+      )
+    }
+    
+    const isPinValid = adminData.pin === pin
     
     if (!isPinValid) {
       return NextResponse.json(
@@ -144,7 +159,7 @@ export async function POST(request: NextRequest) {
       path: '/admin'
     })
     
-    logger.info(`PIN verification successful for admin ${adminProfile.email} from IP ${ip}`)
+    logger.info(`PIN verification successful for admin ${profile.email} from IP ${ip}`)
     
     return response
     

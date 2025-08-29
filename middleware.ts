@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { jwtVerify } from 'jose'
+import { createClient } from './lib/supabase/server'
 import { logger } from './lib/logger'
 import { minimalSecurity } from './lib/security/minimal-security'
 
@@ -18,9 +18,7 @@ function generateNonce(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-)
+// Remove JWT_SECRET as we're using Supabase auth
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -55,30 +53,37 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  // Admin route protection
+  // Admin route protection using Supabase auth
   if (pathname.startsWith('/admin') && !pathname.includes('/login')) {
-    const adminToken = request.cookies.get('admin_session')
-
-    if (!adminToken) {
-      // Fallback to PIN verification cookie
-      const pinCookie = request.cookies.get('admin-pin-verified')?.value
-      let pinVerified = false
-
-      if (pinCookie) {
-        try {
-          const { payload } = await jwtVerify(pinCookie, JWT_SECRET)
-          pinVerified = payload.verified === true
-        } catch {
-          pinVerified = false
-        }
+    try {
+      const supabase = await createClient()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      let isAuthenticated = false
+      
+      if (!error && user) {
+        // Check if user is in admin_users table
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select('id, is_active')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single()
+        
+        isAuthenticated = !!adminUser
       }
-
-      if (!pinVerified) {
-        const url = new URL('/auth/admin-pin', request.url)
+      
+      if (!isAuthenticated) {
+        const url = new URL('/admin/login', request.url)
         // Preserve intended destination
         url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
         return NextResponse.redirect(url)
       }
+    } catch (error) {
+      // If auth check fails, redirect to login
+      const url = new URL('/admin/login', request.url)
+      url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+      return NextResponse.redirect(url)
     }
   }
 
