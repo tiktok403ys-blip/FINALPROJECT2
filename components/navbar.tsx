@@ -31,7 +31,9 @@ interface Profile {
   full_name: string | null | undefined
   avatar_url: string | null | undefined
   role: string | null
-  admin_pin: string | null
+  // admin_pin dihapus: gunakan sumber kebenaran baru dari admin_users via RPC
+  is_admin?: boolean
+  admin_permissions?: string[] | null
 }
 
 // Touch target minimum: 44px as per iOS/Android guidelines
@@ -100,40 +102,55 @@ export function Navbar() {
 
         if (error.code === "PGRST116") {
           logger.log("🔄 Creating new profile...")
-          const newProfile = {
+          // Payload untuk DB hanya kolom yang ada pada tabel profiles
+          const dbInsertProfile = {
             id: currentUser.id,
             email: currentUser.email,
-            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+            full_name:
+              currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+            avatar_url:
+              currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
             role: "user",
-            admin_pin: null,
           }
 
           const { data: createdProfile, error: createError } = await supabase
             .from("profiles")
-            .insert([newProfile])
+            .insert([dbInsertProfile])
             .select()
             .single()
 
           if (createError) {
             logger.error("❌ Error creating profile:", createError)
             if (mountedRef.current) {
-              setProfile(newProfile)
+              const uiProfile: Profile = {
+                ...dbInsertProfile,
+                is_admin: false,
+                admin_permissions: [],
+              }
+              setProfile(uiProfile)
             }
           } else {
             logger.log("✅ Profile created successfully")
             if (mountedRef.current) {
-              setProfile(createdProfile)
+              const uiProfile: Profile = {
+                ...createdProfile,
+                is_admin: false,
+                admin_permissions: [],
+              }
+              setProfile(uiProfile)
             }
           }
         } else {
           const fallbackProfile: Profile = {
             id: currentUser.id,
             email: currentUser.email,
-            full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+            full_name:
+              currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+            avatar_url:
+              currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
             role: "user",
-            admin_pin: null,
+            is_admin: false,
+            admin_permissions: [],
           }
 
           if (mountedRef.current) {
@@ -145,6 +162,7 @@ export function Navbar() {
         logger.log("✅ Profile loaded successfully:", profileData)
         const row = Array.isArray(profileData) ? profileData?.[0] : profileData
         if (mountedRef.current) {
+          // row dari RPC sudah menyertakan role, is_admin, admin_permissions
           setProfile(row ?? null)
         }
       }
@@ -154,10 +172,13 @@ export function Navbar() {
       const fallbackProfile: Profile = {
         id: currentUser.id,
         email: currentUser.email,
-        full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-        avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
+        full_name:
+          currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+        avatar_url:
+          currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
         role: "user",
-        admin_pin: null,
+        is_admin: false,
+        admin_permissions: [],
       }
 
       if (mountedRef.current) {
@@ -332,7 +353,7 @@ export function Navbar() {
   ]
 
   const isSuperAdmin = profile?.role === "super_admin"
-  const hasAdminAccess = isSuperAdmin || profile?.admin_pin !== null
+  const hasAdminAccess = isSuperAdmin || profile?.is_admin === true
 
   return (
     <>

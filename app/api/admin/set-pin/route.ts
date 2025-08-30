@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify, SignJWT } from 'jose'
+import { SignJWT } from 'jose'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
-import { hash, compare } from 'bcryptjs'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -55,30 +55,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user ID from auth context (you might need to implement this based on your auth system)
-    const authHeader = request.headers.get('authorization')
-    let userId: string | null = null
+    // First, try to get user from server-side Supabase session (cookies)
+    const supabaseServer = await createServerClient()
+    const { data: { user } } = await supabaseServer.auth.getUser()
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.substring(7)
-        const { payload } = await jwtVerify(token, JWT_SECRET)
-        userId = payload.sub as string
-      } catch (jwtError) {
-        console.error('JWT verification failed:', jwtError)
-      }
-    }
+    let userId: string | null = user?.id ?? null
 
-    // If no user ID from JWT, try to get from cookie
+    // Fallback: if no session user, try Bearer token with Supabase getUser
     if (!userId) {
-      const adminPinCookie = request.cookies.get('admin-pin-verified')
-      if (adminPinCookie) {
-        try {
-          const { payload } = await jwtVerify(adminPinCookie.value, JWT_SECRET)
-          userId = payload.sub as string
-        } catch (cookieError) {
-          console.error('Cookie verification failed:', cookieError)
-        }
+      const authHeader = request.headers.get('authorization')
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.substring(7)
+        const { data: tokenUser } = await supabase.auth.getUser(token)
+        userId = tokenUser?.user?.id ?? null
       }
     }
 
@@ -89,46 +78,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash the PIN before storing
-    const saltRounds = 12
-    const hashedPin = await hash(pin, saltRounds)
-
-    // Store PIN in database using RPC function
-    const { data: pinResult, error: pinError } = await supabase.rpc('set_admin_pin', {
-      user_uuid: userId,
-      pin_hash: hashedPin
+    // Store PIN in database using RPC function (hashing happens in DB)
+    const { data: rpcData, error: rpcError } = await supabaseServer.rpc('set_admin_pin', {
+      new_pin: pin
     })
 
-    if (pinError || !pinResult) {
-      console.error('Failed to store PIN in database:', pinError)
+    if (rpcError || rpcData !== true) {
+      console.error('Failed to store PIN via RPC set_admin_pin:', rpcError)
       return NextResponse.json(
         { success: false, error: 'Failed to store PIN in database' },
         { status: 500 }
       )
     }
 
-    // Create admin session token
-    const adminToken = await new SignJWT({ 
-      verified: true, 
+    // Create admin session token for PIN verification window (optional UX)
+    const adminToken = await new SignJWT({
+      verified: true,
       type: 'admin',
       userId: userId,
       timestamp: Date.now()
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d') // Extended to 7 days for better UX
+      .setExpirationTime('7d')
       .sign(JWT_SECRET)
 
-    // Set cookie
-    const response = NextResponse.json({ 
-      success: true, 
-      message: 'Admin PIN set successfully and stored permanently' 
+    // Set cookie with consistent name (underscore)
+    const response = NextResponse.json({
+      success: true,
+      message: 'Admin PIN set successfully and stored permanently'
     })
 
-    response.cookies.set('admin-pin-verified', adminToken, {
+    response.cookies.set('admin_pin_verified', adminToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60,
+      path: '/'
     })
 
     return response

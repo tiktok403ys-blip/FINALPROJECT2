@@ -13,7 +13,7 @@ export async function POST() {
     });
     
     // Clear the admin PIN verification cookie
-    response.cookies.set('admin-pin-verified', '', {
+    response.cookies.set('admin_pin_verified', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

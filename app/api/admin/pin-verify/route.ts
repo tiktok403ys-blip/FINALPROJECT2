@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
 
-    response.cookies.set('admin-pin-verified', pinToken, {
+    response.cookies.set('admin_pin_verified', pinToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
 import { AdminAuth, AdminProfile } from '@/lib/auth/admin-auth'
 import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
 
 // JWT_SECRET will be retrieved lazily when needed
 
@@ -100,20 +101,49 @@ export async function validateAdminAuth(
 
 /**
  * Validates PIN verification token from HttpOnly cookie
+ * Accepts legacy non-JWT tokens (prefix 'pin_') and new JWT tokens (signed with JWT_SECRET)
  * @param request - NextRequest object
  * @returns boolean indicating if PIN is verified
  */
 export async function validatePinVerification(request: NextRequest): Promise<boolean> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('admin-pin-verified')?.value;
+    const token = cookieStore.get('admin_pin_verified')?.value;
 
     if (!token) {
       return false;
     }
 
-    // Simple PIN token validation (basic check)
-    return Boolean(token && token.startsWith('pin_'));
+    // Backward compatibility with legacy token format set by old endpoint
+    if (token.startsWith('pin_')) {
+      return true;
+    }
+
+    // Verify JWT-based PIN token
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+
+    try {
+      const { payload } = await jwtVerify(token, secret);
+
+      // If AdminAuth is available, ensure the token subject matches current user
+      try {
+        const adminAuth = AdminAuth.getInstance();
+        if (adminAuth.isAuthenticated()) {
+          const { user } = await adminAuth.getCurrentUser();
+          if (user?.id && payload?.sub && payload.sub !== user.id) {
+            return false;
+          }
+        }
+      } catch (e) {
+        // Non-fatal: if we fail to read current user, rely on JWT validity + claim
+      }
+
+      // Require explicit verified flag in payload for extra safety
+      return Boolean((payload as any)?.verified === true);
+    } catch (e) {
+      logger.error('PIN JWT verification failed:', e as Error);
+      return false;
+    }
   } catch (error) {
     logger.error('PIN verification failed:', error as Error);
     return false;
