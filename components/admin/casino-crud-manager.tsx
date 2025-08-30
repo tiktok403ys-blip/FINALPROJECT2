@@ -6,7 +6,8 @@
 import React, { useState, useCallback } from 'react'
 import { useRealtimeCasinoContext } from '@/components/providers/realtime-casino-provider'
 import { Casino } from '@/lib/types'
-import { toast } from '@/components/ui/sonner'
+import { toast } from '@/components/ui/simple-toast'
+import { SimpleToastContainer } from '@/components/ui/simple-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -544,6 +545,7 @@ export function CasinoCrudManager({
           </Button>
         </div>
       )}
+      <SimpleToastContainer />
     </div>
   )
 }

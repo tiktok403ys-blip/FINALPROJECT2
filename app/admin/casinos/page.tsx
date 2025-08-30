@@ -10,11 +10,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { toast } from '@/components/ui/sonner'
 import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-query'
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { CasinoCrudManager } from '@/components/admin/casino-crud-manager'
+import { SimpleToastContainer, toast } from '@/components/ui/simple-toast'
 import {
   Building2,
   Plus,
@@ -767,6 +767,7 @@ function CasinosContentPage() {
           </CardContent>
         </Card>
       )}
+      <SimpleToastContainer />
     </div>
   )
 }
