@@ -13,7 +13,7 @@ import { QueryProvider } from "@/components/providers/query-provider"
 import { PerformanceMonitor } from "@/components/performance-monitor"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { GoogleAnalytics } from "@/components/google-analytics"
-import { headers } from "next/headers"
+import { headers, cookies } from "next/headers"
 import type { Viewport } from "next"
 import { validateEnvironment } from "@/lib/config/env-validator"
 
@@ -76,6 +76,11 @@ export default async function RootLayout({
   
   const host = (await headers()).get("host") || ""
   const isAdminSubdomain = host === process.env.ADMIN_SUBDOMAIN
+
+  // SSR: check cookie_consent to avoid initial flash
+  const cookieStore = await cookies()
+  const hasConsent = cookieStore.get('cookie_consent')?.value === '1'
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
@@ -87,7 +92,7 @@ export default async function RootLayout({
                 <div className="min-h-screen bg-black text-white">
                   {!isAdminSubdomain && <Navbar />}
                   <main>{children}</main>
-                  {!isAdminSubdomain && <CookieConsent />}
+                  {!isAdminSubdomain && !hasConsent && <CookieConsent />}
                   {/* PWA Installer disabled - uncomment if needed */}
                   {/* {!isAdminSubdomain && <PWAInstaller />} */}
                   <WebVitals />

@@ -12,6 +12,15 @@ const pinAttempts = new Map<string, { count: number; lastAttempt: number }>()
 const MAX_ATTEMPTS = 5
 const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
 
+function resolveCookieDomain(): string | undefined {
+  const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_SITE_DOMAIN
+  }
+  return undefined
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { pin } = await request.json()
@@ -92,8 +101,8 @@ export async function POST(request: NextRequest) {
         const res2 = await authResult.supabase.rpc('verify_admin_pin', { input_pin: pin })
         if (res2.error) rpcError = res2.error
         else if (typeof res2.data === 'boolean') isValid = res2.data
-        else if (Array.isArray(res2.data) && res2.data.length > 0 && typeof res2.data[0]?.is_valid === 'boolean') {
-          isValid = res2.data[0].is_valid
+        else if (Array.isArray(res2.data) && res2.length > 0 && typeof (res2 as any).data[0]?.is_valid === 'boolean') {
+          isValid = (res2 as any).data[0].is_valid
         }
       } catch (e2: any) {
         rpcError = e2
@@ -145,11 +154,14 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
 
+    const domain = resolveCookieDomain()
     response.cookies.set('admin_pin_verified', pinToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 // 1 hour
+      sameSite: 'strict',
+      maxAge: 15 * 60, // 15 minutes
+      path: '/',
+      domain,
     })
 
     return response

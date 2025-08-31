@@ -56,6 +56,15 @@ function getClientIP(request: NextRequest): string {
   return 'unknown'
 }
 
+function resolveCookieDomain(): string | undefined {
+  const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_SITE_DOMAIN
+  }
+  return undefined
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get client information
@@ -150,13 +159,15 @@ export async function POST(request: NextRequest) {
       expiresAt: pinExpiresAt,
       message: 'PIN verified successfully'
     })
-    
+
+    const domain = resolveCookieDomain()
     response.cookies.set('admin_pin_verified', pinToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60, // 15 minutes
-      path: '/admin'
+      path: '/',
+      domain,
     })
     
     logger.info(`PIN verification successful for admin ${profile.email} from IP ${ip}`)

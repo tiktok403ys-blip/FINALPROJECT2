@@ -12,6 +12,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function resolveCookieDomain(): string | undefined {
+  const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_SITE_DOMAIN
+  }
+  return undefined
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for repeated digits
-    if (/(\d)\1{3,}/.test(pin)) {
+    if(/(\d)\1{3,}/.test(pin)) {
       return NextResponse.json(
         { success: false, error: 'Avoid repeated digits' },
         { status: 400 }
@@ -108,12 +117,14 @@ export async function POST(request: NextRequest) {
       message: 'Admin PIN set successfully and stored permanently'
     })
 
+    const domain = resolveCookieDomain()
     response.cookies.set('admin_pin_verified', adminToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60,
-      path: '/'
+      path: '/',
+      domain,
     })
 
     return response

@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+
+function resolveCookieDomain(): string | undefined {
+  const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_SITE_DOMAIN
+  }
+  return undefined
+}
 
 /**
  * POST /api/admin/logout
@@ -11,16 +19,18 @@ export async function POST() {
       success: true,
       message: 'Logged out successfully'
     });
-    
+
+    const domain = resolveCookieDomain()
     // Clear the admin PIN verification cookie
     response.cookies.set('admin_pin_verified', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 0, // This will delete the cookie
-      path: '/'
+      path: '/',
+      domain,
     });
-    
+
     return response;
   } catch (error) {
     console.error('Logout error:', error);

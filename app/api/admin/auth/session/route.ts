@@ -3,6 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
 import { AdminAuth } from '@/lib/auth/admin-auth'
 
+function resolveCookieDomain(): string | undefined {
+  const explicit = process.env.SITE_COOKIE_DOMAIN || process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_SITE_DOMAIN
+  }
+  return undefined
+}
+
 // Removed getSessionToken function as AdminAuth handles authentication directly
 
 // GET - Validate current session
@@ -52,7 +61,15 @@ export async function DELETE(request: NextRequest) {
 
     // Create response and clear cookies
     const response = NextResponse.json({ success: true })
-    response.cookies.delete('admin_pin_verified')
+    const domain = resolveCookieDomain()
+    response.cookies.set('admin_pin_verified', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+      domain,
+    })
 
     return response
   } catch (error) {

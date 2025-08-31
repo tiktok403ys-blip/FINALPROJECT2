@@ -12,6 +12,45 @@ interface CookiePreferences {
   marketing: boolean
 }
 
+// Helper: resolve cookie domain consistently with client environment
+function resolveCookieDomain(): string | undefined {
+  try {
+    const fromEnv = (process.env.NEXT_PUBLIC_SITE_COOKIE_DOMAIN || process.env.SITE_COOKIE_DOMAIN) as
+      | string
+      | undefined
+    if (fromEnv && fromEnv.trim().length > 0) return fromEnv.trim()
+
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname
+      const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN
+      if (siteDomain && host.endsWith(siteDomain)) return siteDomain
+    }
+  } catch {}
+  return undefined
+}
+
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(";").shift()
+  return undefined
+}
+
+function setCookie(name: string, value: string, opts?: { maxAge?: number }) {
+  if (typeof document === "undefined") return
+  const domain = resolveCookieDomain()
+  const secure = typeof window !== "undefined" ? window.location.protocol === "https:" : false
+  const parts: string[] = []
+  parts.push(`${name}=${value}`)
+  if (opts?.maxAge) parts.push(`max-age=${opts.maxAge}`)
+  parts.push("path=/")
+  if (domain) parts.push(`domain=${domain}`)
+  if (secure) parts.push("secure")
+  parts.push("samesite=lax")
+  document.cookie = parts.join("; ")
+}
+
 export function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -23,14 +62,46 @@ export function CookieConsent() {
   })
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookie-consent")
-    if (!consent) {
-      setShowBanner(true)
+    // 1) Try to read from localStorage safely
+    let saved: CookiePreferences | null = null
+    try {
+      const consentRaw = localStorage.getItem("cookie-consent")
+      if (consentRaw) {
+        const parsed = JSON.parse(consentRaw)
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          typeof parsed.necessary === "boolean"
+        ) {
+          saved = parsed as CookiePreferences
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+
+    // 2) If not in localStorage, check fallback cookie flag
+    const consentCookie = getCookie("cookie_consent")
+
+    if (saved) {
+      setPreferences(saved)
+      setShowBanner(false)
+    } else if (consentCookie === "1") {
+      // We have consent (at least necessary-only) via cookie, hide banner
+      setShowBanner(false)
     } else {
-      const savedPreferences = JSON.parse(consent)
-      setPreferences(savedPreferences)
+      setShowBanner(true)
     }
   }, [])
+
+  const setConsentFlag = () => {
+    // Set 365 days
+    setCookie("cookie_consent", "1", { maxAge: 365 * 24 * 60 * 60 })
+    // Also store date for reference in localStorage
+    try {
+      localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    } catch {}
+  }
 
   const acceptAll = () => {
     const allAccepted = {
@@ -40,15 +111,21 @@ export function CookieConsent() {
       marketing: true,
     }
     setPreferences(allAccepted)
-    localStorage.setItem("cookie-consent", JSON.stringify(allAccepted))
-    localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    try {
+      localStorage.setItem("cookie-consent", JSON.stringify(allAccepted))
+      localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    } catch {}
+    setConsentFlag()
     setShowBanner(false)
     setShowSettings(false)
   }
 
   const acceptSelected = () => {
-    localStorage.setItem("cookie-consent", JSON.stringify(preferences))
-    localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    try {
+      localStorage.setItem("cookie-consent", JSON.stringify(preferences))
+      localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    } catch {}
+    setConsentFlag()
     setShowBanner(false)
     setShowSettings(false)
   }
@@ -61,8 +138,11 @@ export function CookieConsent() {
       marketing: false,
     }
     setPreferences(onlyNecessary)
-    localStorage.setItem("cookie-consent", JSON.stringify(onlyNecessary))
-    localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    try {
+      localStorage.setItem("cookie-consent", JSON.stringify(onlyNecessary))
+      localStorage.setItem("cookie-consent-date", new Date().toISOString())
+    } catch {}
+    setConsentFlag()
     setShowBanner(false)
     setShowSettings(false)
   }
@@ -191,7 +271,7 @@ export function CookieConsent() {
                         preferences.analytics ? "bg-[#00ff88] justify-end" : "bg-gray-600 justify-start"
                       }`}
                     >
-                      <div className="w-4 h-4 bg-white rounded-full"></div>
+                      <div className="w-4 h-4 bg:white rounded-full"></div>
                     </button>
                   </div>
                 </div>
