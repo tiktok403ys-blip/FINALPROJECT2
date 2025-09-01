@@ -14,6 +14,7 @@ import {
   Users,
   LogOut,
   Shield,
+  FileText,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -79,6 +80,11 @@ const navigationItems: NavigationItem[] = [
     title: 'Bonuses Content',
     href: '/admin/bonuses',
     icon: Gift
+  },
+  {
+    title: 'Reports',
+    href: '/admin/reports',
+    icon: FileText
   },
   {
     title: 'Footer Content',
