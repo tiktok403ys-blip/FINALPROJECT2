@@ -698,6 +698,81 @@ export default function AdminReportsPage() {
               />
             </div>
 
+            {/* ✅ FIXED: Add missing required fields */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Reporter ID *</label>
+                <Input
+                  value={createFormData.reporter_id}
+                  onChange={(e) => setCreateFormData({ ...createFormData, reporter_id: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                  placeholder="Enter reporter ID"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Reported Content Type *</label>
+                <Select
+                  value={createFormData.reported_content_type}
+                  onValueChange={(value) => setCreateFormData({ ...createFormData, reported_content_type: value })}
+                  required
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10">
+                    <SelectItem value="casino">Casino</SelectItem>
+                    <SelectItem value="bonus">Bonus</SelectItem>
+                    <SelectItem value="payment">Payment</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+                         <div className="grid md:grid-cols-2 gap-4">
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-white">Reported Content ID *</label>
+                 <Input
+                   value={createFormData.reported_content_id}
+                   onChange={(e) => setCreateFormData({ ...createFormData, reported_content_id: e.target.value })}
+                   className="bg-white/5 border-white/10 text-white"
+                   placeholder="Enter content ID (UUID)"
+                   required
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-white">Reason *</label>
+                 <Textarea
+                   value={createFormData.reason}
+                   onChange={(e) => setCreateFormData({ ...createFormData, reason: e.target.value })}
+                   className="bg-white/5 border-white/10 text-white min-h-[100px]"
+                   placeholder="What is the main reason for this report?"
+                   required
+                 />
+               </div>
+             </div>
+
+             {/* ✅ FINAL FIX: Add status field */}
+             <div className="space-y-2">
+               <label className="text-sm font-medium text-white">Status *</label>
+               <Select
+                 value={createFormData.status}
+                 onValueChange={(value) => setCreateFormData({ ...createFormData, status: value as ReportStatus })}
+                 required
+               >
+                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent className="bg-black border-white/10">
+                   <SelectItem value="pending">Pending</SelectItem>
+                   <SelectItem value="investigating">Investigating</SelectItem>
+                   <SelectItem value="resolved">Resolved</SelectItem>
+                   <SelectItem value="closed">Closed</SelectItem>
+                 </SelectContent>
+               </Select>
+             </div>
+
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
               <p className="text-yellow-400 text-sm">
                 <strong>Note:</strong> This report will be created as an admin-generated content and will appear on the public reports page.
