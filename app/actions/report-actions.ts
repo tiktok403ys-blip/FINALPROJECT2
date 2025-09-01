@@ -33,6 +33,18 @@ export async function createReport(formData: ReportFormData) {
       throw new Error("Missing required fields")
     }
 
+    // Basic input constraints
+    if (formData.title.length > 200) {
+      throw new Error("Title too long (max 200 chars)")
+    }
+    if (formData.description.length > 5000) {
+      throw new Error("Description too long (max 5000 chars)")
+    }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.user_email)
+    if (!emailOk) {
+      throw new Error("Invalid email address")
+    }
+
     // Sanitize inputs
     const sanitizedData = {
       title: sanitizeHtml(formData.title),
@@ -57,15 +69,19 @@ export async function createReport(formData: ReportFormData) {
       throw new Error("Failed to create report")
     }
 
-    // Track analytics
-    await supabase.from("analytics_events").insert({
-      event_type: "report_created",
-      event_data: {
-        report_id: data.id,
-        category: data.category,
-        priority: data.priority,
-      },
-    })
+    // Track analytics (non-blocking)
+    try {
+      await supabase.from("analytics_events").insert({
+        event_type: "report_created",
+        event_data: {
+          report_id: data.id,
+          category: data.category,
+          priority: data.priority,
+        },
+      })
+    } catch (e) {
+      console.warn("Analytics insert failed (non-blocking)", e)
+    }
 
     revalidatePath("/reports")
     return { success: true, data }
@@ -179,7 +195,7 @@ export async function updateReport(updateData: ReportUpdateData) {
       updateFields.estimated_resolution_date = updateData.estimated_resolution_date
     }
     
-    if (updateData.time_limit_hours) {
+    if (updateData.time_limit_hours !== undefined) {
       updateFields.time_limit_hours = updateData.time_limit_hours
     }
 
@@ -196,15 +212,19 @@ export async function updateReport(updateData: ReportUpdateData) {
       throw new Error("Failed to update report")
     }
 
-    // Track analytics
-    await supabase.from("analytics_events").insert({
-      event_type: "report_updated",
-      event_data: {
-        report_id: data.id,
-        admin_id: user.id,
-        status: data.status,
-      },
-    })
+    // Track analytics (non-blocking)
+    try {
+      await supabase.from("analytics_events").insert({
+        event_type: "report_updated",
+        event_data: {
+          report_id: data.id,
+          admin_id: user.id,
+          status: data.status,
+        },
+      })
+    } catch (e) {
+      console.warn("Analytics insert failed (non-blocking)", e)
+    }
 
     revalidatePath("/admin/reports")
     revalidatePath("/reports")
@@ -247,14 +267,18 @@ export async function deleteReport(id: string) {
       throw new Error("Failed to delete report")
     }
 
-    // Track analytics
-    await supabase.from("analytics_events").insert({
-      event_type: "report_deleted",
-      event_data: {
-        report_id: id,
-        admin_id: user.id,
-      },
-    })
+    // Track analytics (non-blocking)
+    try {
+      await supabase.from("analytics_events").insert({
+        event_type: "report_deleted",
+        event_data: {
+          report_id: id,
+          admin_id: user.id,
+        },
+      })
+    } catch (e) {
+      console.warn("Analytics insert failed (non-blocking)", e)
+    }
 
     revalidatePath("/admin/reports")
     revalidatePath("/reports")
@@ -266,7 +290,10 @@ export async function deleteReport(id: string) {
 }
 
 // BULK OPERATIONS
-export async function bulkUpdateReports(reportIds: string[], status: string) {
+const ALLOWED_STATUSES = ["pending", "investigating", "resolved", "closed"] as const
+type AllowedStatus = typeof ALLOWED_STATUSES[number]
+
+export async function bulkUpdateReports(reportIds: string[], status: AllowedStatus) {
   try {
     const supabase = await createClient()
 
@@ -286,6 +313,10 @@ export async function bulkUpdateReports(reportIds: string[], status: string) {
       throw new Error("Insufficient permissions")
     }
 
+    if (!reportIds || reportIds.length === 0) {
+      throw new Error("No reports selected")
+    }
+
     // Prepare update data
     const updateFields: any = { status }
     if (status === "resolved") {
@@ -303,15 +334,19 @@ export async function bulkUpdateReports(reportIds: string[], status: string) {
       throw new Error("Failed to bulk update reports")
     }
 
-    // Track analytics
-    await supabase.from("analytics_events").insert({
-      event_type: "reports_bulk_updated",
-      event_data: {
-        report_ids: reportIds,
-        admin_id: user.id,
-        status,
-      },
-    })
+    // Track analytics (non-blocking)
+    try {
+      await supabase.from("analytics_events").insert({
+        event_type: "reports_bulk_updated",
+        event_data: {
+          report_ids: reportIds,
+          admin_id: user.id,
+          status,
+        },
+      })
+    } catch (e) {
+      console.warn("Analytics insert failed (non-blocking)", e)
+    }
 
     revalidatePath("/admin/reports")
     revalidatePath("/reports")
