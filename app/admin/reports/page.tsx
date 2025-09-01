@@ -40,6 +40,11 @@ export default function AdminReportsPage() {
   const { reports, stats, loading, error, refresh } = useReportsRealtime(50)
   const { toast } = useToast()
   
+  // ✅ FIXED: Add proper type definitions
+  type ReportStatus = "pending" | "investigating" | "resolved" | "closed"
+  type ReportPriority = "low" | "medium" | "high" | "urgent"
+  type ContactMethod = "email" | "phone" | "both"
+  
   const [selectedReports, setSelectedReports] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterPriority, setFilterPriority] = useState<string>("all")
@@ -48,6 +53,20 @@ export default function AdminReportsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [reportToDelete, setReportToDelete] = useState<string | null>(null)
+  
+  // ✅ FIXED: Add missing state variables for create form
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createFormData, setCreateFormData] = useState({
+    title: "",
+    description: "",
+    casino_name: "",
+    user_email: "admin@gurusingapore.com",
+    category: "other",
+    priority: "medium" as ReportPriority,
+    amount_disputed: "",
+    contact_method: "email" as ContactMethod,
+    status: "pending" as ReportStatus
+  })
 
   // Filter reports based on search and filters
   const filteredReports = reports.filter((report) => {
@@ -82,15 +101,18 @@ export default function AdminReportsPage() {
   // Handle status update
   const handleStatusUpdate = async (reportId: string, newStatus: string) => {
     try {
+      // ✅ FIXED: Type assertion untuk memastikan type safety
+      const validStatus = newStatus as "pending" | "investigating" | "resolved" | "closed"
+      
       const result = await updateReport({
         id: reportId,
-        status: newStatus as any
+        status: validStatus
       })
 
       if (result.success) {
         toast({
           title: "Status Updated",
-          description: `Report status updated to ${newStatus}`,
+          description: `Report status updated to ${validStatus}`,
         })
         refresh()
       } else {
@@ -116,13 +138,16 @@ export default function AdminReportsPage() {
       return
     }
 
+    // ✅ FIXED: Type assertion untuk memastikan type safety
+    const validStatus = newStatus as "pending" | "investigating" | "resolved" | "closed"
+    
     try {
-      const result = await bulkUpdateReports(selectedReports, newStatus)
+      const result = await bulkUpdateReports(selectedReports, validStatus)
       
       if (result.success) {
         toast({
           title: "Bulk Update Successful",
-          description: `Updated ${selectedReports.length} reports to ${newStatus}`,
+          description: `Updated ${selectedReports.length} reports to ${validStatus}`,
         })
         setSelectedReports([])
         refresh()
@@ -193,6 +218,55 @@ export default function AdminReportsPage() {
     }
   }
 
+  // ✅ FIXED: Add missing create report handler
+  const handleCreateReport = async () => {
+    try {
+      const { createReport } = await import("@/app/actions/report-actions")
+      
+      const result = await createReport({
+        title: createFormData.title,
+        description: createFormData.description,
+        casino_name: createFormData.casino_name || undefined,
+        user_email: createFormData.user_email,
+        category: createFormData.category,
+        priority: createFormData.priority,
+        amount_disputed: createFormData.amount_disputed || undefined,
+        contact_method: createFormData.contact_method,
+      })
+
+      if (result.success) {
+        toast({
+          title: "Report Created",
+          description: "New report has been created successfully",
+        })
+        
+        // Reset form
+        setCreateFormData({
+          title: "",
+          description: "",
+          casino_name: "",
+          user_email: "admin@gurusingapore.com",
+          category: "other",
+          priority: "medium" as ReportPriority,
+          amount_disputed: "",
+          contact_method: "email" as ContactMethod,
+          status: "pending" as ReportStatus
+        })
+        
+        setCreateDialogOpen(false)
+        refresh()
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create report",
+        variant: "error",
+      })
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-blue-500"
@@ -247,6 +321,13 @@ export default function AdminReportsPage() {
             <p className="text-gray-400">Manage and monitor casino reports and complaints</p>
           </div>
           <div className="flex gap-2">
+            <Button
+              onClick={() => setCreateDialogOpen(true)}
+              className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Report
+            </Button>
             <Button
               onClick={refresh}
               variant="outline"
@@ -488,6 +569,163 @@ export default function AdminReportsPage() {
               onCancel={() => setEditDialogOpen(false)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create New Report Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="bg-black border-white/10 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-xl">
+              <Plus className="w-6 h-6 text-[#00ff88] mr-2" />
+              Create New Report
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={(e) => { e.preventDefault(); handleCreateReport(); }} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Report Title *</label>
+                <Input
+                  value={createFormData.title}
+                  onChange={(e) => setCreateFormData({ ...createFormData, title: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                  placeholder="Brief description of the issue"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Casino Name</label>
+                <Input
+                  value={createFormData.casino_name}
+                  onChange={(e) => setCreateFormData({ ...createFormData, casino_name: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                  placeholder="Name of the casino"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Category *</label>
+                <Select
+                  value={createFormData.category}
+                  onValueChange={(value) => setCreateFormData({ ...createFormData, category: value })}
+                  required
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10">
+                    <SelectItem value="payment_issue">Payment Issue</SelectItem>
+                    <SelectItem value="withdrawal_delay">Withdrawal Delay</SelectItem>
+                    <SelectItem value="bonus_dispute">Bonus Dispute</SelectItem>
+                    <SelectItem value="account_closure">Account Closure</SelectItem>
+                    <SelectItem value="unfair_terms">Unfair Terms</SelectItem>
+                    <SelectItem value="technical_issue">Technical Issue</SelectItem>
+                    <SelectItem value="customer_service">Customer Service</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Priority *</label>
+                <Select
+                  value={createFormData.priority}
+                  onValueChange={(value) => setCreateFormData({ ...createFormData, priority: value as ReportPriority })}
+                  required
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10">
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Amount Disputed</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={createFormData.amount_disputed}
+                  onChange={(e) => setCreateFormData({ ...createFormData, amount_disputed: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Contact Method</label>
+                <Select
+                  value={createFormData.contact_method}
+                  onValueChange={(value) => setCreateFormData({ ...createFormData, contact_method: value as ContactMethod })}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10">
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="phone">Phone</SelectItem>
+                    <SelectItem value="both">Both</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">Detailed Description *</label>
+              <Textarea
+                value={createFormData.description}
+                onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
+                className="bg-white/5 border-white/10 text-white min-h-[120px]"
+                placeholder="Please provide detailed information about the issue..."
+                required
+              />
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+              <p className="text-yellow-400 text-sm">
+                <strong>Note:</strong> This report will be created as an admin-generated content and will appear on the public reports page.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setCreateDialogOpen(false)
+                  setCreateFormData({
+                    title: "",
+                    description: "",
+                    casino_name: "",
+                    user_email: "admin@gurusingapore.com",
+                    category: "other",
+                    priority: "medium" as ReportPriority,
+                    amount_disputed: "",
+                    contact_method: "email" as ContactMethod,
+                    status: "pending" as ReportStatus
+                  })
+                }}
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="flex-1 bg-[#00ff88] text-black hover:bg-[#00ff88]/80"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Report
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
