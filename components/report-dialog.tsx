@@ -28,12 +28,15 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    casino_name: casinoName || "",
-    user_email: "",
+    reporter_id: "", // ✅ Updated: sesuai schema database
+    reported_content_type: "casino", // ✅ Updated: sesuai schema database
+    reported_content_id: casinoId || "", // ✅ Updated: sesuai schema database
+    reason: "", // ✅ Updated: sesuai schema database
     category: "",
     priority: "medium" as "low" | "medium" | "high" | "urgent",
     amount_disputed: "",
     contact_method: "email" as "email" | "phone" | "both",
+    casino_name: casinoName || "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,12 +61,15 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
         setFormData({
           title: "",
           description: "",
-          casino_name: casinoName || "",
-          user_email: "",
+          reporter_id: "", // ✅ Updated: sesuai schema database
+          reported_content_type: "casino", // ✅ Updated: sesuai schema database
+          reported_content_id: casinoId || "", // ✅ Updated: sesuai schema database
+          reason: "", // ✅ Updated: sesuai schema database
           category: "",
           priority: "medium" as "low" | "medium" | "high" | "urgent",
           amount_disputed: "",
           contact_method: "email" as "email" | "phone" | "both",
+          casino_name: casinoName || "",
         })
       } else {
         throw new Error(result.error)
@@ -118,17 +124,16 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white">Your Email *</label>
-              <Input
-                type="email"
-                value={formData.user_email}
-                onChange={(e) => setFormData({ ...formData, user_email: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
+                         <div className="space-y-2">
+               <label className="text-sm font-medium text-white">Reporter ID *</label>
+               <Input
+                 value={formData.reporter_id}
+                 onChange={(e) => setFormData({ ...formData, reporter_id: e.target.value })}
+                 className="bg-white/5 border-white/10 text-white"
+                 placeholder="Enter reporter ID"
+                 required
+               />
+             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-white">Contact Method</label>
               <Select
@@ -230,6 +235,18 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="bg-white/5 border-white/10 text-white min-h-[120px]"
               placeholder="Please provide as much detail as possible about the issue you experienced..."
+              required
+            />
+          </div>
+
+          {/* ✅ Updated: Tambahkan field reason sesuai schema database */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white">Reason for Report *</label>
+            <Textarea
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              className="bg-white/5 border-white/10 text-white min-h-[100px]"
+              placeholder="What is the main reason for this report? (e.g., unfair treatment, payment delay, etc.)"
               required
             />
           </div>

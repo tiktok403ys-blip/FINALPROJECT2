@@ -59,20 +59,23 @@ export default function AdminReportsPage() {
   const [createFormData, setCreateFormData] = useState({
     title: "",
     description: "",
-    casino_name: "",
-    user_email: "admin@gurusingapore.com",
+    reporter_id: "", // ✅ Updated: sesuai schema database
+    reported_content_type: "casino", // ✅ Updated: sesuai schema database
+    reported_content_id: "", // ✅ Updated: sesuai schema database
+    reason: "", // ✅ Updated: sesuai schema database
     category: "other",
     priority: "medium" as ReportPriority,
     amount_disputed: "",
     contact_method: "email" as ContactMethod,
-    status: "pending" as ReportStatus
+    status: "pending" as ReportStatus,
+    casino_name: "" // ✅ FIXED: Add missing casino_name field
   })
 
   // Filter reports based on search and filters
   const filteredReports = reports.filter((report) => {
     const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          report.casino_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.user_email.toLowerCase().includes(searchTerm.toLowerCase())
+                         report.reason.toLowerCase().includes(searchTerm.toLowerCase()) // ✅ Updated: gunakan reason
     
     const matchesStatus = filterStatus === "all" || report.status === filterStatus
     const matchesPriority = filterPriority === "all" || report.priority === filterPriority
@@ -223,16 +226,19 @@ export default function AdminReportsPage() {
     try {
       const { createReport } = await import("@/app/actions/report-actions")
       
-      const result = await createReport({
-        title: createFormData.title,
-        description: createFormData.description,
-        casino_name: createFormData.casino_name || undefined,
-        user_email: createFormData.user_email,
-        category: createFormData.category,
-        priority: createFormData.priority,
-        amount_disputed: createFormData.amount_disputed || undefined,
-        contact_method: createFormData.contact_method,
-      })
+             const result = await createReport({
+         title: createFormData.title,
+         description: createFormData.description,
+         reporter_id: createFormData.reporter_id,
+         reported_content_type: createFormData.reported_content_type,
+         reported_content_id: createFormData.reported_content_id,
+         reason: createFormData.reason,
+         category: createFormData.category,
+         priority: createFormData.priority,
+         amount_disputed: createFormData.amount_disputed || undefined,
+         contact_method: createFormData.contact_method,
+         casino_name: createFormData.casino_name || undefined,
+       })
 
       if (result.success) {
         toast({
@@ -240,18 +246,21 @@ export default function AdminReportsPage() {
           description: "New report has been created successfully",
         })
         
-        // Reset form
-        setCreateFormData({
-          title: "",
-          description: "",
-          casino_name: "",
-          user_email: "admin@gurusingapore.com",
-          category: "other",
-          priority: "medium" as ReportPriority,
-          amount_disputed: "",
-          contact_method: "email" as ContactMethod,
-          status: "pending" as ReportStatus
-        })
+                 // Reset form
+         setCreateFormData({
+           title: "",
+           description: "",
+           reporter_id: "",
+           reported_content_type: "casino",
+           reported_content_id: "",
+           reason: "",
+           category: "other",
+           priority: "medium" as ReportPriority,
+           amount_disputed: "",
+           contact_method: "email" as ContactMethod,
+           status: "pending" as ReportStatus,
+           casino_name: "" // ✅ FIXED: Add missing casino_name field
+         })
         
         setCreateDialogOpen(false)
         refresh()
@@ -488,7 +497,7 @@ export default function AdminReportsPage() {
                       {report.casino_name && (
                         <span>Casino: {report.casino_name}</span>
                       )}
-                      <span>Email: {report.user_email}</span>
+                                             <span>Reporter ID: {report.reporter_id}</span>
                       {report.amount_disputed && (
                         <span>Amount: ${report.amount_disputed}</span>
                       )}
@@ -699,20 +708,23 @@ export default function AdminReportsPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false)
-                  setCreateFormData({
-                    title: "",
-                    description: "",
-                    casino_name: "",
-                    user_email: "admin@gurusingapore.com",
-                    category: "other",
-                    priority: "medium" as ReportPriority,
-                    amount_disputed: "",
-                    contact_method: "email" as ContactMethod,
-                    status: "pending" as ReportStatus
-                  })
-                }}
+                                 onClick={() => {
+                   setCreateDialogOpen(false)
+                   setCreateFormData({
+                     title: "",
+                     description: "",
+                     reporter_id: "",
+                     reported_content_type: "casino",
+                     reported_content_id: "",
+                     reason: "",
+                     category: "other",
+                     priority: "medium" as ReportPriority,
+                     amount_disputed: "",
+                     contact_method: "email" as ContactMethod,
+                     status: "pending" as ReportStatus,
+                     casino_name: "" // ✅ FIXED: Add missing casino_name field
+                   })
+                 }}
                 className="flex-1 border-white/20 text-white hover:bg-white/10"
               >
                 Cancel

@@ -149,6 +149,21 @@ export default function ReportsPage() {
                       <div className="mb-6">
                         <h4 className="text-[#00ff88] font-semibold mb-3">Problem Description:</h4>
                         <p className="text-gray-300 text-sm leading-relaxed">{report.description}</p>
+                        
+                        {/* ✅ Updated: Tambahkan informasi tambahan sesuai schema */}
+                        {report.reason && (
+                          <div className="mt-3">
+                            <h5 className="text-[#00ff88] font-medium mb-1">Reason:</h5>
+                            <p className="text-gray-300 text-sm">{report.reason}</p>
+                          </div>
+                        )}
+                        
+                        {report.casino_name && (
+                          <div className="mt-3">
+                            <h5 className="text-[#00ff88] font-medium mb-1">Casino:</h5>
+                            <p className="text-gray-300 text-sm">{report.casino_name}</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Button */}

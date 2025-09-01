@@ -8,20 +8,25 @@ export interface Report {
   id: string
   title: string
   description: string
-  casino_name: string | null
-  user_email: string
-  category: string
-  priority: "low" | "medium" | "high" | "urgent"
-  status: "pending" | "investigating" | "resolved" | "closed"
-  amount_disputed: number | null
-  contact_method: "email" | "phone" | "both"
+  reporter_id: string
+  reported_content_type: string
+  reported_content_id: string
+  reason: string
+  status: string
+  priority: string
+  assigned_to: string | null
+  resolution_notes: string | null
+  resolved_at: string | null
   created_at: string
   updated_at: string
-  resolved_at: string | null
+  category: string | null
+  amount_disputed: number | null
+  contact_method: string | null
+  casino_name: string | null
   admin_notes: string | null
   admin_id: string | null
   estimated_resolution_date: string | null
-  time_limit_hours: number
+  time_limit_hours: number | null
   timeElapsed?: {
     days: number
     hours: number

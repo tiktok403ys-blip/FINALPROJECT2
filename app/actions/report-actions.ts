@@ -7,12 +7,15 @@ import { sanitizeHtml } from "@/lib/utils"
 export interface ReportFormData {
   title: string
   description: string
-  casino_name?: string
-  user_email: string
-  category: string
+  reporter_id: string
+  reported_content_type: string
+  reported_content_id: string
+  reason: string
+  category?: string
   priority: "low" | "medium" | "high" | "urgent"
   amount_disputed?: string
   contact_method: "email" | "phone" | "both"
+  casino_name?: string
 }
 
 export interface ReportUpdateData {
@@ -29,7 +32,7 @@ export async function createReport(formData: ReportFormData) {
     const supabase = await createClient()
 
     // Validate required fields
-    if (!formData.title || !formData.description || !formData.user_email || !formData.category) {
+    if (!formData.title || !formData.description || !formData.reporter_id || !formData.reported_content_type || !formData.reported_content_id || !formData.reason) {
       throw new Error("Missing required fields")
     }
 
@@ -40,21 +43,22 @@ export async function createReport(formData: ReportFormData) {
     if (formData.description.length > 5000) {
       throw new Error("Description too long (max 5000 chars)")
     }
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.user_email)
-    if (!emailOk) {
-      throw new Error("Invalid email address")
-    }
+    // ✅ FIXED: Remove email validation since user_email is no longer in interface
+    // Email validation will be handled by the frontend form
 
     // Sanitize inputs
     const sanitizedData = {
       title: sanitizeHtml(formData.title),
       description: sanitizeHtml(formData.description),
-      casino_name: formData.casino_name ? sanitizeHtml(formData.casino_name) : null,
-      user_email: sanitizeHtml(formData.user_email),
-      category: sanitizeHtml(formData.category),
+      reporter_id: formData.reporter_id,
+      reported_content_type: sanitizeHtml(formData.reported_content_type),
+      reported_content_id: formData.reported_content_id,
+      reason: sanitizeHtml(formData.reason),
+      category: formData.category ? sanitizeHtml(formData.category) : null,
       priority: formData.priority,
       amount_disputed: formData.amount_disputed ? parseFloat(formData.amount_disputed) : null,
       contact_method: formData.contact_method,
+      casino_name: formData.casino_name ? sanitizeHtml(formData.casino_name) : null,
     }
 
     // Insert report
