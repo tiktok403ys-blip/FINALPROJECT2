@@ -31,9 +31,9 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
     casino_name: casinoName || "",
     user_email: "",
     category: "",
-    priority: "medium",
+    priority: "medium" as "low" | "medium" | "high" | "urgent",
     amount_disputed: "",
-    contact_method: "email",
+    contact_method: "email" as "email" | "phone" | "both",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,31 +41,17 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
     setLoading(true)
 
     try {
-      const { error } = await supabase.from("reports").insert({
-        title: formData.title,
-        description: formData.description,
-        casino_name: formData.casino_name,
-        casino_id: casinoId || null,
-        user_email: formData.user_email,
-        category: formData.category,
-        priority: formData.priority,
-        amount_disputed: formData.amount_disputed ? Number.parseFloat(formData.amount_disputed) : null,
-        contact_method: formData.contact_method,
-        status: "pending",
-        report_type: "complaint",
-      })
+      // Import server action
+      const { createReport } = await import("@/app/actions/report-actions")
+      
+      const result = await createReport(formData)
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "error",
-        })
-      } else {
+      if (result.success) {
         setSuccess(true)
         toast({
-          title: "Report Submitted",
-          description: "Your report has been submitted successfully. We'll review it within 24 hours.",
+          title: "Report Submitted Successfully!",
+          description: "We've received your report and will investigate it within 24 hours.",
+          variant: "default",
         })
 
         // Reset form
@@ -75,15 +61,18 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
           casino_name: casinoName || "",
           user_email: "",
           category: "",
-          priority: "medium",
+          priority: "medium" as "low" | "medium" | "high" | "urgent",
           amount_disputed: "",
-          contact_method: "email",
+          contact_method: "email" as "email" | "phone" | "both",
         })
+      } else {
+        throw new Error(result.error)
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error submitting report:", error)
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "Failed to submit report. Please try again.",
         variant: "error",
       })
     } finally {
@@ -144,7 +133,7 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
               <label className="text-sm font-medium text-white">Contact Method</label>
               <Select
                 value={formData.contact_method}
-                onValueChange={(value) => setFormData({ ...formData, contact_method: value })}
+                onValueChange={(value) => setFormData({ ...formData, contact_method: value as "email" | "phone" | "both" })}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
@@ -197,7 +186,7 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
               <label className="text-sm font-medium text-white">Priority</label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                onValueChange={(value) => setFormData({ ...formData, priority: value as "low" | "medium" | "high" | "urgent" })}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />

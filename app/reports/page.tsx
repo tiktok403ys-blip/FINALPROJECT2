@@ -7,73 +7,16 @@ import { Button } from "@/components/ui/button"
 import { ReportDialog } from "@/components/report-dialog"
 import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass } from "lucide-react"
 import { Footer } from "@/components/footer"
+import { useReportsRealtime } from "@/hooks/use-reports-realtime"
 
 export default function ReportsPage() {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 10,
-    hours: 22,
-    minutes: 57,
-    seconds: 50,
-  })
-
-  // Simulate countdown timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        } else if (prev.hours > 0) {
-          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        } else if (prev.days > 0) {
-          return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 }
-        }
-        return prev
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
+  const { reports, stats, loading, error } = useReportsRealtime(10)
 
   const formatTime = (num: number) => num.toString().padStart(2, "0")
 
-  const sampleReports = [
-    {
-      id: 1,
-      title: "Betovo Casino - Player's withdrawal has been delayed.",
-      status: "opened",
-      submittedDate: "11 Aug 2025",
-      currentStatus: "Waiting for a delayed payment",
-      timeElapsed: timeLeft,
-      description:
-        "Player submitted a withdrawal request for $2,500 on August 1st, 2025. Despite multiple follow-ups and providing all required verification documents, the casino has not processed the withdrawal. The player has been waiting for over 10 days without any clear timeline from the casino's support team. All account verification was completed successfully, and the player has met all wagering requirements for the bonus used.",
-    },
-    {
-      id: 2,
-      title: "Royal Casino - Bonus terms were not clearly explained.",
-      status: "investigating",
-      submittedDate: "09 Aug 2025",
-      currentStatus: "Under investigation",
-      timeElapsed: { days: 12, hours: 5, minutes: 30, seconds: 15 },
-      description:
-        "Player claims that the casino's welcome bonus terms were misleading and not clearly disclosed during registration. The player deposited $500 expecting a 100% match bonus but discovered hidden wagering requirements of 50x that were not prominently displayed. Additionally, certain games were excluded from bonus play without clear notification, causing confusion and potential losses.",
-    },
-    {
-      id: 3,
-      title: "Diamond Palace - Account was closed without explanation.",
-      status: "resolved",
-      submittedDate: "05 Aug 2025",
-      currentStatus: "Successfully resolved",
-      timeElapsed: { days: 16, hours: 0, minutes: 0, seconds: 0 },
-      description:
-        "Player's account was suddenly closed after winning $8,000 from a progressive jackpot. The casino cited 'irregular play patterns' but provided no specific details. After our investigation, we found that the player's gameplay was completely legitimate. The casino has since reopened the account, processed the full withdrawal, and provided a formal apology along with a goodwill bonus.",
-    },
-  ]
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "opened":
+      case "pending":
         return "bg-blue-500 text-white"
       case "investigating":
         return "bg-yellow-500 text-black"
@@ -103,25 +46,33 @@ export default function ReportsPage() {
         <div className="grid md:grid-cols-4 gap-6 mb-12">
           <GlassCard className="p-6 text-center">
             <Shield className="w-8 h-8 text-[#00ff88] mx-auto mb-2" />
-            <div className="text-2xl font-bold text-white">1,247</div>
+            <div className="text-2xl font-bold text-white">
+              {loading ? '...' : stats.resolved.toLocaleString()}
+            </div>
             <div className="text-gray-400 text-sm">Cases Resolved</div>
           </GlassCard>
 
           <GlassCard className="p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-white">89</div>
+            <div className="text-2xl font-bold text-white">
+              {loading ? '...' : stats.active}
+            </div>
             <div className="text-gray-400 text-sm">Active Cases</div>
           </GlassCard>
 
           <GlassCard className="p-6 text-center">
             <FileText className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-white">3,456</div>
+            <div className="text-2xl font-bold text-white">
+              {loading ? '...' : stats.total.toLocaleString()}
+            </div>
             <div className="text-gray-400 text-sm">Total Reports</div>
           </GlassCard>
 
           <GlassCard className="p-6 text-center">
             <Users className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-white">92%</div>
+            <div className="text-2xl font-bold text-white">
+              {loading ? '...' : `${stats.success_rate}%`}
+            </div>
             <div className="text-gray-400 text-sm">Success Rate</div>
           </GlassCard>
         </div>
@@ -145,65 +96,83 @@ export default function ReportsPage() {
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-8">Recent Reports</h2>
           <div className="space-y-6">
-            {sampleReports.map((report) => (
-              <GlassCard key={report.id} className="overflow-hidden">
-                <div className="flex flex-col lg:flex-row">
-                  {/* Left Side - Status */}
-                  <div className="lg:w-1/4 bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
-                    <div className="text-center">
-                      <Hourglass className="w-12 h-12 mx-auto mb-3" />
-                      <div className="text-sm font-medium mb-2">Current status</div>
-                      <div className="text-lg font-bold mb-4">{report.currentStatus}</div>
-
-                      {report.status !== "resolved" && (
-                        <div className="text-2xl font-mono">
-                          {formatTime(report.timeElapsed.days)}d : {formatTime(report.timeElapsed.hours)}h :{" "}
-                          {formatTime(report.timeElapsed.minutes)}m : {formatTime(report.timeElapsed.seconds)}s
-                        </div>
-                      )}
-                    </div>
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 3 }).map((_, i) => (
+                <GlassCard key={i} className="overflow-hidden animate-pulse">
+                  <div className="flex flex-col lg:flex-row">
+                    <div className="lg:w-1/4 bg-gray-700 p-6"></div>
+                    <div className="lg:w-3/4 p-6 bg-gray-800"></div>
                   </div>
+                </GlassCard>
+              ))
+            ) : reports.length > 0 ? (
+              reports.map((report) => (
+                <GlassCard key={report.id} className="overflow-hidden">
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Left Side - Status */}
+                    <div className="lg:w-1/4 bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
+                      <div className="text-center">
+                        <Hourglass className="w-12 h-12 mx-auto mb-3" />
+                        <div className="text-sm font-medium mb-2">Current status</div>
+                        <div className="text-lg font-bold mb-4">{report.statusDisplay}</div>
 
-                  {/* Right Side - Report Details */}
-                  <div className="lg:w-3/4 p-6 bg-white/5">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white mb-2">{report.title}</h3>
-                        <div className="flex items-center gap-4 mb-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(report.status)}`}
-                          >
-                            {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                          </span>
-                          <span className="text-gray-400 text-sm flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            Submitted: {report.submittedDate}
-                          </span>
-                        </div>
+                        {report.status !== "resolved" && report.timeElapsed && (
+                          <div className="text-2xl font-mono">
+                            {formatTime(report.timeElapsed.days)}d : {formatTime(report.timeElapsed.hours)}h :{" "}
+                            {formatTime(report.timeElapsed.minutes)}m : {formatTime(report.timeElapsed.seconds)}s
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Problem Description */}
-                    <div className="mb-6">
-                      <h4 className="text-[#00ff88] font-semibold mb-3">Problem Description:</h4>
-                      <p className="text-gray-300 text-sm leading-relaxed">{report.description}</p>
-                    </div>
+                    {/* Right Side - Report Details */}
+                    <div className="lg:w-3/4 p-6 bg-white/5">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-white mb-2">{report.title}</h3>
+                          <div className="flex items-center gap-4 mb-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(report.status)}`}
+                            >
+                              {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                            </span>
+                            <span className="text-gray-400 text-sm flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              Submitted: {report.submittedDate}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
 
-                    {/* Action Button */}
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88]/10 bg-transparent"
-                      >
-                        View Details
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </Button>
+                      {/* Problem Description */}
+                      <div className="mb-6">
+                        <h4 className="text-[#00ff88] font-semibold mb-3">Problem Description:</h4>
+                        <p className="text-gray-300 text-sm leading-relaxed">{report.description}</p>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88]/10 bg-transparent"
+                        >
+                          View Details
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </GlassCard>
+              ))
+            ) : (
+              <GlassCard className="p-12 text-center">
+                <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">No Reports Found</h3>
+                <p className="text-gray-400">There are currently no active reports to display.</p>
               </GlassCard>
-            ))}
+            )}
           </div>
         </div>
 

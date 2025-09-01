@@ -1,0 +1,323 @@
+"use server"
+
+import { createClient } from "@/lib/supabase/server"
+import { revalidatePath } from "next/cache"
+import { sanitizeHtml } from "@/lib/utils"
+
+export interface ReportFormData {
+  title: string
+  description: string
+  casino_name?: string
+  user_email: string
+  category: string
+  priority: "low" | "medium" | "high" | "urgent"
+  amount_disputed?: string
+  contact_method: "email" | "phone" | "both"
+}
+
+export interface ReportUpdateData {
+  id: string
+  status?: "pending" | "investigating" | "resolved" | "closed"
+  admin_notes?: string
+  estimated_resolution_date?: string
+  time_limit_hours?: number
+}
+
+// CREATE - Submit new report
+export async function createReport(formData: ReportFormData) {
+  try {
+    const supabase = await createClient()
+
+    // Validate required fields
+    if (!formData.title || !formData.description || !formData.user_email || !formData.category) {
+      throw new Error("Missing required fields")
+    }
+
+    // Sanitize inputs
+    const sanitizedData = {
+      title: sanitizeHtml(formData.title),
+      description: sanitizeHtml(formData.description),
+      casino_name: formData.casino_name ? sanitizeHtml(formData.casino_name) : null,
+      user_email: sanitizeHtml(formData.user_email),
+      category: sanitizeHtml(formData.category),
+      priority: formData.priority,
+      amount_disputed: formData.amount_disputed ? parseFloat(formData.amount_disputed) : null,
+      contact_method: formData.contact_method,
+    }
+
+    // Insert report
+    const { data, error } = await supabase
+      .from("reports")
+      .insert([sanitizedData])
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error creating report:", error)
+      throw new Error("Failed to create report")
+    }
+
+    // Track analytics
+    await supabase.from("analytics_events").insert({
+      event_type: "report_created",
+      event_data: {
+        report_id: data.id,
+        category: data.category,
+        priority: data.priority,
+      },
+    })
+
+    revalidatePath("/reports")
+    return { success: true, data }
+  } catch (error) {
+    console.error("Create report error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// READ - Get reports with realtime data
+export async function getReports(limit: number = 10) {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from("reports")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error("Error fetching reports:", error)
+      throw new Error("Failed to fetch reports")
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Get reports error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// READ - Get single report
+export async function getReport(id: string) {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from("reports")
+      .select("*")
+      .eq("id", id)
+      .single()
+
+    if (error) {
+      console.error("Error fetching report:", error)
+      throw new Error("Failed to fetch report")
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Get report error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// READ - Get reports statistics
+export async function getReportsStats() {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase.rpc("get_reports_stats")
+
+    if (error) {
+      console.error("Error fetching stats:", error)
+      throw new Error("Failed to fetch statistics")
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Get stats error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// UPDATE - Update report (admin only)
+export async function updateReport(updateData: ReportUpdateData) {
+  try {
+    const supabase = await createClient()
+
+    // Check if user is admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error("Unauthorized")
+    }
+
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+
+    if (!userData || !["admin", "super_admin"].includes(userData.role)) {
+      throw new Error("Insufficient permissions")
+    }
+
+    // Prepare update data
+    const updateFields: any = {}
+    
+    if (updateData.status) {
+      updateFields.status = updateData.status
+      if (updateData.status === "resolved") {
+        updateFields.resolved_at = new Date().toISOString()
+      }
+    }
+    
+    if (updateData.admin_notes !== undefined) {
+      updateFields.admin_notes = sanitizeHtml(updateData.admin_notes)
+    }
+    
+    if (updateData.estimated_resolution_date) {
+      updateFields.estimated_resolution_date = updateData.estimated_resolution_date
+    }
+    
+    if (updateData.time_limit_hours) {
+      updateFields.time_limit_hours = updateData.time_limit_hours
+    }
+
+    // Update report
+    const { data, error } = await supabase
+      .from("reports")
+      .update(updateFields)
+      .eq("id", updateData.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error updating report:", error)
+      throw new Error("Failed to update report")
+    }
+
+    // Track analytics
+    await supabase.from("analytics_events").insert({
+      event_type: "report_updated",
+      event_data: {
+        report_id: data.id,
+        admin_id: user.id,
+        status: data.status,
+      },
+    })
+
+    revalidatePath("/admin/reports")
+    revalidatePath("/reports")
+    return { success: true, data }
+  } catch (error) {
+    console.error("Update report error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// DELETE - Delete report (admin only)
+export async function deleteReport(id: string) {
+  try {
+    const supabase = await createClient()
+
+    // Check if user is admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error("Unauthorized")
+    }
+
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+
+    if (!userData || !["admin", "super_admin"].includes(userData.role)) {
+      throw new Error("Insufficient permissions")
+    }
+
+    // Delete report
+    const { error } = await supabase
+      .from("reports")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      console.error("Error deleting report:", error)
+      throw new Error("Failed to delete report")
+    }
+
+    // Track analytics
+    await supabase.from("analytics_events").insert({
+      event_type: "report_deleted",
+      event_data: {
+        report_id: id,
+        admin_id: user.id,
+      },
+    })
+
+    revalidatePath("/admin/reports")
+    revalidatePath("/reports")
+    return { success: true }
+  } catch (error) {
+    console.error("Delete report error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// BULK OPERATIONS
+export async function bulkUpdateReports(reportIds: string[], status: string) {
+  try {
+    const supabase = await createClient()
+
+    // Check if user is admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error("Unauthorized")
+    }
+
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+
+    if (!userData || !["admin", "super_admin"].includes(userData.role)) {
+      throw new Error("Insufficient permissions")
+    }
+
+    // Prepare update data
+    const updateFields: any = { status }
+    if (status === "resolved") {
+      updateFields.resolved_at = new Date().toISOString()
+    }
+
+    // Bulk update
+    const { error } = await supabase
+      .from("reports")
+      .update(updateFields)
+      .in("id", reportIds)
+
+    if (error) {
+      console.error("Error bulk updating reports:", error)
+      throw new Error("Failed to bulk update reports")
+    }
+
+    // Track analytics
+    await supabase.from("analytics_events").insert({
+      event_type: "reports_bulk_updated",
+      event_data: {
+        report_ids: reportIds,
+        admin_id: user.id,
+        status,
+      },
+    })
+
+    revalidatePath("/admin/reports")
+    revalidatePath("/reports")
+    return { success: true }
+  } catch (error) {
+    console.error("Bulk update reports error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
