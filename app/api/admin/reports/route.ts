@@ -7,8 +7,12 @@ async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Unauthorized")
-  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
-  if (!userData || !["admin", "super_admin"].includes(userData.role)) {
+  const { data: userData } = await supabase
+    .from("admin_users")
+    .select("role, is_active")
+    .eq("user_id", user.id)
+    .single()
+  if (!userData || !userData.is_active || !["admin", "super_admin"].includes(userData.role)) {
     throw new Error("Insufficient permissions")
   }
   return supabase
