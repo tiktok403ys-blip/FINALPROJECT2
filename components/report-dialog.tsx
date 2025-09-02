@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
 import { AlertTriangle, Send, CheckCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -23,15 +22,14 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const { toast } = useToast()
-  const supabase = createClient()
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    reporter_id: "", // ✅ Updated: sesuai schema database
-    reported_content_type: "casino", // ✅ Updated: sesuai schema database
-    reported_content_id: casinoId || "", // ✅ Updated: sesuai schema database
-    reason: "", // ✅ Updated: sesuai schema database
+    reporter_id: "",
+    reported_content_type: "casino",
+    reported_content_id: casinoId || "",
+    reason: "",
     category: "",
     priority: "medium" as "low" | "medium" | "high" | "urgent",
     amount_disputed: "",
@@ -44,16 +42,22 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
     setLoading(true)
 
     try {
-      // Import server action
-      const { createReport } = await import("@/app/actions/report-actions")
-      
-      const result = await createReport(formData)
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          amount_disputed: formData.amount_disputed === "" ? null : Number(formData.amount_disputed),
+        }),
+      })
 
-      if (result.success) {
+      const result = await res.json()
+
+      if (res.ok && result?.success) {
         setSuccess(true)
         toast({
-          title: "Report Submitted Successfully!",
-          description: "We've received your report and will investigate it within 24 hours.",
+          title: "Report Sent",
+          description: "Your report has been emailed to our team. We'll review it and follow up if needed.",
           variant: "default",
         })
 
@@ -61,10 +65,10 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
         setFormData({
           title: "",
           description: "",
-          reporter_id: "", // ✅ Updated: sesuai schema database
-          reported_content_type: "casino", // ✅ Updated: sesuai schema database
-          reported_content_id: casinoId || "", // ✅ Updated: sesuai schema database
-          reason: "", // ✅ Updated: sesuai schema database
+          reporter_id: "",
+          reported_content_type: "casino",
+          reported_content_id: casinoId || "",
+          reason: "",
           category: "",
           priority: "medium" as "low" | "medium" | "high" | "urgent",
           amount_disputed: "",
@@ -72,13 +76,13 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
           casino_name: casinoName || "",
         })
       } else {
-        throw new Error(result.error)
+        throw new Error(result?.error || "Failed to submit report")
       }
     } catch (error) {
       console.error("Error submitting report:", error)
       toast({
         title: "Error",
-        description: "Failed to submit report. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to submit report. Please try again.",
         variant: "error",
       })
     } finally {

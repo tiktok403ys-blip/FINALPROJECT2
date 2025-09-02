@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useReportsRealtime } from "@/hooks/use-reports-realtime"
-import { updateReport, deleteReport, bulkUpdateReports } from "@/app/actions/report-actions"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -106,20 +105,21 @@ export default function AdminReportsPage() {
     try {
       // ✅ FIXED: Type assertion untuk memastikan type safety
       const validStatus = newStatus as "pending" | "investigating" | "resolved" | "closed"
-      
-      const result = await updateReport({
-        id: reportId,
-        status: validStatus
+      const res = await fetch(`/api/admin/reports/${reportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: validStatus }),
       })
+      const result = await res.json()
 
-      if (result.success) {
+      if (res.ok && result.success) {
         toast({
           title: "Status Updated",
           description: `Report status updated to ${validStatus}`,
         })
         refresh()
       } else {
-        throw new Error(result.error)
+        throw new Error(result?.error || "Failed to update status")
       }
     } catch (error) {
       toast({
@@ -145,9 +145,14 @@ export default function AdminReportsPage() {
     const validStatus = newStatus as "pending" | "investigating" | "resolved" | "closed"
     
     try {
-      const result = await bulkUpdateReports(selectedReports, validStatus)
-      
-      if (result.success) {
+      const res = await fetch(`/api/admin/reports`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedReports, status: validStatus }),
+      })
+      const result = await res.json()
+
+      if (res.ok && result.success) {
         toast({
           title: "Bulk Update Successful",
           description: `Updated ${selectedReports.length} reports to ${validStatus}`,
@@ -155,7 +160,7 @@ export default function AdminReportsPage() {
         setSelectedReports([])
         refresh()
       } else {
-        throw new Error(result.error)
+        throw new Error(result?.error || "Failed to bulk update reports")
       }
     } catch (error) {
       toast({
@@ -171,9 +176,12 @@ export default function AdminReportsPage() {
     if (!reportToDelete) return
 
     try {
-      const result = await deleteReport(reportToDelete)
-      
-      if (result.success) {
+      const res = await fetch(`/api/admin/reports/${reportToDelete}`, {
+        method: "DELETE",
+      })
+      const result = await res.json().catch(() => ({}))
+
+      if (res.ok && result.success) {
         toast({
           title: "Report Deleted",
           description: "Report has been permanently deleted",
@@ -182,7 +190,7 @@ export default function AdminReportsPage() {
         setDeleteDialogOpen(false)
         refresh()
       } else {
-        throw new Error(result.error)
+        throw new Error(result?.error || "Failed to delete report")
       }
     } catch (error) {
       toast({
@@ -196,12 +204,14 @@ export default function AdminReportsPage() {
   // Handle report edit
   const handleEditReport = async (formData: any) => {
     try {
-      const result = await updateReport({
-        id: editingReport.id,
-        ...formData
+      const res = await fetch(`/api/admin/reports/${editingReport.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       })
+      const result = await res.json()
 
-      if (result.success) {
+      if (res.ok && result.success) {
         toast({
           title: "Report Updated",
           description: "Report has been updated successfully",
@@ -210,7 +220,7 @@ export default function AdminReportsPage() {
         setEditDialogOpen(false)
         refresh()
       } else {
-        throw new Error(result.error)
+        throw new Error(result?.error || "Failed to update report")
       }
     } catch (error) {
       toast({
@@ -224,48 +234,54 @@ export default function AdminReportsPage() {
   // ✅ FIXED: Add missing create report handler
   const handleCreateReport = async () => {
     try {
-      const { createReport } = await import("@/app/actions/report-actions")
-      
-             const result = await createReport({
-         title: createFormData.title,
-         description: createFormData.description,
-         reporter_id: createFormData.reporter_id,
-         reported_content_type: createFormData.reported_content_type,
-         reported_content_id: createFormData.reported_content_id,
-         reason: createFormData.reason,
-         category: createFormData.category,
-         priority: createFormData.priority,
-         amount_disputed: createFormData.amount_disputed || undefined,
-         contact_method: createFormData.contact_method,
-         casino_name: createFormData.casino_name || undefined,
-       })
+      const body = {
+        title: createFormData.title,
+        description: createFormData.description,
+        reporter_id: createFormData.reporter_id,
+        reported_content_type: createFormData.reported_content_type,
+        reported_content_id: createFormData.reported_content_id,
+        reason: createFormData.reason,
+        category: createFormData.category,
+        priority: createFormData.priority,
+        amount_disputed: createFormData.amount_disputed === "" ? null : Number(createFormData.amount_disputed),
+        contact_method: createFormData.contact_method,
+        casino_name: createFormData.casino_name || null,
+        status: createFormData.status,
+      }
 
-      if (result.success) {
+      const res = await fetch(`/api/admin/reports`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      const result = await res.json()
+
+      if (res.ok && result.success) {
         toast({
           title: "Report Created",
           description: "New report has been created successfully",
         })
         
-                 // Reset form
-         setCreateFormData({
-           title: "",
-           description: "",
-           reporter_id: "",
-           reported_content_type: "casino",
-           reported_content_id: "",
-           reason: "",
-           category: "other",
-           priority: "medium" as ReportPriority,
-           amount_disputed: "",
-           contact_method: "email" as ContactMethod,
-           status: "pending" as ReportStatus,
-           casino_name: "" // ✅ FIXED: Add missing casino_name field
-         })
+                // Reset form
+        setCreateFormData({
+          title: "",
+          description: "",
+          reporter_id: "",
+          reported_content_type: "casino",
+          reported_content_id: "",
+          reason: "",
+          category: "other",
+          priority: "medium" as ReportPriority,
+          amount_disputed: "",
+          contact_method: "email" as ContactMethod,
+          status: "pending" as ReportStatus,
+          casino_name: "" // ✅ FIXED: Add missing casino_name field
+        })
         
         setCreateDialogOpen(false)
         refresh()
       } else {
-        throw new Error(result.error)
+        throw new Error(result?.error || "Failed to create report")
       }
     } catch (error) {
       toast({
