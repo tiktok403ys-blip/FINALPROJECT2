@@ -36,17 +36,24 @@ export default function supabaseLoader({ src, width, quality }: LoaderProps): st
   const q = typeof quality === "number" ? quality : 75;
 
   // If base is missing or src is not a Supabase asset, return as-is
-  const isSupabase = src.includes("/storage/v1/object/public/") || (!src.startsWith("http") && !src.startsWith("/"));
+  const isSupabase = src.includes("/storage/v1/object/public/") || (!src.startsWith("http://") && !src.startsWith("https://"));
   if (!base || !isSupabase) {
     return src;
   }
 
   const bucketPath = toBucketPath(src);
+  const cleanPath = bucketPath.split("?")[0].split("#")[0];
+  const ext = (cleanPath.split(".").pop() || "").toLowerCase();
+
+  // Skip transform for vector/animated formats that the render endpoint may not accept
+  if (ext === "svg" || ext === "gif") {
+    return `${base}/storage/v1/object/public/${bucketPath.replace(/^\/+/, "")}`;
+  }
   // Build Supabase Render URL
   const u = new URL(`${base}/storage/v1/render/image/public/${bucketPath}`);
   u.searchParams.set("width", String(width));
   u.searchParams.set("quality", String(q));
-  u.searchParams.set("format", "webp");
+  // Do not force format to avoid 400 errors on some deployments
   return u.toString();
 }
 
