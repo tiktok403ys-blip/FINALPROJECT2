@@ -122,7 +122,7 @@ export function CasinoScreenshots({ screenshots }: CasinoScreenshotsProps) {
                 src={screenshot.image_url || "/placeholder.svg"}
                 alt={screenshot.title || "Casino screenshot"}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                className="object-contain bg-black/20 group-hover:scale-105 transition-transform duration-300"
               />
 
               {/* Overlay */}

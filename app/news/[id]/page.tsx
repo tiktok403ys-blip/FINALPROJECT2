@@ -93,7 +93,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
               alt={article.title} 
               width={768}
               height={320}
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-contain bg-black/20" 
             />
           </div>
         )}

@@ -528,7 +528,7 @@ function NewsContentPage() {
                   alt={article.title}
                   width={400}
                   height={192}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
+                  className="w-full h-48 object-contain bg-black/20 rounded-lg mb-4"
                 />
               )}
               <div className="text-white/80 text-sm mb-4">

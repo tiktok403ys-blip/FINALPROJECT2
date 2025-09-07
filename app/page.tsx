@@ -257,7 +257,7 @@ export default async function HomePage() {
                         alt={article.title}
                         width={320}
                         height={160}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-black/20"
                       />
                     </div>
                   )}
@@ -304,7 +304,7 @@ export default async function HomePage() {
                             alt={`${review.casinos.name} logo`}
                             width={48}
                             height={48}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain bg-black/20"
                           />
                         ) : (
                           <Shield className="w-6 h-6 text-[#00ff88]" />

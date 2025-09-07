@@ -63,7 +63,7 @@ export function PageHeader({ title, description, breadcrumbs = [], author, class
                     alt={author.name}
                     width={32}
                     height={32}
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-full h-full rounded-full object-contain bg-black/20"
                   />
                 ) : (
                   <User className="w-3 h-3 md:w-4 md:h-4 text-[#00ff88]" />

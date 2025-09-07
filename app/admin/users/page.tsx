@@ -528,7 +528,7 @@ function UsersManagementPage() {
                         alt={user.full_name}
                         width={48}
                         height={48}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-black/20"
                       />
                     ) : (
                       <User className="w-6 h-6 text-white/70" />

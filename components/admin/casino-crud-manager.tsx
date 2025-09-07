@@ -484,7 +484,7 @@ export function CasinoCrudManager({
                     alt={casino.name}
                     width={64}
                     height={64}
-                    className="w-16 h-16 object-cover rounded-lg mb-3"
+                    className="w-16 h-16 object-contain bg-black/20 rounded-lg mb-3"
                   />
                 )}
 

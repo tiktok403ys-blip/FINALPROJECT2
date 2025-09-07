@@ -76,8 +76,9 @@ export function CasinoBanner({ casinoId, banners }: CasinoBannerProps) {
               src={banner.image_url || "/placeholder.svg"}
               alt={banner.title}
               fill
-              className="object-cover"
+              className="object-cover md:object-contain"
               priority={index === 0}
+              sizes="100vw"
             />
             <div className="absolute inset-0 bg-black/30" />
 

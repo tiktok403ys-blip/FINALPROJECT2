@@ -345,7 +345,7 @@ export default function AdminCasinoScreenshotsPage() {
                           alt={row.title || "Casino screenshot"} 
                           width={400}
                           height={225}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain bg-black/20"
                         />
                         {row.is_featured && (
                           <div className="absolute top-2 right-2">
