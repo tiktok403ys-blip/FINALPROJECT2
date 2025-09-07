@@ -20,7 +20,6 @@ import {
   Shield,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { AdminPinDialog } from "@/components/admin-pin-dialog"
 import { useAuth } from "@/components/auth-provider"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { logger } from "@/lib/logger"
@@ -46,7 +45,7 @@ export function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
-  const [showPinDialog, setShowPinDialog] = useState(false)
+  // PIN dialog removed
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [mobileActiveDropdown, setMobileActiveDropdown] = useState<string | null>(null)
 
@@ -307,14 +306,10 @@ export function Navbar() {
     console.log("🔐 Admin access requested - redirecting to admin subdomain")
     setShowUserMenu(false)
     const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
-    window.location.href = adminUrl ? `${adminUrl}/admin?showPin=true` : "/admin?showPin=true"
-  }
-
-  const handlePinSuccess = () => {
-    console.log("✅ PIN verified, redirecting to admin panel...")
-    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
     window.location.href = adminUrl ? `${adminUrl}/admin` : "/admin"
   }
+
+  // Removed handlePinSuccess
 
   const getUserDisplayName = () => {
     if (profile?.full_name) return profile.full_name
@@ -735,12 +730,7 @@ export function Navbar() {
         </div>
       )}
 
-      {/* Admin PIN Dialog */}
-      <AdminPinDialog
-        open={showPinDialog}
-        onOpenChange={setShowPinDialog}
-        onSuccess={handlePinSuccess}
-      />
+      {/* PIN dialog removed */}
     </>
   )
 }

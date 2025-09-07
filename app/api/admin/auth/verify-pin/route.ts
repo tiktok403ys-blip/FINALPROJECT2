@@ -1,30 +1,18 @@
 import { NextResponse } from 'next/server'
 
-// Deprecated insecure endpoint: always return 410 Gone
+// PIN removed entirely: return 410 for any method
 export async function POST() {
-  return NextResponse.json(
-    { error: 'This endpoint is deprecated. Use /api/admin/pin-verify.' },
-    { status: 410 }
-  )
+  return NextResponse.json({ error: 'Admin PIN has been removed' }, { status: 410 })
 }
 
 export async function GET() {
-  return NextResponse.json(
-    { error: 'This endpoint is deprecated. Use /api/admin/pin-verify.' },
-    { status: 410 }
-  )
+  return NextResponse.json({ error: 'Admin PIN has been removed' }, { status: 410 })
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: 'This endpoint is deprecated. Use /api/admin/pin-verify.' },
-    { status: 410 }
-  )
+  return NextResponse.json({ error: 'Admin PIN has been removed' }, { status: 410 })
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: 'This endpoint is deprecated. Use /api/admin/pin-verify.' },
-    { status: 410 }
-  )
+  return NextResponse.json({ error: 'Admin PIN has been removed' }, { status: 410 })
 }

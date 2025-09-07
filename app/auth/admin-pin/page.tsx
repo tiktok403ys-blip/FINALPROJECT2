@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { AdminPinDialog } from "@/components/admin-pin-dialog"
+// PIN dialog removed
 
 export default function AdminPinPage() {
   const { user, loading } = useAuth()
@@ -25,17 +25,7 @@ export default function AdminPinPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      {user && (
-        <AdminPinDialog
-          open={open}
-          onOpenChange={setOpen}
-          onSuccess={onSuccess}
-        />
-      )}
-    </div>
-  )
+  return <div className="min-h-screen bg-black flex items-center justify-center" />
 }
 
 

@@ -105,51 +105,12 @@ export async function validateAdminAuth(
  * @param request - NextRequest object
  * @returns boolean indicating if PIN is verified
  */
-export async function validatePinVerification(request: NextRequest): Promise<boolean> {
+export async function validatePinVerification(_request: NextRequest): Promise<boolean> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('admin_pin_verified')?.value;
-
-    if (!token) {
-      return false;
-    }
-
-    // Legacy non-JWT tokens are no longer accepted for security reasons
-    if (token.startsWith('pin_')) {
-      return false;
-    }
-
-    // Verify JWT-based PIN token
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
-
-    try {
-      const { payload } = await jwtVerify(token, secret);
-
-      // If AdminAuth is available, ensure the token subject matches current user
-      try {
-        const adminAuth = AdminAuth.getInstance();
-        if (adminAuth.isAuthenticated()) {
-          const { user } = await adminAuth.getCurrentUser();
-          if (user?.id && payload?.sub && payload.sub !== user.id) {
-            return false;
-          }
-        }
-      } catch (e) {
-        // Non-fatal: if we fail to read current user, rely on JWT validity + claim
-      }
-
-      // Require explicit verified flag and correct purpose in payload
-      const p = payload as any
-      if (p?.verified !== true) return false
-      if (p?.purpose !== 'admin_pin') return false
-      return true
-    } catch (e) {
-      logger.error('PIN JWT verification failed:', e as Error);
-      return false;
-    }
+    // PIN system removed: always return true
+    return true;
   } catch (error) {
-    logger.error('PIN verification failed:', error as Error);
-    return false;
+    return true;
   }
 }
 
