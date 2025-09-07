@@ -116,11 +116,13 @@ export default function AdminPartnersPage() {
     if (confirm("Are you sure you want to delete this partner?")) {
       const { error } = await supabase.from("partners").delete().eq("id", partner.id)
       if (!error) {
-        const marker = "/storage/v1/object/public/assets/"
-        const idx = (partner.logo_url || '').indexOf(marker)
-        if (idx !== -1) {
-          const path = (partner.logo_url || '').substring(idx + marker.length)
-          await supabase.storage.from("assets").remove([path])
+        const asPath = toBucketPath(partner.logo_url || '')
+        if (asPath) {
+          const [bucket, ...rest] = asPath.split('/')
+          const key = rest.join('/')
+          if (bucket && key) {
+            await supabase.storage.from(bucket).remove([key])
+          }
         }
         fetchPartners()
       }
@@ -143,6 +145,15 @@ export default function AdminPartnersPage() {
   const filteredPartners = partners.filter((partner) => partner.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
   const partnerTypes = ["partner", "sponsor", "affiliate"]
+
+  function toBucketPath(input: string): string | null {
+    if (!input) return null
+    if (!input.startsWith('http')) return input
+    const marker = '/storage/v1/object/public/'
+    const idx = input.indexOf(marker)
+    if (idx === -1) return null
+    return input.substring(idx + marker.length)
+  }
 
   return (
     <div className="container mx-auto px-4 py-16">

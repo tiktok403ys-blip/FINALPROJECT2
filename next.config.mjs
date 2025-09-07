@@ -14,6 +14,12 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
+    // Use Supabase custom loader to avoid Vercel Image Optimization quota
+    loader: 'custom',
+    loaderFile: './image-loader.ts',
+    deviceSizes: [480, 768, 1024, 1440],
+    imageSizes: [16, 32, 64, 128, 256],
+    // Keep remotePatterns for compatibility if some components still reference external hosts
     remotePatterns: [
       {
         protocol: 'https',

@@ -9,12 +9,13 @@ import { logger } from "@/lib/logger"
 interface UploadInputProps {
   bucket?: string
   folder?: string
-  onUploaded: (publicUrl: string) => void
+  onUploaded: (bucketPath: string) => void
   label?: string
   allowedMime?: string[]
   maxSizeMB?: number
   onError?: (message: string) => void
   showPreview?: boolean
+  cacheControlSeconds?: number
 }
 
 export function UploadInput({
@@ -26,6 +27,7 @@ export function UploadInput({
   maxSizeMB = 2,
   onError,
   showPreview = true,
+  cacheControlSeconds = 31536000,
 }: UploadInputProps) {
   const supabase = createClient()
   const [uploading, setUploading] = useState(false)
@@ -56,10 +58,11 @@ export function UploadInput({
       const fileExt = file.name.split(".").pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
       const filePath = `${folder}/${fileName}`
-      const { error } = await supabase.storage.from(bucket).upload(filePath, file, { cacheControl: "3600", upsert: false })
+      const { error } = await supabase.storage.from(bucket).upload(filePath, file, { cacheControl: String(cacheControlSeconds), upsert: false })
       if (error) throw error
+      const bucketPath = `${bucket}/${filePath}`
       const { data } = supabase.storage.from(bucket).getPublicUrl(filePath)
-      onUploaded(data.publicUrl)
+      onUploaded(bucketPath)
       setUploadedInfo({ name: file.name, size: file.size, url: data.publicUrl })
     } catch (err) {
       logger.error("Upload failed", err as Error)

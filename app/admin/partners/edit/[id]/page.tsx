@@ -15,7 +15,8 @@ import { ArrowLeft, Save, Trash2 } from "lucide-react"
 
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
-  logo_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+  // Accept either full URL or bucket/path or empty
+  logo_url: z.string().optional().or(z.literal("")),
   website_url: z.string().url("Invalid URL").optional().or(z.literal("")),
   description: z.string().optional().default(""),
   partner_type: z.string().default("partner"),
@@ -71,7 +72,11 @@ export default function EditPartnerPage() {
     else {
       const newPath = parseAssetsPath(payload.logo_url || "")
       if (prevLogoPath && newPath !== prevLogoPath) {
-        await supabase.storage.from("assets").remove([prevLogoPath])
+        const [prevBucket, ...restPrev] = prevLogoPath.split("/")
+        const prevKey = restPrev.join("/")
+        if (prevBucket && prevKey) {
+          await supabase.storage.from(prevBucket).remove([prevKey])
+        }
       }
       window.location.href = "/admin/partners"
     }
@@ -117,8 +122,8 @@ export default function EditPartnerPage() {
           <TextField label="Partner Name *" {...register("name")} error={errors.name?.message} placeholder="Evolution Gaming" />
           <div className="grid md:grid-cols-2 gap-4 items-end">
             <div className="flex items-center gap-2">
-              <TextField label="Logo URL" {...register("logo_url")} placeholder="/placeholder.svg?height=60&width=120&text=Logo" error={errors.logo_url?.message} />
-              <UploadInput folder="partners/logos" onUploaded={(url) => setValue("logo_url", url)} />
+              <TextField label="Logo bucket/path" {...register("logo_url")} placeholder="assets/partners/logos/xyz.png" error={errors.logo_url?.message} />
+              <UploadInput folder="partners/logos" onUploaded={(bucketPath) => setValue("logo_url", bucketPath)} />
             </div>
             <TextField label="Website URL" {...register("website_url")} placeholder="https://example.com" error={errors.website_url?.message} />
           </div>
@@ -152,11 +157,14 @@ export default function EditPartnerPage() {
   )
 }
 
-function parseAssetsPath(url: string): string | null {
-  const marker = "/storage/v1/object/public/assets/"
-  const idx = url.indexOf(marker)
+function parseAssetsPath(input: string): string | null {
+  if (!input) return null
+  // If already in bucket/path form
+  if (!input.startsWith("http")) return input
+  const base = "/storage/v1/object/public/"
+  const idx = input.indexOf(base)
   if (idx === -1) return null
-  return url.substring(idx + marker.length)
+  return input.substring(idx + base.length)
 }
 
 

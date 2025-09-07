@@ -67,7 +67,8 @@ export function CasinoCardMobileFirst({ casino, rank }: CasinoCardMobileFirstPro
                   alt={`${casino.name} logo`}
                   fill
                   className="object-contain filter brightness-110"
-                  sizes="(max-width: 640px) 80px, 96px"
+                  sizes="(max-width: 640px) 80px, (max-width: 1024px) 96px, 120px"
+                  priority={false}
                 />
               </div>
             ) : (

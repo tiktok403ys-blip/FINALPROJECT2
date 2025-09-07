@@ -15,7 +15,14 @@ export async function generateMetadata({ params }: PageProps) {
   const { data } = await supabase.from("news").select("title, excerpt, image_url").eq("id", id).single()
   const title = data?.title ? `${data.title} - News` : "News"
   const description = data?.excerpt || "Latest casino industry news."
-  const images = data?.image_url ? [data.image_url] : []
+  const toPublicUrl = (val?: string | null) => {
+    if (!val) return null
+    if (val.startsWith("http")) return val
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+    return base ? `${base}/storage/v1/object/public/${val}` : null
+  }
+  const resolvedImage = toPublicUrl(data?.image_url)
+  const images = resolvedImage ? [resolvedImage] : []
   const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
   const canonical = `https://${host}/news/${id}`
   return {
@@ -56,6 +63,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
               datePublished: article.created_at,
               dateModified: article.updated_at,
               image: article.image_url ? [article.image_url] : undefined,
+              // Note: metadata above resolves to absolute URL for social previews
               description: article.excerpt || undefined,
               mainEntityOfPage: {
                 "@type": "WebPage",

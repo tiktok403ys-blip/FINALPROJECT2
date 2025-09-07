@@ -8,7 +8,7 @@ import Image from 'next/image'
 
 interface ImageUploadProps {
   value?: string
-  onChange: (url: string) => void
+  onChange: (bucketPath: string) => void
   bucket: string
   folder?: string
   accept?: string
@@ -17,6 +17,7 @@ interface ImageUploadProps {
   placeholder?: string
   placeholderBgColor?: string
   label?: string
+  cacheControlSeconds?: number
 }
 
 export default function ImageUpload({
@@ -29,7 +30,8 @@ export default function ImageUpload({
   className = '',
   placeholder = 'Upload gambar',
   placeholderBgColor = '#1f2937',
-  label
+  label,
+  cacheControlSeconds = 31536000
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
@@ -58,7 +60,7 @@ export default function ImageUpload({
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file)
+        .upload(filePath, file, { cacheControl: String(cacheControlSeconds), upsert: false })
 
       if (uploadError) {
         throw uploadError
@@ -68,8 +70,9 @@ export default function ImageUpload({
         .from(bucket)
         .getPublicUrl(filePath)
 
-      onChange(publicUrl)
-      return publicUrl
+      const bucketPath = `${bucket}/${filePath}`
+      onChange(bucketPath)
+      return bucketPath
     })()
 
     // Show loading toast with glass card theme

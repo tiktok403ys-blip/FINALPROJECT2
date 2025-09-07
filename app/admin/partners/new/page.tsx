@@ -13,7 +13,8 @@ import { createClient } from "@/lib/supabase/client"
 
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
-  logo_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+  // Accept either full URL or bucket/path or empty
+  logo_url: z.string().optional().or(z.literal("")),
   website_url: z.string().url("Invalid URL").optional().or(z.literal("")),
   description: z.string().optional().default(""),
   partner_type: z.string().default("partner"),

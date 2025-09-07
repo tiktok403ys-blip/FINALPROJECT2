@@ -77,8 +77,8 @@ export default function SiteSettingsPage() {
       ) : (
         <div className="space-y-6">
           <div className="flex items-end gap-2">
-            <TextField label="Hero Image URL" value={row.hero_image_url || ""} onChange={(e) => setRow({ ...row, hero_image_url: e.target.value })} placeholder="https://..." />
-            <UploadInput folder="site/banners" onUploaded={(url) => setRow({ ...row, hero_image_url: url })} label="Upload Hero" />
+            <TextField label="Hero Image path (bucket/path)" value={row.hero_image_url || ""} onChange={(e) => setRow({ ...row, hero_image_url: e.target.value })} placeholder="assets/site/banners/hero-123.webp" />
+            <UploadInput folder="site/banners" onUploaded={(bucketPath) => setRow({ ...row, hero_image_url: bucketPath })} label="Upload Hero" />
           </div>
           <TextField label="Hero Title" value={row.hero_title || ""} onChange={(e) => setRow({ ...row, hero_title: e.target.value })} placeholder="Ultimate Casino Guide" />
           <TextAreaField label="Hero Subtitle" value={row.hero_subtitle || ""} onChange={(e) => setRow({ ...row, hero_subtitle: e.target.value })} className="min-h-[100px]" placeholder="Subtitle..." />

@@ -11,13 +11,14 @@ import Image from 'next/image'
 
 interface ImageUploadProps {
   value?: string
-  onChange: (url: string) => void
+  onChange: (bucketPath: string) => void
   bucket: string
   className?: string
   label?: string
+  cacheControlSeconds?: number
 }
 
-export function ImageUpload({ value, onChange, bucket, className, label }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, bucket, className, label, cacheControlSeconds = 31536000 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const supabase = createClient()
 
@@ -36,17 +37,18 @@ export function ImageUpload({ value, onChange, bucket, className, label }: Image
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file)
+        .upload(filePath, file, { cacheControl: String(cacheControlSeconds), upsert: false })
 
       if (uploadError) {
         throw uploadError
       }
 
+      const bucketPath = `${bucket}/${filePath}`
       const { data } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath)
 
-      onChange(data.publicUrl)
+      onChange(bucketPath)
       toast.success('Image Uploaded', 'Image has been successfully uploaded to storage')
     } catch (error) {
       console.error('Error uploading image:', error)

@@ -56,6 +56,8 @@ export function LogoSlider() {
                   alt={partner.name}
                   width={120}
                   height={60}
+                  sizes="(max-width: 640px) 96px, 120px"
+                  priority={false}
                   className="max-w-full max-h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity"
                 />
               ) : (
@@ -78,6 +80,8 @@ export function LogoSlider() {
                   alt={partner.name}
                   width={120}
                   height={60}
+                  sizes="(max-width: 640px) 96px, 120px"
+                  priority={false}
                   className="max-w-full max-h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity"
                 />
               ) : (
