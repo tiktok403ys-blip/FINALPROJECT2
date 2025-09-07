@@ -114,9 +114,9 @@ export async function validatePinVerification(request: NextRequest): Promise<boo
       return false;
     }
 
-    // Backward compatibility with legacy token format set by old endpoint
+    // Legacy non-JWT tokens are no longer accepted for security reasons
     if (token.startsWith('pin_')) {
-      return true;
+      return false;
     }
 
     // Verify JWT-based PIN token
@@ -138,8 +138,11 @@ export async function validatePinVerification(request: NextRequest): Promise<boo
         // Non-fatal: if we fail to read current user, rely on JWT validity + claim
       }
 
-      // Require explicit verified flag in payload for extra safety
-      return Boolean((payload as any)?.verified === true);
+      // Require explicit verified flag and correct purpose in payload
+      const p = payload as any
+      if (p?.verified !== true) return false
+      if (p?.purpose !== 'admin_pin') return false
+      return true
     } catch (e) {
       logger.error('PIN JWT verification failed:', e as Error);
       return false;

@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SignJWT } from 'jose'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-)
+import { rateLimitMiddleware, rateLimiters, applyRateLimitHeaders } from '@/lib/security/simple-rate-limiter'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,6 +19,11 @@ function resolveCookieDomain(): string | undefined {
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply strict auth rate limiting (IP-based)
+    const rl = rateLimitMiddleware(request, rateLimiters.auth)
+    if (!rl.allowed) {
+      return rl.response as NextResponse
+    }
     const body = await request.json()
     const { pin, confirmPin } = body
 
@@ -100,34 +101,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create admin session token for PIN verification window (optional UX)
-    const adminToken = await new SignJWT({
-      verified: true,
-      type: 'admin',
-      userId: userId,
-      timestamp: Date.now()
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .sign(JWT_SECRET)
-
-    // Set cookie with consistent name (underscore)
+    // Do NOT auto-verify PIN with long-lived cookie; require separate pin-verify step
     const response = NextResponse.json({
       success: true,
-      message: 'Admin PIN set successfully and stored permanently'
+      message: 'Admin PIN set successfully. Please verify your PIN to continue.'
     })
 
-    const domain = resolveCookieDomain()
-    response.cookies.set('admin_pin_verified', adminToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-      domain,
-    })
-
-    return response
+    // Apply rate limit headers
+    return applyRateLimitHeaders(response, rl)
 
   } catch (error) {
     console.error('Admin PIN setting error:', error)

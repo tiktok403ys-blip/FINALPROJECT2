@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminAuth } from '@/lib/auth/admin-middleware'
 import { SignJWT } from 'jose'
 import { logger } from '@/lib/logger'
+import { rateLimitMiddleware, rateLimiters, applyRateLimitHeaders } from '@/lib/security/simple-rate-limiter'
 
 const PIN_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
 // Reduce TTL to 15 minutes for better UX with per-section prompts
@@ -23,6 +24,11 @@ function resolveCookieDomain(): string | undefined {
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply strict auth rate limiting (IP-based)
+    const rl = rateLimitMiddleware(request, rateLimiters.auth)
+    if (!rl.allowed) {
+      return rl.response as NextResponse
+    }
     const { pin } = await request.json()
 
     if (!pin) {
@@ -141,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Create secure JWT token for PIN verification
     const expirationSeconds = Math.floor(PIN_TOKEN_EXPIRY / 1000)
-    const pinToken = await new SignJWT({ verified: true, email: authResult.user.email })
+    const pinToken = await new SignJWT({ verified: true, email: authResult.user.email, purpose: 'admin_pin' })
       .setProtectedHeader({ alg: 'HS256' })
       .setSubject(authResult.user.id)
       .setIssuedAt()
@@ -164,7 +170,8 @@ export async function POST(request: NextRequest) {
       domain,
     })
 
-    return response
+    // Apply rate limit headers to successful response
+    return applyRateLimitHeaders(response, rl)
 
   } catch (error) {
     logger.error('PIN verification error:', error as Error)

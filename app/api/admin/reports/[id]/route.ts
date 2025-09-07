@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sanitizeHtml } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
+import { validatePinVerification } from "@/lib/auth/admin-middleware"
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -21,6 +22,10 @@ async function requireAdmin() {
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await requireAdmin()
+    const pinVerified = await validatePinVerification(req as any)
+    if (!pinVerified) {
+      return NextResponse.json({ success: false, error: "PIN verification required" }, { status: 403 })
+    }
     const { id } = await context.params
     const body = await req.json()
 
@@ -69,6 +74,10 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await requireAdmin()
+    const pinVerified = await validatePinVerification(_req as any)
+    if (!pinVerified) {
+      return NextResponse.json({ success: false, error: "PIN verification required" }, { status: 403 })
+    }
     const { id } = await context.params
 
     const { error } = await supabase.from("reports").delete().eq("id", id)
