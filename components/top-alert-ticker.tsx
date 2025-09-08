@@ -21,13 +21,8 @@ export function TopAlertTicker() {
   const [fromPx, setFromPx] = useState(0)
   const [toPx, setToPx] = useState(0)
 
-  useEffect(() => {
-    const rm = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setEnabled(!rm.matches)
-    const onChange = () => setEnabled(!rm.matches)
-    rm.addEventListener?.('change', onChange)
-    return () => rm.removeEventListener?.('change', onChange)
-  }, [])
+  // Selalu aktifkan animasi (mengabaikan prefers-reduced-motion sesuai permintaan)
+  useEffect(() => { setEnabled(true) }, [])
 
   useEffect(() => {
     let active = true
@@ -57,7 +52,7 @@ export function TopAlertTicker() {
       setFromPx(start)
       setToPx(end)
       const distance = start - end // total px to travel
-      const pxPerSec = 35 // target speed (slower = bigger number)
+      const pxPerSec = 22 // slower target speed
       const d = Math.max(8, Math.ceil(distance / pxPerSec))
       setDurationSec(d)
     }
