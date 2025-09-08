@@ -641,7 +641,7 @@ function CasinosContentPage() {
                       alt={casino.name}
                       width={48}
                       height={48}
-                      className="w-9 h-9 md:w-12 md:h-12 rounded-lg object-cover"
+                      className="w-9 h-9 md:w-12 md:h-12 rounded-lg object-contain bg-black/20"
                     />
                   )}
                   <div>

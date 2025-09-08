@@ -138,7 +138,7 @@ export default function ImageUpload({
               alt="Uploaded image"
               width={400}
               height={192}
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-contain bg-black/20"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
               <button

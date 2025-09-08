@@ -57,17 +57,18 @@ export function CasinoCardMobileFirst({ casino, rank }: CasinoCardMobileFirstPro
 
           {/* Logo Section */}
           <div
-            className="h-32 sm:h-40 flex items-center justify-center relative overflow-hidden"
+            className="h-32 sm:h-40 flex items-center justify-center relative"
             style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}
           >
             {casino.logo_url ? (
-              <div className="relative w-20 h-16 sm:w-24 sm:h-20">
+              <div className="relative">
                 <Image
                   src={casino.logo_url}
                   alt={`${casino.name} logo`}
-                  fill
+                  width={120}
+                  height={80}
                   className="object-contain filter brightness-110"
-                  sizes="(max-width: 640px) 80px, (max-width: 1024px) 96px, 120px"
+                  sizes="(max-width: 640px) 96px, (max-width: 1024px) 120px, 144px"
                   priority={false}
                 />
               </div>

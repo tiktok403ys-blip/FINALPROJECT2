@@ -77,7 +77,7 @@ export function ImageUpload({ value, onChange, bucket, className, label, cacheCo
             alt="Uploaded image"
             width={128}
             height={128}
-            className="w-32 h-32 object-cover rounded-lg border border-white/20"
+            className="w-32 h-32 object-contain bg-black/20 rounded-lg border border-white/20"
           />
           <Button
             type="button"

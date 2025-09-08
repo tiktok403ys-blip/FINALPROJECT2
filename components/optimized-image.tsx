@@ -316,7 +316,7 @@ export function MobileOptimizedImageCarousel({
             <OptimizedImage
               src={image.src}
               alt={image.alt}
-              className="w-full h-48 sm:h-64 object-cover rounded-lg"
+              className="w-full h-48 sm:h-64 object-contain bg-black/20 rounded-lg"
               enableCDN={true}
               trackPerformance={false}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
