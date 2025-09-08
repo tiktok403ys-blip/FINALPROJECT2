@@ -53,6 +53,8 @@ export default function supabaseLoader({ src, width, quality }: LoaderProps): st
   const u = new URL(`${base}/storage/v1/render/image/public/${bucketPath}`);
   u.searchParams.set("width", String(width));
   u.searchParams.set("quality", String(q));
+  // Enforce contain resize to prevent any server-side cropping
+  u.searchParams.set("resize", "contain");
   // Do not force format to avoid 400 errors on some deployments
   return u.toString();
 }
