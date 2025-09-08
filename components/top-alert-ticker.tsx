@@ -78,7 +78,7 @@ export function TopAlertTicker() {
         <div ref={containerRef} className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
           <div
             key={`${current.id}-${idx}`}
-            className="absolute inset-0 flex items-center"
+            className="absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform"
             style={{
               animation: enabled ? 'ticker-slide var(--dur) linear 1' : 'none',
               // custom props used inside keyframes
@@ -88,13 +88,7 @@ export function TopAlertTicker() {
               ['--dur' as any]: `${durationSec}s`
             }}
           >
-            {current.href ? (
-              <Link href={current.href} className="px-4 inline-block underline-offset-4 hover:underline">
-                <span ref={textRef}>{current.text}</span>
-              </Link>
-            ) : (
-              <span ref={textRef} className="px-4 inline-block">{current.text}</span>
-            )}
+            <span ref={textRef} className="px-4 inline-block">{current.text}</span>
           </div>
         </div>
       </div>
