@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
 interface AlertItem {
@@ -16,6 +15,7 @@ export function TopAlertTicker() {
   const [idx, setIdx] = useState(0)
   const [enabled, setEnabled] = useState(true)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const animRef = useRef<HTMLDivElement | null>(null)
   const textRef = useRef<HTMLSpanElement | null>(null)
   const [durationSec, setDurationSec] = useState(14)
   const [fromPx, setFromPx] = useState(0)
@@ -23,6 +23,7 @@ export function TopAlertTicker() {
   const [isVisible, setIsVisible] = useState(false)
   const [animVersion, setAnimVersion] = useState(0)
   const [animate, setAnimate] = useState(false)
+  const progressTimerRef = useRef<number | null>(null)
 
   // Selalu aktifkan animasi (mengabaikan prefers-reduced-motion sesuai permintaan)
   useEffect(() => { setEnabled(true) }, [])
@@ -41,7 +42,7 @@ export function TopAlertTicker() {
     return () => { active = false }
   }, [supabase])
 
-  // Observe visibility to start when ticker enters viewport (works on mobile too)
+  // Observe visibility to start when ticker enters viewport (ensure ref exists)
   useEffect(() => {
     const node = containerRef.current
     if (!node) return
@@ -50,7 +51,7 @@ export function TopAlertTicker() {
     }, { threshold: 0, root: null, rootMargin: '0px' })
     obs.observe(node)
     return () => obs.disconnect()
-  }, [])
+  }, [items, idx])
 
   // Fallback: jika visibilitas tidak terdeteksi, tetap ukur & mulai animasi setelah sedikit penundaan
   useEffect(() => {
@@ -127,12 +128,40 @@ export function TopAlertTicker() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); window.removeEventListener('orientationchange', measure) }
   }, [idx, enabled, isVisible])
 
-  // Advance to next item when animation completes
+  // Advance to next item when animation completes (fallback timer)
   useEffect(() => {
     if (!enabled || items.length <= 1) return
-    const t = setTimeout(() => setIdx(i => (i + 1) % items.length), (durationSec + 0.5) * 1000)
-    return () => clearTimeout(t)
+    if (progressTimerRef.current) {
+      clearTimeout(progressTimerRef.current)
+      progressTimerRef.current = null
+    }
+    const t = window.setTimeout(() => {
+      progressTimerRef.current = null
+      setIdx(i => (i + 1) % items.length)
+    }, (durationSec + 0.5) * 1000)
+    progressTimerRef.current = t
+    return () => {
+      if (progressTimerRef.current) {
+        clearTimeout(progressTimerRef.current)
+        progressTimerRef.current = null
+      }
+    }
   }, [durationSec, items.length, enabled])
+
+  // Prefer reliable progression via animationend (with timeout as fallback)
+  useEffect(() => {
+    const node = animRef.current
+    if (!node || items.length <= 1) return
+    const handleEnd = () => {
+      if (progressTimerRef.current) {
+        clearTimeout(progressTimerRef.current)
+        progressTimerRef.current = null
+      }
+      setIdx(i => (i + 1) % items.length)
+    }
+    node.addEventListener('animationend', handleEnd)
+    return () => { node.removeEventListener('animationend', handleEnd) }
+  }, [items.length, animVersion])
 
   const current = useMemo(() => items[idx] || null, [items, idx])
   if (!current) return null
@@ -142,6 +171,7 @@ export function TopAlertTicker() {
       <div className="container mx-auto px-0">
         <div ref={containerRef} className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
           <div
+            ref={animRef}
             key={`${current.id}-${idx}-${animVersion}`}
             className={`absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform ticker-anim ${animate && enabled ? 'ticker-anim-on' : ''} ${items.length > 1 ? 'ticker-once' : 'ticker-infinite'}`}
             style={{
@@ -162,10 +192,13 @@ export function TopAlertTicker() {
           to { transform: translateX(var(--to)); }
         }
         /* Override reduce-motion global rule specifically for ticker */
-        .ticker-anim { will-change: transform; }
-        .ticker-anim-on { animation-name: ticker-slide !important; animation-duration: var(--dur) !important; animation-timing-function: linear !important; animation-play-state: running !important; }
+        .ticker-anim { will-change: transform; transform: translateX(var(--from)); }
+        .ticker-anim-on { animation-name: ticker-slide !important; animation-duration: var(--dur) !important; animation-timing-function: linear !important; animation-play-state: running !important; animation-fill-mode: both !important; }
         .ticker-once { animation-iteration-count: 1 !important; }
         .ticker-infinite { animation-iteration-count: infinite !important; }
+        @media (prefers-reduced-motion: reduce) {
+          .ticker-anim-on { animation-duration: var(--dur) !important; }
+        }
       `}</style>
     </div>
   )
