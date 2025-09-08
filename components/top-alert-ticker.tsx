@@ -20,6 +20,8 @@ export function TopAlertTicker() {
   const [durationSec, setDurationSec] = useState(14)
   const [fromPx, setFromPx] = useState(0)
   const [toPx, setToPx] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
+  const [animVersion, setAnimVersion] = useState(0)
 
   // Selalu aktifkan animasi (mengabaikan prefers-reduced-motion sesuai permintaan)
   useEffect(() => { setEnabled(true) }, [])
@@ -38,9 +40,20 @@ export function TopAlertTicker() {
     return () => { active = false }
   }, [supabase])
 
-  // Recompute animation distance and duration per item & on resize
+  // Observe visibility to start when ticker enters viewport (works on mobile too)
   useEffect(() => {
-    if (!enabled) return
+    const node = containerRef.current
+    if (!node) return
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => setIsVisible(e.isIntersecting))
+    }, { threshold: 0.1 })
+    obs.observe(node)
+    return () => obs.disconnect()
+  }, [])
+
+  // Recompute animation distance and duration per item & on resize/visibility
+  useEffect(() => {
+    if (!enabled || !isVisible) return
     const measure = () => {
       const c = containerRef.current
       const t = textRef.current
@@ -55,12 +68,18 @@ export function TopAlertTicker() {
       const pxPerSec = 22 // slower target speed
       const d = Math.max(8, Math.ceil(distance / pxPerSec))
       setDurationSec(d)
+      // Force animation restart after measurement
+      // Flush layout then bump version so animated node remounts with fresh CSS vars
+      /* eslint-disable-next-line no-unused-expressions */
+      c.offsetWidth
+      setAnimVersion(v => v + 1)
     }
     // ukur setelah paint agar layout sudah stabil
     const raf = requestAnimationFrame(measure)
     window.addEventListener('resize', measure)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
-  }, [idx, enabled])
+    window.addEventListener('orientationchange', measure)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); window.removeEventListener('orientationchange', measure) }
+  }, [idx, enabled, isVisible])
 
   // Advance to next item when animation completes
   useEffect(() => {
@@ -77,7 +96,7 @@ export function TopAlertTicker() {
       <div className="container mx-auto px-0">
         <div ref={containerRef} className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
           <div
-            key={`${current.id}-${idx}`}
+            key={`${current.id}-${idx}-${animVersion}`}
             className="absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform"
             style={{
               animation: enabled ? 'ticker-slide var(--dur) linear 1' : 'none',
