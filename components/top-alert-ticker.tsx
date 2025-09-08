@@ -56,7 +56,7 @@ export function TopAlertTicker() {
             className="whitespace-nowrap absolute inset-0 flex items-center"
             style={{
               transform: enabled ? 'translateX(0)' : 'none',
-              animation: enabled ? 'ticker-slide 8s linear infinite' : 'none'
+              animation: enabled ? 'ticker-slide 14s linear infinite' : 'none'
             }}
           >
             {current.href ? (
