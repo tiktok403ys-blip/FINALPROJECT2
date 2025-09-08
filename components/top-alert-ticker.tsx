@@ -48,23 +48,33 @@ export function TopAlertTicker() {
   if (!current) return null
 
   return (
-    <div className="w-full bg-[#00ff88]/10 border-b border-[#00ff88]/20 text-[#00ff88]">
-      <div className="container mx-auto px-4 py-2">
-        <div className={`overflow-hidden relative h-6`}
-             aria-live={enabled ? 'polite' : 'off'}>
-          <div key={current.id}
-               className={`absolute inset-0 flex items-center transition-transform duration-500 ${enabled ? 'animate-none' : ''}`}
-               style={{ transform: 'translateY(0)' }}>
+    <div className="w-full bg-[#0a0f0c] border-y border-[#00ff88]/20 text-[#00ff88]">
+      <div className="container mx-auto px-0">
+        <div className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
+          <div
+            key={current.id}
+            className="whitespace-nowrap absolute inset-0 flex items-center"
+            style={{
+              transform: enabled ? 'translateX(0)' : 'none',
+              animation: enabled ? 'ticker-slide 8s linear infinite' : 'none'
+            }}
+          >
             {current.href ? (
-              <Link href={current.href} className="underline-offset-4 hover:underline">
+              <Link href={current.href} className="px-4 inline-block underline-offset-4 hover:underline">
                 {current.text}
               </Link>
             ) : (
-              <span>{current.text}</span>
+              <span className="px-4 inline-block">{current.text}</span>
             )}
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes ticker-slide {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+      `}</style>
     </div>
   )
 }

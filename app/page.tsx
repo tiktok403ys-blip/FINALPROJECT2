@@ -89,8 +89,6 @@ export default async function HomePage() {
       <RealtimeHomeRefresher />
       {/* Realtime refresh when casinos change */}
       <RealtimeCasinosRefresher filterHomeFeatured={true} />
-      {/* Lightweight top alert ticker (does not affect hero parallax) */}
-      <TopAlertTicker />
       <HeroBanner
         imageUrl={hero?.image_url || settings?.hero_image_url || undefined}
         title={hero?.title || settings?.hero_title || undefined}
@@ -100,6 +98,9 @@ export default async function HomePage() {
         ctaSecondaryText={settings?.hero_cta_secondary_text || undefined}
         ctaSecondaryLink={settings?.hero_cta_secondary_link || undefined}
       />
+
+      {/* Lightweight alert ticker separator between hero and Top Rated section */}
+      <TopAlertTicker />
 
       <div className="container mx-auto px-4 py-4 sm:py-6 md:py-12 lg:py-16 space-y-4 sm:space-y-6 md:space-y-12 lg:space-y-16">
         {/* Top Casinos Section */}
