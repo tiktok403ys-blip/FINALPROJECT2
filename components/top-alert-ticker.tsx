@@ -68,7 +68,7 @@ export function TopAlertTicker() {
       setFromPx(start)
       setToPx(end)
       const distance = start - end
-      const pxPerSec = 22
+      const pxPerSec = 26
       const d = Math.max(8, Math.ceil(distance / pxPerSec))
       setDurationSec(d)
       setAnimate(false)
@@ -109,7 +109,7 @@ export function TopAlertTicker() {
       setFromPx(start)
       setToPx(end)
       const distance = start - end // total px to travel
-      const pxPerSec = 22 // slower target speed
+      const pxPerSec = 26 // slightly faster but still smooth
       const d = Math.max(8, Math.ceil(distance / pxPerSec))
       setDurationSec(d)
       // Restart animation after measurement with latest CSS vars
@@ -194,6 +194,7 @@ export function TopAlertTicker() {
         /* Override reduce-motion global rule specifically for ticker */
         .ticker-anim { will-change: transform; transform: translateX(var(--from)); }
         .ticker-anim-on { animation-name: ticker-slide !important; animation-duration: var(--dur) !important; animation-timing-function: linear !important; animation-play-state: running !important; animation-fill-mode: both !important; }
+        .ticker-anim-on:hover { animation-play-state: paused !important; }
         .ticker-once { animation-iteration-count: 1 !important; }
         .ticker-infinite { animation-iteration-count: infinite !important; }
         @media (prefers-reduced-motion: reduce) {
