@@ -56,9 +56,10 @@ export function TopAlertTicker() {
       const d = Math.max(8, Math.ceil(distance / pxPerSec))
       setDurationSec(d)
     }
-    measure()
+    // ukur setelah paint agar layout sudah stabil
+    const raf = requestAnimationFrame(measure)
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
   }, [idx, enabled])
 
   // Advance to next item when animation completes
@@ -88,8 +89,8 @@ export function TopAlertTicker() {
             }}
           >
             {current.href ? (
-              <Link ref={textRef as any} href={current.href} className="px-4 inline-block underline-offset-4 hover:underline">
-                {current.text}
+              <Link href={current.href} className="px-4 inline-block underline-offset-4 hover:underline">
+                <span ref={textRef}>{current.text}</span>
               </Link>
             ) : (
               <span ref={textRef} className="px-4 inline-block">{current.text}</span>
