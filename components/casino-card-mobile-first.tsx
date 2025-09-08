@@ -61,14 +61,13 @@ export function CasinoCardMobileFirst({ casino, rank }: CasinoCardMobileFirstPro
             style={{ backgroundColor: casino.placeholder_bg_color || '#1f2937' }}
           >
             {casino.logo_url ? (
-              <div className="relative">
+              <div className="relative" style={{ width: 144, height: 96 }}>
                 <Image
                   src={casino.logo_url}
                   alt={`${casino.name} logo`}
-                  width={120}
-                  height={80}
-                  className="object-contain filter brightness-110"
+                  fill
                   sizes="(max-width: 640px) 96px, (max-width: 1024px) 120px, 144px"
+                  className="object-contain filter brightness-110"
                   priority={false}
                 />
               </div>
