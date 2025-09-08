@@ -200,6 +200,13 @@ function HomeContentPage() {
         </Button>
       </div>
 
+      {/* Shortcuts */}
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-3">
+          <a href="/admin/home/alerts" className="px-4 py-2 rounded border border-[#00ff88]/30 text-[#00ff88] hover:bg-[#00ff88]/10">Manage Alerts</a>
+        </div>
+      </div>
+
       {/* Search */}
       <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-6">
         <CardContent className="p-4">

@@ -12,6 +12,7 @@ import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
 import RealtimeHomeRefresher from "@/components/realtime-home-refresher"
 import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
+import { TopAlertTicker } from "@/components/top-alert-ticker"
 
 // Revalidate every 6 hours for static content optimization
 export const revalidate = 21600 // 6 hours instead of 1 hour
@@ -88,6 +89,8 @@ export default async function HomePage() {
       <RealtimeHomeRefresher />
       {/* Realtime refresh when casinos change */}
       <RealtimeCasinosRefresher filterHomeFeatured={true} />
+      {/* Lightweight top alert ticker (does not affect hero parallax) */}
+      <TopAlertTicker />
       <HeroBanner
         imageUrl={hero?.image_url || settings?.hero_image_url || undefined}
         title={hero?.title || settings?.hero_title || undefined}
