@@ -679,3 +679,15 @@ html {
   .exclusive-title { font-size: 1rem; }
   @media (min-width: 640px) { .exclusive-title { font-size: 1.125rem; } }
 }
+
+/* Themed text selection highlight (green) */
+@layer base {
+  ::selection {
+    background: rgba(0, 255, 136, 0.35);
+    color: #000000;
+  }
+  ::-moz-selection {
+    background: rgba(0, 255, 136, 0.35);
+    color: #000000;
+  }
+}
