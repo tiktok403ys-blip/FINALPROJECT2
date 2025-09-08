@@ -39,7 +39,7 @@ export function PageHero({ title, description, breadcrumbs, author, date, childr
           src="/casino-bg-pattern.png"
           alt=""
           fill
-          className="object-cover opacity-5 pointer-events-none"
+          className="object-contain opacity-5 pointer-events-none"
           sizes="100vw"
           priority={false}
           placeholder="empty"

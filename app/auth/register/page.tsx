@@ -286,7 +286,7 @@ export default function RegisterPage() {
         {/* Right Side - Image */}
         <div className="hidden lg:flex flex-1 relative">
           <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/50 z-10" />
-          <Image src="/casino-interior.png" alt="Casino Interior" fill className="object-cover" priority />
+          <Image src="/casino-interior.png" alt="Casino Interior" fill className="object-contain" priority />
           <div className="absolute inset-0 flex items-center justify-center z-20">
             <div className="text-center text-white p-8">
               <h2 className="text-4xl font-bold mb-4">Welcome to GuruSingapore</h2>

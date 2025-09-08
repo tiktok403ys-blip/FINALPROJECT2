@@ -117,7 +117,7 @@ export function HeroBanner({
           alt="Hero background"
           fill
           priority={false}
-          className="object-contain md:object-cover object-center"
+          className="object-contain object-center"
           sizes="100vw"
           placeholder="empty"
           onError={(e) => {
