@@ -22,6 +22,7 @@ export function TopAlertTicker() {
   const [toPx, setToPx] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [animVersion, setAnimVersion] = useState(0)
+  const [animate, setAnimate] = useState(false)
 
   // Selalu aktifkan animasi (mengabaikan prefers-reduced-motion sesuai permintaan)
   useEffect(() => { setEnabled(true) }, [])
@@ -68,11 +69,14 @@ export function TopAlertTicker() {
       const pxPerSec = 22 // slower target speed
       const d = Math.max(8, Math.ceil(distance / pxPerSec))
       setDurationSec(d)
-      // Force animation restart after measurement
-      // Flush layout then bump version so animated node remounts with fresh CSS vars
+      // Restart animation after measurement with latest CSS vars
+      setAnimate(false)
       /* eslint-disable-next-line no-unused-expressions */
       c.offsetWidth
-      setAnimVersion(v => v + 1)
+      requestAnimationFrame(() => {
+        setAnimate(true)
+        setAnimVersion(v => v + 1)
+      })
     }
     // ukur setelah paint agar layout sudah stabil
     const raf = requestAnimationFrame(measure)
@@ -99,7 +103,7 @@ export function TopAlertTicker() {
             key={`${current.id}-${idx}-${animVersion}`}
             className="absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform"
             style={{
-              animation: enabled ? 'ticker-slide var(--dur) linear 1' : 'none',
+              animation: animate && enabled ? `ticker-slide var(--dur) linear ${items.length > 1 ? '1' : 'infinite'}` : 'none',
               // custom props used inside keyframes
               // @ts-ignore - custom CSS props
               ['--from' as any]: `${fromPx}px`,
@@ -111,7 +115,7 @@ export function TopAlertTicker() {
           </div>
         </div>
       </div>
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes ticker-slide {
           from { transform: translateX(var(--from)); }
           to { transform: translateX(var(--to)); }
