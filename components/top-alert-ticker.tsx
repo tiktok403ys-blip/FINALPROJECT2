@@ -52,6 +52,48 @@ export function TopAlertTicker() {
     return () => obs.disconnect()
   }, [])
 
+  // Fallback: jika visibilitas tidak terdeteksi, tetap ukur & mulai animasi setelah sedikit penundaan
+  useEffect(() => {
+    if (!enabled) return
+    const c = containerRef.current
+    const t = textRef.current
+    if (!c || !t) return
+    const runMeasure = () => {
+      const containerWidth = c.clientWidth
+      const contentWidth = t.scrollWidth
+      if (containerWidth === 0 || contentWidth === 0) return
+      const start = containerWidth
+      const end = -contentWidth
+      setFromPx(start)
+      setToPx(end)
+      const distance = start - end
+      const pxPerSec = 22
+      const d = Math.max(8, Math.ceil(distance / pxPerSec))
+      setDurationSec(d)
+      setAnimate(false)
+      /* eslint-disable-next-line no-unused-expressions */
+      c.offsetWidth
+      requestAnimationFrame(() => {
+        setAnimate(true)
+        setAnimVersion(v => v + 1)
+      })
+    }
+    const tm = setTimeout(() => {
+      if (!isVisible && !animate) {
+        runMeasure()
+      }
+    }, 400)
+    // Re-measure setelah webfonts siap (jika tersedia)
+    // @ts-ignore
+    if (typeof document !== 'undefined' && (document as any).fonts?.ready) {
+      // @ts-ignore
+      ;(document as any).fonts.ready.then(() => {
+        if (!animate) runMeasure()
+      })
+    }
+    return () => clearTimeout(tm)
+  }, [enabled, isVisible, animate, idx])
+
   // Recompute animation distance and duration per item & on resize/visibility
   useEffect(() => {
     if (!enabled || !isVisible) return
@@ -101,14 +143,15 @@ export function TopAlertTicker() {
         <div ref={containerRef} className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
           <div
             key={`${current.id}-${idx}-${animVersion}`}
-            className="absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform"
+            className="absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform ticker-anim"
             style={{
               animation: animate && enabled ? `ticker-slide var(--dur) linear ${items.length > 1 ? '1' : 'infinite'}` : 'none',
               // custom props used inside keyframes
               // @ts-ignore - custom CSS props
               ['--from' as any]: `${fromPx}px`,
               ['--to' as any]: `${toPx}px`,
-              ['--dur' as any]: `${durationSec}s`
+              ['--dur' as any]: `${durationSec}s`,
+              ['--iter' as any]: items.length > 1 ? '1' : 'infinite'
             }}
           >
             <span ref={textRef} className="px-4 inline-block">{current.text}</span>
@@ -119,6 +162,13 @@ export function TopAlertTicker() {
         @keyframes ticker-slide {
           from { transform: translateX(var(--from)); }
           to { transform: translateX(var(--to)); }
+        }
+        /* Override reduce-motion global rule specifically for ticker */
+        .ticker-anim {
+          animation-duration: var(--dur) !important;
+          animation-iteration-count: var(--iter, 1) !important;
+          animation-timing-function: linear !important;
+          animation-play-state: running !important;
         }
       `}</style>
     </div>
