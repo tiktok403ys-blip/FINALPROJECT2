@@ -47,7 +47,7 @@ export function TopAlertTicker() {
     if (!node) return
     const obs = new IntersectionObserver((entries) => {
       entries.forEach(e => setIsVisible(e.isIntersecting))
-    }, { threshold: 0.1 })
+    }, { threshold: 0, root: null, rootMargin: '0px' })
     obs.observe(node)
     return () => obs.disconnect()
   }, [])
@@ -143,15 +143,13 @@ export function TopAlertTicker() {
         <div ref={containerRef} className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
           <div
             key={`${current.id}-${idx}-${animVersion}`}
-            className="absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform ticker-anim"
+            className={`absolute top-0 left-0 flex items-center whitespace-nowrap will-change-transform ticker-anim ${animate && enabled ? 'ticker-anim-on' : ''} ${items.length > 1 ? 'ticker-once' : 'ticker-infinite'}`}
             style={{
-              animation: animate && enabled ? `ticker-slide var(--dur) linear ${items.length > 1 ? '1' : 'infinite'}` : 'none',
               // custom props used inside keyframes
               // @ts-ignore - custom CSS props
               ['--from' as any]: `${fromPx}px`,
               ['--to' as any]: `${toPx}px`,
-              ['--dur' as any]: `${durationSec}s`,
-              ['--iter' as any]: items.length > 1 ? '1' : 'infinite'
+              ['--dur' as any]: `${durationSec}s`
             }}
           >
             <span ref={textRef} className="px-4 inline-block">{current.text}</span>
@@ -164,12 +162,10 @@ export function TopAlertTicker() {
           to { transform: translateX(var(--to)); }
         }
         /* Override reduce-motion global rule specifically for ticker */
-        .ticker-anim {
-          animation-duration: var(--dur) !important;
-          animation-iteration-count: var(--iter, 1) !important;
-          animation-timing-function: linear !important;
-          animation-play-state: running !important;
-        }
+        .ticker-anim { will-change: transform; }
+        .ticker-anim-on { animation-name: ticker-slide !important; animation-duration: var(--dur) !important; animation-timing-function: linear !important; animation-play-state: running !important; }
+        .ticker-once { animation-iteration-count: 1 !important; }
+        .ticker-infinite { animation-iteration-count: infinite !important; }
       `}</style>
     </div>
   )
