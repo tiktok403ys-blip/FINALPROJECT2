@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
@@ -15,6 +15,11 @@ export function TopAlertTicker() {
   const [items, setItems] = useState<AlertItem[]>([])
   const [idx, setIdx] = useState(0)
   const [enabled, setEnabled] = useState(true)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const textRef = useRef<HTMLSpanElement | null>(null)
+  const [durationSec, setDurationSec] = useState(14)
+  const [fromPx, setFromPx] = useState(0)
+  const [toPx, setToPx] = useState(0)
 
   useEffect(() => {
     const rm = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -38,11 +43,35 @@ export function TopAlertTicker() {
     return () => { active = false }
   }, [supabase])
 
+  // Recompute animation distance and duration per item & on resize
+  useEffect(() => {
+    if (!enabled) return
+    const measure = () => {
+      const c = containerRef.current
+      const t = textRef.current
+      if (!c || !t) return
+      const containerWidth = c.clientWidth
+      const contentWidth = t.scrollWidth
+      const start = containerWidth // start just outside the right edge
+      const end = -contentWidth // finish outside the left edge
+      setFromPx(start)
+      setToPx(end)
+      const distance = start - end // total px to travel
+      const pxPerSec = 35 // target speed (slower = bigger number)
+      const d = Math.max(8, Math.ceil(distance / pxPerSec))
+      setDurationSec(d)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [idx, enabled])
+
+  // Advance to next item when animation completes
   useEffect(() => {
     if (!enabled || items.length <= 1) return
-    const timer = setInterval(() => setIdx(i => (i + 1) % items.length), 4000)
-    return () => clearInterval(timer)
-  }, [items.length, enabled])
+    const t = setTimeout(() => setIdx(i => (i + 1) % items.length), (durationSec + 0.5) * 1000)
+    return () => clearTimeout(t)
+  }, [durationSec, items.length, enabled])
 
   const current = useMemo(() => items[idx] || null, [items, idx])
   if (!current) return null
@@ -50,29 +79,33 @@ export function TopAlertTicker() {
   return (
     <div className="w-full bg-[#0a0f0c] border-y border-[#00ff88]/20 text-[#00ff88]">
       <div className="container mx-auto px-0">
-        <div className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
+        <div ref={containerRef} className={`overflow-hidden relative h-6`} aria-live={enabled ? 'polite' : 'off'}>
           <div
-            key={current.id}
-            className="whitespace-nowrap absolute inset-0 flex items-center"
+            key={`${current.id}-${idx}`}
+            className="absolute inset-0 flex items-center"
             style={{
-              transform: enabled ? 'translateX(0)' : 'none',
-              animation: enabled ? 'ticker-slide 14s linear infinite' : 'none'
+              animation: enabled ? 'ticker-slide var(--dur) linear 1' : 'none',
+              // custom props used inside keyframes
+              // @ts-ignore - custom CSS props
+              ['--from' as any]: `${fromPx}px`,
+              ['--to' as any]: `${toPx}px`,
+              ['--dur' as any]: `${durationSec}s`
             }}
           >
             {current.href ? (
-              <Link href={current.href} className="px-4 inline-block underline-offset-4 hover:underline">
+              <Link ref={textRef as any} href={current.href} className="px-4 inline-block underline-offset-4 hover:underline">
                 {current.text}
               </Link>
             ) : (
-              <span className="px-4 inline-block">{current.text}</span>
+              <span ref={textRef} className="px-4 inline-block">{current.text}</span>
             )}
           </div>
         </div>
       </div>
       <style jsx>{`
         @keyframes ticker-slide {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
+          from { transform: translateX(var(--from)); }
+          to { transform: translateX(var(--to)); }
         }
       `}</style>
     </div>
