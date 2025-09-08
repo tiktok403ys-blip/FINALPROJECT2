@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 // Simple Typewriter Effect Component
 const TypewriterText = ({ text, speed = 100 }: { text: string; speed?: number }) => {
@@ -53,6 +53,66 @@ export function HeroBanner({
   ctaSecondaryText = "Best Bonuses",
   ctaSecondaryLink = "/bonuses",
 }: HeroProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const bgRef = useRef<HTMLDivElement | null>(null)
+  const rafRef = useRef<number | null>(null)
+  const [parallaxEnabled, setParallaxEnabled] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const isCoarse = window.matchMedia('(pointer: coarse)')
+    const isWide = () => window.innerWidth >= 1024 // desktop only
+
+    const shouldEnable = !reduceMotion.matches && !isCoarse.matches && isWide()
+    setParallaxEnabled(shouldEnable)
+
+    const handleChange = () => setParallaxEnabled(!reduceMotion.matches && !isCoarse.matches && isWide())
+    reduceMotion.addEventListener?.('change', handleChange)
+    isCoarse.addEventListener?.('change', handleChange)
+    window.addEventListener('resize', handleChange)
+
+    return () => {
+      reduceMotion.removeEventListener?.('change', handleChange)
+      isCoarse.removeEventListener?.('change', handleChange)
+      window.removeEventListener('resize', handleChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!parallaxEnabled) {
+      if (bgRef.current) bgRef.current.style.transform = ''
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      return
+    }
+
+    const update = () => {
+      if (!containerRef.current || !bgRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const vh = window.innerHeight
+      // Only update while visible to save work
+      if (rect.bottom < 0 || rect.top > vh) return
+
+      const factor = 0.15 // subtle parallax speed
+      const maxShift = 60 // clamp (px)
+      const shift = Math.max(Math.min(-rect.top * factor, maxShift), -maxShift)
+      bgRef.current.style.transform = `translate3d(0, ${shift}px, 0)`
+    }
+
+    const onScroll = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(update)
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    // initial position
+    onScroll()
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [parallaxEnabled])
   // Custom smooth scroll function with enhanced smoothness
   const smoothScrollTo = (element: Element, duration: number = 1500) => {
     const targetPosition = element.getBoundingClientRect().top + window.pageYOffset;
@@ -109,15 +169,15 @@ export function HeroBanner({
     }
   };
   return (
-    <div className="relative h-[60vh] md:h-[70vh] lg:h-screen flex items-center justify-center overflow-hidden">
+    <div ref={containerRef} className="relative h-[60vh] md:h-[70vh] lg:h-screen flex items-center justify-center overflow-hidden">
       {/* Optimized Background Image with Next.js Image */}
-      <div className="absolute inset-0">
+      <div ref={bgRef} className="absolute inset-0 will-change-transform">
         <Image
           src={imageUrl || "/placeholder-714xv.png"}
           alt="Hero background"
           fill
           priority={false}
-          className="object-contain object-center"
+          className="object-cover object-center"
           sizes="100vw"
           placeholder="empty"
           onError={(e) => {
