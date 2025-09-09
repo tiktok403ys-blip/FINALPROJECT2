@@ -27,15 +27,13 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     // Validate UUIDs and normalize IDs
-    const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
-    if (!isUuid(String(body.reported_content_id))) {
-      return NextResponse.json({ success: false, error: "reported_content_id must be a valid UUID" }, { status: 400 })
-    }
+    const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v))
     const reporterInput = String(body.reporter_id || "").trim()
     const reporterId = isUuid(reporterInput) ? reporterInput : (user?.id ?? reporterInput)
+    const reportedContentId = isUuid(body.reported_content_id) ? String(body.reported_content_id) : (globalThis.crypto?.randomUUID?.() || `${Date.now()}-0000-4000-8000-000000000000`)
 
     // Validate
-    const required = ["title", "description", "reporter_id", "reported_content_type", "reported_content_id", "reason"]
+    const required = ["title", "description", "reported_content_type", "reason"]
     for (const k of required) {
       if (!body?.[k] || String(body[k]).trim() === "") {
         return NextResponse.json({ success: false, error: `Missing field: ${k}` }, { status: 400 })
@@ -54,7 +52,7 @@ export async function POST(req: Request) {
       description: sanitizeHtml(String(body.description)),
       reporter_id: reporterId,
       reported_content_type: sanitizeHtml(String(body.reported_content_type)),
-      reported_content_id: String(body.reported_content_id),
+      reported_content_id: reportedContentId,
       reason: sanitizeHtml(String(body.reason)),
       category: body.category ? sanitizeHtml(String(body.category)) : null,
       priority: (body.priority ?? "medium") as "low" | "medium" | "high" | "urgent",
