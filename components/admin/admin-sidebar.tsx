@@ -108,6 +108,7 @@ export function AdminSidebar() {
   const [isMobile, setIsMobile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [homeMenuOpen, setHomeMenuOpen] = useState(false)
+  const [reportsMenuOpen, setReportsMenuOpen] = useState(false)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -299,6 +300,59 @@ export function AdminSidebar() {
                         }}
                       >
                         Featured Casinos
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            // Special handling for Reports dropdown behavior
+            if (item.href === '/admin/reports') {
+              return (
+                <div key={item.href} className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-between text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                      (isActive || reportsMenuOpen) && "bg-white/20 text-white",
+                      collapsed && "px-2"
+                    )}
+                    onClick={() => setReportsMenuOpen((v) => !v)}
+                  >
+                    <div className="flex items-center">
+                      <IconComponent className={cn("w-4 h-4", (!collapsed || isMobile) && "mr-3")} />
+                      {(!collapsed || isMobile) && (
+                        <span className="truncate">Reports</span>
+                      )}
+                    </div>
+                    {(!collapsed || isMobile) && <ChevronDown className={cn("w-4 h-4 transition-transform", reportsMenuOpen && "rotate-180")} />}
+                  </Button>
+                  {reportsMenuOpen && (!collapsed || isMobile) && (
+                    <div className="ml-7 space-y-1">
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/reports' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/reports')
+                        }}
+                      >
+                        Reports Complaint
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/reports/list' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/reports/list')
+                        }}
+                      >
+                        Reports List
                       </Button>
                     </div>
                   )}
