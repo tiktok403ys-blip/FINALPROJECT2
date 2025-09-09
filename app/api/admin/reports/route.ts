@@ -26,13 +26,14 @@ export async function POST(req: Request) {
     // Current admin user (for audit trail)
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Validate UUIDs and normalize IDs
+    // Normalize IDs; auto-generate where appropriate to reduce friction
     const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v))
-    const reporterInput = String(body.reporter_id || "").trim()
-    const reporterId = isUuid(reporterInput) ? reporterInput : (user?.id ?? reporterInput)
-    const reportedContentId = isUuid(body.reported_content_id) ? String(body.reported_content_id) : (globalThis.crypto?.randomUUID?.() || `${Date.now()}-0000-4000-8000-000000000000`)
+    const reporterId = user?.id ?? (isUuid(body?.reporter_id) ? String(body.reporter_id) : null)
+    const reportedContentId = isUuid(body?.reported_content_id)
+      ? String(body.reported_content_id)
+      : (globalThis.crypto?.randomUUID?.() || `${Date.now()}-0000-4000-8000-000000000000`)
 
-    // Validate
+    // Validate (server will auto-fill reporter_id / reported_content_id if absent)
     const required = ["title", "description", "reported_content_type", "reason"]
     for (const k of required) {
       if (!body?.[k] || String(body[k]).trim() === "") {
@@ -47,22 +48,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Description too long (max 5000 chars)" }, { status: 400 })
     }
 
-    const data = {
+    // Map UI statuses to DB baseline if needed (older schema uses reviewing/dismissed)
+    const normalizeStatus = (s: any) => {
+      const v = String(s ?? "pending").toLowerCase()
+      if (v === "investigating") return "reviewing"
+      if (v === "closed") return "dismissed"
+      return v
+    }
+
+    // Minimal, broadly compatible payload (avoid columns that might not exist on some DBs)
+    const data: any = {
       title: sanitizeHtml(String(body.title)),
       description: sanitizeHtml(String(body.description)),
       reporter_id: reporterId,
       reported_content_type: sanitizeHtml(String(body.reported_content_type)),
       reported_content_id: reportedContentId,
       reason: sanitizeHtml(String(body.reason)),
-      category: body.category ? sanitizeHtml(String(body.category)) : null,
       priority: (body.priority ?? "medium") as "low" | "medium" | "high" | "urgent",
-      amount_disputed: body.amount_disputed !== undefined && body.amount_disputed !== null && String(body.amount_disputed) !== ""
-        ? Number(body.amount_disputed)
-        : null,
-      contact_method: (body.contact_method ?? "email") as "email" | "phone" | "both",
-      casino_name: body.casino_name ? sanitizeHtml(String(body.casino_name)) : null,
-      status: (body.status ?? "pending") as "pending" | "investigating" | "resolved" | "closed",
-      admin_id: user?.id ?? null,
+      status: normalizeStatus(body.status),
     }
 
     const { data: inserted, error } = await supabase.from("reports").insert([data]).select().single()
