@@ -29,7 +29,16 @@ export default function AdminReportsListPage() {
   )
 
   const statusBadge = (s: StatusType) =>
-    s === "scam" ? "bg-red-500 text-white" : "bg-yellow-500 text-black"
+    s === "scam" ? "bg-red-500 text-white" : "bg-yellow-500 text-white"
+
+  const accentBorder = (s: StatusType) =>
+    s === "scam" ? "border-l-red-500" : "border-l-yellow-400"
+
+  const gradientBg = (s: StatusType) =>
+    s === "scam" ? "from-red-500/10 via-transparent to-transparent" : "from-yellow-400/10 via-transparent to-transparent"
+
+  const ringStyle = (s: StatusType) =>
+    s === "scam" ? "ring-red-500/30 text-red-400" : "ring-yellow-400/30 text-yellow-300"
 
   const statusIcon = (s: StatusType) =>
     s === "scam" ? <ShieldAlert className="w-4 h-4 mr-1.5" /> : <Flag className="w-4 h-4 mr-1.5" />
@@ -145,11 +154,25 @@ export default function AdminReportsListPage() {
           <GlassCard className="p-6 text-white/70">Loading...</GlassCard>
         )}
         {!loading && items.map((rec) => (
-          <GlassCard key={rec.id} className="p-6 flex items-center justify-between">
-            <div className="text-white font-medium">{rec.casino_name}</div>
-            <div className="flex items-center gap-3">
-              <Badge className={`${statusBadge(rec.status)} flex items-center`}>{statusIcon(rec.status)}{rec.status.charAt(0).toUpperCase()+rec.status.slice(1)}</Badge>
-              <Button variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(rec.id)}>Delete</Button>
+          <GlassCard
+            key={rec.id}
+            className={`relative overflow-hidden group p-5 md:p-6 border-l-4 ${accentBorder(rec.status)} transition-transform hover:-translate-y-0.5`}
+          >
+            <div className={`pointer-events-none absolute inset-0 bg-gradient-to-r ${gradientBg(rec.status)}`} />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <span className={`w-10 h-10 rounded-full flex items-center justify-center ring-1 ${ringStyle(rec.status)} bg-white/5`}>
+                  {statusIcon(rec.status)}
+                </span>
+                <div className="min-w-0">
+                  <div className="text-white font-semibold text-base md:text-lg truncate">{rec.casino_name}</div>
+                  <div className="text-xs text-white/50 mt-0.5">Public Status</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge className={`${statusBadge(rec.status)} flex items-center px-3 py-1.5`}>{statusIcon(rec.status)}{rec.status.charAt(0).toUpperCase()+rec.status.slice(1)}</Badge>
+                <Button variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(rec.id)}>Delete</Button>
+              </div>
             </div>
           </GlassCard>
         ))}
