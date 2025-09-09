@@ -88,14 +88,14 @@ export default function ReportsPage() {
         </div>
 
         {/* Submit Report Section - Moved to Top */}
-        <div className="text-center mb-16 py-12 bg-gradient-to-r from-gray-900/50 to-black/50 rounded-2xl border border-white/10">
-          <h2 className="text-4xl font-bold text-white mb-4">Have an Issue with a Casino?</h2>
-          <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+        <div className="text-center mb-10 md:mb-16 py-6 md:py-12 bg-gradient-to-r from-gray-900/50 to-black/50 rounded-2xl border border-white/10">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4">Have an Issue with a Casino?</h2>
+          <p className="text-gray-400 text-sm md:text-lg mb-6 md:mb-8 max-w-xl md:max-w-2xl mx-auto">
             Submit your complaint and our expert team will investigate and help resolve the issue.
           </p>
 
           <ReportDialog>
-            <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 px-8 py-3 text-lg font-semibold" size="lg">
+            <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 px-5 py-2.5 md:px-8 md:py-3 text-base md:text-lg font-semibold">
               <Flag className="w-5 h-5 mr-2" />
               Submit a Report
             </Button>
