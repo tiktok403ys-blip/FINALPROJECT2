@@ -26,6 +26,14 @@ export async function POST(req: Request) {
     // Current admin user (for audit trail)
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Validate UUIDs and normalize IDs
+    const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
+    if (!isUuid(String(body.reported_content_id))) {
+      return NextResponse.json({ success: false, error: "reported_content_id must be a valid UUID" }, { status: 400 })
+    }
+    const reporterInput = String(body.reporter_id || "").trim()
+    const reporterId = isUuid(reporterInput) ? reporterInput : (user?.id ?? reporterInput)
+
     // Validate
     const required = ["title", "description", "reporter_id", "reported_content_type", "reported_content_id", "reason"]
     for (const k of required) {
@@ -44,7 +52,7 @@ export async function POST(req: Request) {
     const data = {
       title: sanitizeHtml(String(body.title)),
       description: sanitizeHtml(String(body.description)),
-      reporter_id: String(body.reporter_id),
+      reporter_id: reporterId,
       reported_content_type: sanitizeHtml(String(body.reported_content_type)),
       reported_content_id: String(body.reported_content_id),
       reason: sanitizeHtml(String(body.reason)),
@@ -62,7 +70,12 @@ export async function POST(req: Request) {
     const { data: inserted, error } = await supabase.from("reports").insert([data]).select().single()
     if (error) {
       console.error("Admin create report error:", error)
-      return NextResponse.json({ success: false, error: "Failed to create report" }, { status: 500 })
+      const message =
+        (error as any)?.message ||
+        (error as any)?.hint ||
+        (error as any)?.details ||
+        "Failed to create report"
+      return NextResponse.json({ success: false, error: message }, { status: 500 })
     }
 
     // Optional analytics (best effort)
