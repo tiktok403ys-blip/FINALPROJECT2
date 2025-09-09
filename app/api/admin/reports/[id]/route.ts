@@ -27,12 +27,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     const updateFields: any = {}
 
     if (body.status) {
-      const allowed = ["pending", "investigating", "resolved", "closed"] as const
-      if (!allowed.includes(body.status)) {
+      const uiAllowed = ["pending", "investigating", "resolved", "closed"] as const
+      if (!uiAllowed.includes(body.status)) {
         return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 })
       }
-      updateFields.status = body.status
-      if (body.status === "resolved") updateFields.resolved_at = new Date().toISOString()
+      const map = (s: string) => s === "investigating" ? "reviewing" : s === "closed" ? "dismissed" : s
+      const dbStatus = map(body.status)
+      updateFields.status = dbStatus
+      if (dbStatus === "resolved") updateFields.resolved_at = new Date().toISOString()
     }
 
     if (body.admin_notes !== undefined) updateFields.admin_notes = sanitizeHtml(String(body.admin_notes))

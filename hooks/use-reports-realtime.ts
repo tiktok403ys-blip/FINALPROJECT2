@@ -58,29 +58,29 @@ export function useReportsRealtime(limit: number = 10) {
 
   const supabase = createClient()
 
-  // Calculate time elapsed for a report
+  // Calculate time elapsed for a report (stable tick from base timestamp)
   const calculateTimeElapsed = useCallback((createdAt: string, resolvedAt?: string | null) => {
-    const created = new Date(createdAt)
-    const endTime = resolvedAt ? new Date(resolvedAt) : new Date()
-    const diffMs = endTime.getTime() - created.getTime()
-    
+    const created = new Date(createdAt).getTime()
+    const end = resolvedAt ? new Date(resolvedAt).getTime() : Date.now()
+    const diffMs = Math.max(0, end - created)
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
-    
     return { days, hours, minutes, seconds }
   }, [])
 
   // Get status display text
   const getStatusDisplay = useCallback((status: string) => {
-    switch (status) {
-      case 'pending': return 'Waiting for review'
-      case 'investigating': return 'Under investigation'
-      case 'resolved': return 'Successfully resolved'
-      case 'closed': return 'Case closed'
-      default: return status
-    }
+    // Normalize DB variants -> UI
+    const s = (status || '').toLowerCase()
+    if (s === 'reviewing') return 'Under investigation'
+    if (s === 'dismissed') return 'Case closed'
+    if (s === 'investigating') return 'Under investigation'
+    if (s === 'closed') return 'Case closed'
+    if (s === 'pending') return 'Waiting for review'
+    if (s === 'resolved') return 'Successfully resolved'
+    return status
   }, [])
 
   // Format date for display
@@ -143,18 +143,15 @@ export function useReportsRealtime(limit: number = 10) {
     }
   }, [supabase])
 
-  // Update timers every second for active reports
+  // Update timers every second for active reports (single interval, stable calculation)
   useEffect(() => {
-    const timer = setInterval(() => {
-      setReports(prevReports => 
-        prevReports.map(report => ({
-          ...report,
-          timeElapsed: calculateTimeElapsed(report.created_at, report.resolved_at)
-        }))
-      )
+    const id = setInterval(() => {
+      setReports(prev => prev.map(r => ({
+        ...r,
+        timeElapsed: calculateTimeElapsed(r.created_at, r.resolved_at)
+      })))
     }, 1000)
-
-    return () => clearInterval(timer)
+    return () => clearInterval(id)
   }, [calculateTimeElapsed])
 
   // Setup realtime subscription

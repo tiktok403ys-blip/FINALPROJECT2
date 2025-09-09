@@ -112,8 +112,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 })
     }
 
-    const updateFields: any = { status }
-    if (status === "resolved") updateFields.resolved_at = new Date().toISOString()
+    const map = (s: string) => s === "investigating" ? "reviewing" : s === "closed" ? "dismissed" : s
+    const dbStatus = map(status)
+    const updateFields: any = { status: dbStatus }
+    if (dbStatus === "resolved") updateFields.resolved_at = new Date().toISOString()
 
     const { error } = await supabase.from("reports").update(updateFields).in("id", ids)
     if (error) {
