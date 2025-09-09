@@ -115,7 +115,7 @@ export async function PATCH(req: Request) {
     const map = (s: string) => s === "investigating" ? "reviewing" : s === "closed" ? "dismissed" : s
     const dbStatus = map(status)
     const updateFields: any = { status: dbStatus }
-    if (dbStatus === "resolved") updateFields.resolved_at = new Date().toISOString()
+    if (dbStatus === "resolved" || dbStatus === "dismissed") updateFields.resolved_at = new Date().toISOString()
 
     const { error } = await supabase.from("reports").update(updateFields).in("id", ids)
     if (error) {

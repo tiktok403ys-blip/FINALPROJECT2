@@ -34,7 +34,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       const map = (s: string) => s === "investigating" ? "reviewing" : s === "closed" ? "dismissed" : s
       const dbStatus = map(body.status)
       updateFields.status = dbStatus
-      if (dbStatus === "resolved") updateFields.resolved_at = new Date().toISOString()
+      if (dbStatus === "resolved" || dbStatus === "dismissed") updateFields.resolved_at = new Date().toISOString()
     }
 
     if (body.admin_notes !== undefined) updateFields.admin_notes = sanitizeHtml(String(body.admin_notes))

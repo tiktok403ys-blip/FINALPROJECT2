@@ -5,7 +5,7 @@ import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { ReportDialog } from "@/components/report-dialog"
-import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass } from "lucide-react"
+import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass, CheckCircle, XCircle } from "lucide-react"
 import { Footer } from "@/components/footer"
 import { useReportsRealtime } from "@/hooks/use-reports-realtime"
 
@@ -19,14 +19,24 @@ export default function ReportsPage() {
       case "pending":
         return "bg-blue-500 text-white"
       case "investigating":
+      case "reviewing":
         return "bg-yellow-500 text-black"
       case "resolved":
         return "bg-green-500 text-white"
       case "closed":
+      case "dismissed":
         return "bg-red-500 text-white"
       default:
         return "bg-gray-500 text-white"
     }
+  }
+
+  const renderStatusIcon = (status: string) => {
+    const s = (status || "").toLowerCase()
+    if (s === "resolved") return <CheckCircle className="w-12 h-12 mb-3" />
+    if (s === "closed" || s === "dismissed") return <XCircle className="w-12 h-12 mb-3" />
+    // pending / investigating / reviewing / default
+    return <Hourglass className="w-12 h-12 mb-3" />
   }
 
   return (
@@ -43,7 +53,7 @@ export default function ReportsPage() {
 
       <div className="container mx-auto px-4 py-16">
         {/* Stats Section */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
           <GlassCard className="p-6 text-center">
             <Shield className="w-8 h-8 text-[#00ff88] mx-auto mb-2" />
             <div className="text-2xl font-bold text-white">
@@ -112,8 +122,8 @@ export default function ReportsPage() {
                   <div className="flex flex-col lg:flex-row">
                     {/* Left Side - Status */}
                     <div className="lg:w-1/4 bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
-                      <div className="text-center">
-                        <Hourglass className="w-12 h-12 mx-auto mb-3" />
+                      <div className="h-full flex flex-col items-center justify-center text-center">
+                        {renderStatusIcon(report.status)}
                         <div className="text-sm font-medium mb-2">Current status</div>
                         <div className="text-lg font-bold mb-4">{report.statusDisplay}</div>
 
