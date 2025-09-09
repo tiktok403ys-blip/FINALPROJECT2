@@ -55,7 +55,7 @@ export default function ReportsListPage() {
   const statusStyles = (s: ListItem['status']) =>
     s === 'scam'
       ? 'bg-red-500 text-white border-red-400/40'
-      : 'bg-yellow-500 text-black border-yellow-400/40'
+      : 'bg-yellow-500 text-white border-yellow-400/40'
 
   const statusIcon = (s: ListItem['status']) =>
     s === 'scam' ? <ShieldAlert className="w-4 h-4 mr-1.5" /> : <Flag className="w-4 h-4 mr-1.5" />

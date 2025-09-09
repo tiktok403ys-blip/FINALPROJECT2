@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,7 +34,7 @@ export default function AdminReportsListPage() {
   const statusIcon = (s: StatusType) =>
     s === "scam" ? <ShieldAlert className="w-4 h-4 mr-1.5" /> : <Flag className="w-4 h-4 mr-1.5" />
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch("/api/admin/reports-list", { cache: "no-store" })
@@ -46,7 +46,7 @@ export default function AdminReportsListPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   const handleCreate = async () => {
     try {
@@ -84,7 +84,7 @@ export default function AdminReportsListPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [fetchData])
 
   return (
     <div className="min-h-screen">
