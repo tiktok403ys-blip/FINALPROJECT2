@@ -58,7 +58,7 @@ export default function ReportsListPage() {
       : 'bg-yellow-500 text-white border-yellow-400/40'
 
   const statusIcon = (s: ListItem['status']) =>
-    s === 'scam' ? <ShieldAlert className="w-4 h-4 mr-1.5" /> : <Flag className="w-4 h-4 mr-1.5" />
+    s === 'scam' ? <ShieldAlert className="w-5 h-5" /> : <Flag className="w-5 h-5" />
 
   const statusLabel = (s: ListItem['status']) => (s.charAt(0).toUpperCase() + s.slice(1))
 
@@ -106,7 +106,7 @@ export default function ReportsListPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge className={`${statusStyles(item.status)} flex items-center px-3 py-1.5`}>
+                  <Badge className={`${statusStyles(item.status)} flex items-center gap-1.5 px-3 py-1.5`}>
                     {statusIcon(item.status)}
                     {statusLabel(item.status)}
                   </Badge>
