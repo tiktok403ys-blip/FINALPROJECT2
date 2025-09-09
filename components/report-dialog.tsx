@@ -128,16 +128,15 @@ export function ReportDialog({ children, casinoId, casinoName }: ReportDialogPro
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
-                         <div className="space-y-2">
-               <label className="text-sm font-medium text-white">Reporter ID *</label>
-               <Input
-                 value={formData.reporter_id}
-                 onChange={(e) => setFormData({ ...formData, reporter_id: e.target.value })}
-                 className="bg-white/5 border-white/10 text-white"
-                 placeholder="Enter reporter ID"
-                 required
-               />
-             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">Reporter ID (optional)</label>
+              <Input
+                value={formData.reporter_id}
+                onChange={(e) => setFormData({ ...formData, reporter_id: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+                placeholder="Enter reporter ID (optional)"
+              />
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-white">Contact Method</label>
               <Select

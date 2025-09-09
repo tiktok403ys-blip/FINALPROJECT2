@@ -18,6 +18,7 @@ import {
   Settings,
   ChevronDown,
   Shield,
+  Flag,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/components/auth-provider"
@@ -344,7 +345,16 @@ export function Navbar() {
       ]
     },
     { name: "News", href: "/news", icon: Newspaper },
-    { name: "Reports", href: "/reports", icon: FileText },
+    {
+      name: "Reports Public",
+      href: "/reports",
+      icon: FileText,
+      hasDropdown: true,
+      dropdownItems: [
+        { name: "Complaint", href: "/reports", icon: Flag, description: "Submit or view complaints" },
+        { name: "List Report", href: "/reports/list", icon: FileText, description: "Casino list statuses" },
+      ]
+    },
   ]
 
   const isSuperAdmin = profile?.role === "super_admin"

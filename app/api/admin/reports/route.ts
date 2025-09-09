@@ -23,6 +23,9 @@ export async function POST(req: Request) {
     const supabase = await requireAdmin()
     const body = await req.json()
 
+    // Current admin user (for audit trail)
+    const { data: { user } } = await supabase.auth.getUser()
+
     // Validate
     const required = ["title", "description", "reporter_id", "reported_content_type", "reported_content_id", "reason"]
     for (const k of required) {
@@ -53,6 +56,7 @@ export async function POST(req: Request) {
       contact_method: (body.contact_method ?? "email") as "email" | "phone" | "both",
       casino_name: body.casino_name ? sanitizeHtml(String(body.casino_name)) : null,
       status: (body.status ?? "pending") as "pending" | "investigating" | "resolved" | "closed",
+      admin_id: user?.id ?? null,
     }
 
     const { data: inserted, error } = await supabase.from("reports").insert([data]).select().single()
