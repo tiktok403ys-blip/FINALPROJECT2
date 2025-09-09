@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from '@/components/ui/toast'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 // PIN dialogs removed
 import { ProtectedRoute } from '@/components/admin/protected-route'
@@ -44,7 +44,7 @@ export default function AdminLayout({
         
         {/* PIN dialogs removed */}
         
-        <Toaster position="top-right" />
+        <Toaster />
       </ErrorBoundary>
     </ProtectedRoute>
   )

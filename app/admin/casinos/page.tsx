@@ -14,7 +14,7 @@ import { useOptimizedQuery, useOptimizedMutation } from '@/hooks/use-optimized-q
 import { TableSkeleton } from '@/components/admin/loading-skeleton'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { CasinoCrudManager } from '@/components/admin/casino-crud-manager'
-import { SimpleToastContainer, toast } from '@/components/ui/simple-toast'
+import { useToast } from '@/hooks/use-toast'
 import {
   Building2,
   Plus,
@@ -54,6 +54,7 @@ interface Casino {
 
 function CasinosContentPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const { success, error: toastError, warning } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [formData, setFormData] = useState({
@@ -117,11 +118,11 @@ function CasinosContentPage() {
   const { mutate, loading: mutationLoading } = useOptimizedMutation<Casino>({
     table: 'casinos',
     onSuccess: () => {
-      toast.success('Operation completed successfully', 'Casino data has been updated')
+      success('Operation completed successfully', 'Casino data has been updated')
       refetch()
     },
     onError: (error) => {
-              toast.error('Save Failed', error.message)
+      toastError('Save Failed', error.message)
     },
     invalidateQueries: [`casinos-${searchTerm}-${statusFilter}`]
   })
@@ -131,7 +132,7 @@ function CasinosContentPage() {
   const handleSave = async () => {
     try {
       if (!formData.name.trim() || !formData.description.trim()) {
-        toast.error('Validation Error', 'Please fill in the required fields')
+        toastError('Validation Error', 'Please fill in the required fields')
         return
       }
 
@@ -166,7 +167,7 @@ function CasinosContentPage() {
           .eq('id', editingId)
 
         if (error) throw error
-        toast.success('Casino Updated', 'Changes have been saved successfully')
+        success('Casino Updated', 'Changes have been saved successfully')
       } else {
         // Create new casino
         const supabaseClient = supabase()
@@ -190,14 +191,14 @@ function CasinosContentPage() {
           .insert([{ slug, ...payload }])
 
         if (error) throw error
-        toast.success('Casino Created', 'New casino has been added to the system')
+        success('Casino Created', 'New casino has been added to the system')
       }
 
       resetForm()
       refetch()
     } catch (error) {
       console.error('Error saving casino:', error)
-      toast.error('Save Failed', 'Unable to save casino data. Please check your connection and try again.')
+      toastError('Save Failed', 'Unable to save casino data. Please check your connection and try again.')
     }
   }
 
@@ -243,11 +244,11 @@ function CasinosContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Casino Deleted', 'Casino has been successfully removed from the system')
+      success('Casino Deleted', 'Casino has been successfully removed from the system')
       refetch()
     } catch (error) {
       console.error('Error deleting casino:', error)
-      toast.error('Delete Failed', 'Unable to delete casino. Please try again or contact support.')
+      toastError('Delete Failed', 'Unable to delete casino. Please try again or contact support.')
     }
   }
 
@@ -260,11 +261,11 @@ function CasinosContentPage() {
         .eq('id', id)
 
       if (error) throw error
-      toast.success('Status Updated', `Casino ${field === 'is_active' ? 'status' : 'featured flag'} has been successfully updated`)
+      success('Status Updated', `Casino ${field === 'is_active' ? 'status' : 'featured flag'} has been successfully updated`)
       refetch()
     } catch (error) {
       console.error('Error updating status:', error)
-      toast.error('Status Update Failed', 'Unable to update casino status. Please try again.')
+      toastError('Status Update Failed', 'Unable to update casino status. Please try again.')
     }
   }
 
@@ -767,7 +768,7 @@ function CasinosContentPage() {
           </CardContent>
         </Card>
       )}
-      <SimpleToastContainer />
+      {/* Toast handled globally via <Toaster /> */}
     </div>
   )
 }
