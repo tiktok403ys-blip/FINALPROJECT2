@@ -34,7 +34,7 @@ export default function ReportsListPage() {
         sectionType="hero"
         fallbackTitle="Public Reports List"
         fallbackDescription="Simple list of casinos with public risk statuses."
-        breadcrumbs={[{ label: 'Reports Public' }, { label: 'List Report' }]}
+        breadcrumbs={[{ label: 'Reports' }, { label: 'List Report' }]}
         author={{ name: 'GuruSingapore Protection Team' }}
         date={new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
       />

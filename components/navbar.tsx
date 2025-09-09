@@ -346,7 +346,7 @@ export function Navbar() {
     },
     { name: "News", href: "/news", icon: Newspaper },
     {
-      name: "Reports Public",
+      name: "Reports",
       href: "/reports",
       icon: FileText,
       hasDropdown: true,
