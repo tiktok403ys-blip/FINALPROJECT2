@@ -1,18 +1,39 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "lucide-react"
-import { useSingleReportRealtime } from "@/hooks/use-reports-realtime"
+import { createClient } from "@/lib/supabase/client"
 
 export default function ReportDetailsModal({ id, onClose }: { id: string; onClose: () => void }) {
-  const { report, loading, error, refresh } = useSingleReportRealtime(id)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [report, setReport] = useState<any | null>(null)
 
   useEffect(() => {
-    // refresh on mount to ensure fresh data
-    refresh()
-  }, [refresh])
+    const supabase = createClient()
+    let cancelled = false
+    const load = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const { data, error } = await supabase
+          .from('public_reports_view')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (error) throw error
+        if (!cancelled) setReport(data)
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || 'Failed to load report')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [id])
 
   return (
     <Dialog open onOpenChange={(v) => { if (!v) onClose() }}>
@@ -33,7 +54,7 @@ export default function ReportDetailsModal({ id, onClose }: { id: string; onClos
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">{report.title}</h3>
               <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                {report.statusDisplay || report.status}
+                {report.status}
               </Badge>
             </div>
 
