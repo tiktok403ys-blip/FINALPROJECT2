@@ -199,15 +199,10 @@ export function TopAlertTicker() {
               ['--from' as any]: `${fromPx}px`,
               ['--to' as any]: `${toPx}px`,
               ['--dur' as any]: `${durationSec}s`,
-              animationPlayState: (isPaused || pageHidden || !isVisible) ? 'paused' : 'running',
-              touchAction: 'pan-y'
+              animationPlayState: (isPaused || pageHidden || !isVisible) ? 'paused' : 'running'
             }}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            onPointerDown={() => setIsPaused(true)}
-            onPointerUp={() => setIsPaused(false)}
-            onPointerCancel={() => setIsPaused(false)}
-            onPointerLeave={() => setIsPaused(false)}
           >
             <span ref={textRef} className="px-4 inline-block">{current.text}</span>
           </div>
