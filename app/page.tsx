@@ -44,7 +44,7 @@ export default async function HomePage() {
     .eq("is_featured_home", true)
     .eq("is_active", true)
     .order("home_rank", { ascending: true, nullsFirst: false })
-    .limit(4)
+    .limit(6)
 
   // Fetch latest news with real data
   const { data: latestNews } = await supabase
@@ -67,7 +67,7 @@ export default async function HomePage() {
     `)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
-    .limit(4)
+    .limit(6)
 
   // Fetch recent reviews
   const { data: recentReviews } = await supabase
@@ -175,7 +175,7 @@ export default async function HomePage() {
             {/* <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p> */}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: Bonus & { casinos?: Casino }) => (
               <GlassCard key={bonus.id} className="p-3 sm:p-4 hover:border-[#00ff88]/30 transition-colors">
                 <div className="flex items-stretch h-full">
