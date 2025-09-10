@@ -180,7 +180,7 @@ export default async function HomePage() {
               <GlassCard key={bonus.id} className="p-3 sm:p-4 hover:border-[#00ff88]/30 transition-colors">
                 <div className="flex items-stretch h-full">
                   <div
-                    className="w-20 -ml-4 -mt-4 -mb-4 rounded-l-lg flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
+                    className="w-20 -ml-3 sm:-ml-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 rounded-l-xl sm:rounded-l-2xl flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
