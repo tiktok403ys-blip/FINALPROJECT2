@@ -23,6 +23,8 @@ export function TopAlertTicker() {
   const [isVisible, setIsVisible] = useState(false)
   const [animVersion, setAnimVersion] = useState(0)
   const [animate, setAnimate] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [pageHidden, setPageHidden] = useState(false)
   const progressTimerRef = useRef<number | null>(null)
 
   // Selalu aktifkan animasi (mengabaikan prefers-reduced-motion sesuai permintaan)
@@ -52,6 +54,18 @@ export function TopAlertTicker() {
     obs.observe(node)
     return () => obs.disconnect()
   }, [items, idx])
+
+  // Pause when tab is hidden; resume when visible
+  useEffect(() => {
+    const handleVis = () => {
+      if (typeof document !== 'undefined') {
+        setPageHidden(document.hidden)
+      }
+    }
+    handleVis()
+    document.addEventListener('visibilitychange', handleVis)
+    return () => document.removeEventListener('visibilitychange', handleVis)
+  }, [])
 
   // Fallback: jika visibilitas tidak terdeteksi, tetap ukur & mulai animasi setelah sedikit penundaan
   useEffect(() => {
@@ -131,9 +145,13 @@ export function TopAlertTicker() {
   // Advance to next item when animation completes (fallback timer)
   useEffect(() => {
     if (!enabled || items.length <= 1) return
+    const paused = isPaused || pageHidden || !isVisible
     if (progressTimerRef.current) {
       clearTimeout(progressTimerRef.current)
       progressTimerRef.current = null
+    }
+    if (paused) {
+      return
     }
     const t = window.setTimeout(() => {
       progressTimerRef.current = null
@@ -146,7 +164,7 @@ export function TopAlertTicker() {
         progressTimerRef.current = null
       }
     }
-  }, [durationSec, items.length, enabled])
+  }, [durationSec, items.length, enabled, isPaused, pageHidden, isVisible])
 
   // Prefer reliable progression via animationend (with timeout as fallback)
   useEffect(() => {
@@ -179,13 +197,22 @@ export function TopAlertTicker() {
               // @ts-ignore - custom CSS props
               ['--from' as any]: `${fromPx}px`,
               ['--to' as any]: `${toPx}px`,
-              ['--dur' as any]: `${durationSec}s`
+              ['--dur' as any]: `${durationSec}s`,
+              animationPlayState: (isPaused || pageHidden || !isVisible) ? 'paused' : 'running'
             }}
           >
             <span ref={textRef} className="px-4 inline-block">{current.text}</span>
           </div>
         </div>
       </div>
+      {/* Accessible toggle for screen readers */}
+      <button
+        type="button"
+        className="sr-only"
+        aria-pressed={!isPaused}
+        aria-label={isPaused ? 'Resume ticker' : 'Pause ticker'}
+        onClick={() => setIsPaused(p => !p)}
+      />
       <style jsx global>{`
         @keyframes ticker-slide {
           from { transform: translateX(var(--from)); }
