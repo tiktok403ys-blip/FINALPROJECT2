@@ -10,9 +10,11 @@ import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, External
 import { Footer } from "@/components/footer"
 import { useReportsRealtime } from "@/hooks/use-reports-realtime"
 
+// Ensure stable identity for dynamically imported modal across re-renders
+const ReportDetailsModal = dynamic(() => import("@/components/report-details-modal"), { ssr: false })
+
 export default function ReportsPage() {
   const { reports, stats, loading, error } = useReportsRealtime(10)
-  const ReportDetailsModal = dynamic(() => import("@/components/report-details-modal"), { ssr: false })
   const [openId, setOpenId] = useState<string | null>(null)
 
   const formatTime = (num: number) => num.toString().padStart(2, "0")

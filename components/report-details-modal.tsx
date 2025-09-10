@@ -37,7 +37,7 @@ export default function ReportDetailsModal({ id, onClose }: { id: string; onClos
 
   return (
     <Dialog open onOpenChange={(v) => { if (!v) onClose() }}>
-      <DialogContent className="bg-black border-white/10 text-white max-w-2xl">
+      <DialogContent className="bg-black border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Report Details</DialogTitle>
           <DialogDescription>Public information for the selected report.</DialogDescription>
