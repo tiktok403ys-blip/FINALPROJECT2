@@ -44,7 +44,7 @@ export interface ReportStats {
   success_rate: number
 }
 
-export function useReportsRealtime(limit: number = 10) {
+export function useReportsRealtime(limit: number = 10, enabled: boolean = true) {
   const [reports, setReports] = useState<Report[]>([])
   const [stats, setStats] = useState<ReportStats>({
     total: 0,
@@ -104,6 +104,7 @@ export function useReportsRealtime(limit: number = 10) {
 
   // Fetch reports from database
   const fetchReports = useCallback(async () => {
+    if (!enabled) return
     try {
       setLoading(true)
       setError(null)
@@ -126,10 +127,11 @@ export function useReportsRealtime(limit: number = 10) {
     } finally {
       setLoading(false)
     }
-  }, [supabase, limit, processReportsData])
+  }, [supabase, limit, processReportsData, enabled])
 
   // Fetch statistics
   const fetchStats = useCallback(async () => {
+    if (!enabled) return
     try {
       const { data, error } = await supabase.rpc("get_reports_stats")
 
@@ -141,10 +143,11 @@ export function useReportsRealtime(limit: number = 10) {
     } catch (err) {
       console.error("Error fetching stats:", err)
     }
-  }, [supabase])
+  }, [supabase, enabled])
 
   // Update timers every second for active reports (single interval, stable calculation)
   useEffect(() => {
+    if (!enabled) return
     const id = setInterval(() => {
       setReports(prev => prev.map(r => ({
         ...r,
@@ -152,10 +155,11 @@ export function useReportsRealtime(limit: number = 10) {
       })))
     }, 1000)
     return () => clearInterval(id)
-  }, [calculateTimeElapsed])
+  }, [calculateTimeElapsed, enabled])
 
   // Setup realtime subscription
   useEffect(() => {
+    if (!enabled) return
     // Fetch initial data
     fetchReports()
     fetchStats()
@@ -170,10 +174,7 @@ export function useReportsRealtime(limit: number = 10) {
           schema: 'public',
           table: 'reports'
         },
-        async (payload: any) => {
-          console.log('Reports realtime change:', payload)
-          
-          // Refresh data when reports change
+        async () => {
           await fetchReports()
           await fetchStats()
         }
@@ -182,13 +183,12 @@ export function useReportsRealtime(limit: number = 10) {
 
     setChannel(newChannel)
 
-    // Cleanup function
     return () => {
       if (newChannel) {
         supabase.removeChannel(newChannel)
       }
     }
-  }, [fetchReports, fetchStats, supabase])
+  }, [fetchReports, fetchStats, supabase, enabled])
 
   // Manual refresh function
   const refresh = useCallback(async () => {
