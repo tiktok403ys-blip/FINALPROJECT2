@@ -109,9 +109,10 @@ export function TopAlertTicker() {
     return () => clearTimeout(tm)
   }, [enabled, isVisible, animate, idx])
 
-  // Recompute animation distance and duration per item & on resize/visibility
+  // Recompute animation distance and duration per item & on resize.
+  // Important: do NOT tie to visibility changes to avoid resetting position on resume
   useEffect(() => {
-    if (!enabled || !isVisible) return
+    if (!enabled) return
     const measure = () => {
       const c = containerRef.current
       const t = textRef.current
@@ -140,7 +141,7 @@ export function TopAlertTicker() {
     window.addEventListener('resize', measure)
     window.addEventListener('orientationchange', measure)
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); window.removeEventListener('orientationchange', measure) }
-  }, [idx, enabled, isVisible])
+  }, [idx, enabled])
 
   // Advance to next item when animation completes (fallback timer)
   useEffect(() => {
@@ -200,6 +201,8 @@ export function TopAlertTicker() {
               ['--dur' as any]: `${durationSec}s`,
               animationPlayState: (isPaused || pageHidden || !isVisible) ? 'paused' : 'running'
             }}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
           >
             <span ref={textRef} className="px-4 inline-block">{current.text}</span>
           </div>
