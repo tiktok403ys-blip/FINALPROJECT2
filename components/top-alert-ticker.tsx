@@ -26,6 +26,7 @@ export function TopAlertTicker() {
   const [isPaused, setIsPaused] = useState(false)
   const [pageHidden, setPageHidden] = useState(false)
   const progressTimerRef = useRef<number | null>(null)
+  const lastDimsRef = useRef<{ containerWidth: number; contentWidth: number }>({ containerWidth: 0, contentWidth: 0 })
 
   // Selalu aktifkan animasi (mengabaikan prefers-reduced-motion sesuai permintaan)
   useEffect(() => { setEnabled(true) }, [])
@@ -77,6 +78,11 @@ export function TopAlertTicker() {
       const containerWidth = c.clientWidth
       const contentWidth = t.scrollWidth
       if (containerWidth === 0 || contentWidth === 0) return
+      const needRestart =
+        lastDimsRef.current.containerWidth !== containerWidth ||
+        lastDimsRef.current.contentWidth !== contentWidth
+      lastDimsRef.current = { containerWidth, contentWidth }
+      if (!needRestart) return
       const start = containerWidth
       const end = -contentWidth
       setFromPx(start)
@@ -109,7 +115,7 @@ export function TopAlertTicker() {
     return () => clearTimeout(tm)
   }, [enabled, isVisible, animate, idx])
 
-  // Recompute animation distance and duration per item & on resize.
+  // Recompute animation distance and duration per item & on resize (debounced 80ms).
   // Important: do NOT tie to visibility changes to avoid resetting position on resume
   useEffect(() => {
     if (!enabled) return
@@ -119,6 +125,11 @@ export function TopAlertTicker() {
       if (!c || !t) return
       const containerWidth = c.clientWidth
       const contentWidth = t.scrollWidth
+      const needRestart =
+        lastDimsRef.current.containerWidth !== containerWidth ||
+        lastDimsRef.current.contentWidth !== contentWidth
+      lastDimsRef.current = { containerWidth, contentWidth }
+      if (!needRestart) return
       const start = containerWidth // start just outside the right edge
       const end = -contentWidth // finish outside the left edge
       setFromPx(start)
@@ -138,9 +149,24 @@ export function TopAlertTicker() {
     }
     // ukur setelah paint agar layout sudah stabil
     const raf = requestAnimationFrame(measure)
-    window.addEventListener('resize', measure)
-    window.addEventListener('orientationchange', measure)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); window.removeEventListener('orientationchange', measure) }
+    let debounceId: number | null = null
+    const scheduleMeasure = () => {
+      if (debounceId) {
+        clearTimeout(debounceId)
+        debounceId = null
+      }
+      debounceId = window.setTimeout(() => {
+        measure()
+      }, 80)
+    }
+    window.addEventListener('resize', scheduleMeasure)
+    window.addEventListener('orientationchange', scheduleMeasure)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', scheduleMeasure)
+      window.removeEventListener('orientationchange', scheduleMeasure)
+      if (debounceId) clearTimeout(debounceId)
+    }
   }, [idx, enabled])
 
   // Advance to next item when animation completes (fallback timer)
