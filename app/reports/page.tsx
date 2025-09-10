@@ -105,7 +105,7 @@ export default function ReportsPage() {
         {/* Recent Reports Section */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-8">Recent Reports</h2>
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {loading ? (
               // Loading skeleton
               Array.from({ length: 3 }).map((_, i) => (
@@ -192,7 +192,7 @@ export default function ReportsPage() {
                 </GlassCard>
               ))
             ) : (
-              <GlassCard className="p-12 text-center">
+              <GlassCard className="p-12 text-center lg:col-span-2">
                 <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">No Reports Found</h3>
                 <p className="text-gray-400">There are currently no active reports to display.</p>
