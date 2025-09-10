@@ -32,7 +32,9 @@ export function DynamicPageHero({
   children,
   className
 }: DynamicPageHeroProps) {
-  const { section, loading, error } = usePageSectionSingle(pageName, sectionType)
+  // Jangan fetch saat dialog terbuka atau di rute yang tidak membutuhkan hero dinamis.
+  // Komponen pemanggil dapat memanfaatkan prop fallback saja.
+  const { section, loading, error } = usePageSectionSingle(pageName, sectionType, true)
 
   // Memoized content for performance
   const content = useMemo(() => {

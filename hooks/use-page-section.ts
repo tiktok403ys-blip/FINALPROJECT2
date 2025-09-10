@@ -80,11 +80,11 @@ export function usePageSection(options: UsePageSectionOptions = {}) {
 }
 
 // Hook untuk mendapatkan single page section berdasarkan page name dan section type
-export function usePageSectionSingle(pageName: string, sectionType: string = 'hero') {
+export function usePageSectionSingle(pageName: string, sectionType: string = 'hero', enabled: boolean = true) {
   const { data, loading, error, refetch } = usePageSection({
     pageName,
     sectionType,
-    enabled: !!pageName
+    enabled: !!pageName && enabled
   })
 
   const section = data.length > 0 ? data[0] : null

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "lucide-react"
 import { useSingleReportRealtime } from "@/hooks/use-reports-realtime"
@@ -19,6 +19,7 @@ export default function ReportDetailsModal({ id, onClose }: { id: string; onClos
       <DialogContent className="bg-black border-white/10 text-white max-w-2xl">
         <DialogHeader>
           <DialogTitle>Report Details</DialogTitle>
+          <DialogDescription>Public information for the selected report.</DialogDescription>
         </DialogHeader>
 
         {loading ? (
