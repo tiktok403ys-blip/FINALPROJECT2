@@ -51,14 +51,25 @@ export function usePageSection(options: UsePageSectionOptions = {}) {
       const response = await fetch(`/api/admin/page-sections?${params.toString()}`, {
         credentials: 'include',
         headers
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch page sections')
+      }).catch(() => undefined as any)
+
+      if (response && response.ok) {
+        const result = await response.json()
+        setData(result.data || [])
+      } else {
+        // Fallback: query Supabase directly (public read), limit to safe columns
+        const supabase = createClient()
+        let query = supabase
+          .from('page_sections')
+          .select('id,page_name,section_type,heading,content,display_order,is_active,created_at,updated_at')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+        if (pageName) query = query.eq('page_name', pageName)
+        if (sectionType) query = query.eq('section_type', sectionType)
+        const { data: sections, error } = await query
+        if (error) throw error
+        setData(sections || [])
       }
-      
-      const result = await response.json()
-      setData(result.data || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       setData([])
