@@ -272,8 +272,9 @@ export function useSingleReportRealtime(reportId: string) {
       setLoading(true)
       setError(null)
 
+      // Read from public view for safe fields
       const { data, error } = await supabase
-        .from("reports")
+        .from("public_reports_view")
         .select("*")
         .eq("id", reportId)
         .single()

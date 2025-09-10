@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
+import dynamic from "next/dynamic"
 import { ReportDialog } from "@/components/report-dialog"
 import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass, CheckCircle, XCircle } from "lucide-react"
 import { Footer } from "@/components/footer"
@@ -11,6 +12,8 @@ import { useReportsRealtime } from "@/hooks/use-reports-realtime"
 
 export default function ReportsPage() {
   const { reports, stats, loading, error } = useReportsRealtime(10)
+  const ReportDetailsModal = dynamic(() => import("@/components/report-details-modal"), { ssr: false })
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const formatTime = (num: number) => num.toString().padStart(2, "0")
 
@@ -181,6 +184,7 @@ export default function ReportsPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => setOpenId(report.id)}
                           className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88]/10 bg-transparent"
                         >
                           View Details
@@ -200,6 +204,11 @@ export default function ReportsPage() {
             )}
           </div>
         </div>
+
+        {/* Lazy details modal */}
+        {openId && (
+          <ReportDetailsModal id={openId} onClose={() => setOpenId(null)} />
+        )}
 
         {/* Information Sections */}
         <div className="mt-16 grid md:grid-cols-2 gap-8">
