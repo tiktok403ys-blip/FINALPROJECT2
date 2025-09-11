@@ -20,7 +20,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Info,
+  AlertTriangle,
 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
@@ -435,14 +437,6 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                     <div className="border border-white/20 rounded-lg p-4 mb-6" style={{ backgroundColor: 'transparent' }}>
                       <h4 className="text-white font-semibold text-center mb-3">HOW TO GET BONUS?</h4>
                       <div className="text-center mb-3">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <MessageCircle className="w-4 h-4 text-[#00ff88]" />
-                          {bonus.how_to_get ? (
-                            <span className="text-gray-300 text-sm">{bonus.how_to_get}</span>
-                          ) : (
-                            <span className="text-gray-300 text-sm">Message live chat with promo code</span>
-                          )}
-                        </div>
                         <div className="bg-white/10 rounded px-3 py-2 flex items-center justify-between">
                           <span className="text-[#00ff88] font-bold">{bonus.promo_code || "GURU2000"}</span>
                           <button
@@ -456,9 +450,28 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         </div>
                       </div>
                       <div className="text-center">
-                        <Link href="#" className="text-blue-400 text-sm hover:underline">
-                          Show step by step instructions
-                        </Link>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button type="button" className="text-blue-400 text-sm hover:underline">
+                              Show step by step instruction
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-black border-white/10 text-white max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>How to get this bonus</DialogTitle>
+                              <DialogDescription>Follow these steps to claim your bonus.</DialogDescription>
+                            </DialogHeader>
+                            <ol className="list-decimal list-inside space-y-2 text-gray-300 text-sm">
+                              <li>Copy the promotion code.</li>
+                              <li>Tap “Get Bonus” to go to the casino.</li>
+                              <li>Contact live chat / customer support and provide the code.</li>
+                            </ol>
+                            <div className="mt-4 p-3 border border-yellow-500/30 rounded-lg bg-yellow-500/10 text-yellow-300 text-xs flex items-start gap-2">
+                              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <p>Warning: Beware of scams and offers promising unusually large bonuses. Only use codes and links shown on this site. We will never ask for your password or any payment to claim a bonus.</p>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </div>
 
