@@ -163,7 +163,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
             return (
               <GlassCard
                 key={bonus.id}
-                className={`overflow-hidden hover:shadow-xl transition-all duration-300 border bonus-card-glass ${
+                className={`hover:shadow-xl transition-all duration-300 border bonus-card-glass ${
                   expired
                     ? "border-red-500/30 opacity-60"
                     : expiringSoon
@@ -184,10 +184,10 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       : 'rgba(255, 255, 255, 0.03)'
                 } as React.CSSProperties}
               >
-                <div className="flex flex-col lg:flex-row min-h-[260px] lg:min-h-[300px]">
+                <div className="flex flex-col lg:flex-row min-h-[260px] lg:min-h-[300px] min-w-0">
                   {/* Left Side - Bonus Details */}
                   <div
-                    className="lg:w-2/3 p-4 sm:p-5 lg:p-6 bonus-card-left"
+                    className="lg:w-2/3 p-4 sm:p-5 lg:p-6 bonus-card-left min-w-0"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
@@ -398,7 +398,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
 
                   {/* Right Side - Casino Info & Actions */}
                   <div
-                    className="lg:w-1/3 p-4 sm:p-5 lg:p-6 flex flex-col bonus-card-separator"
+                    className="lg:w-1/3 p-4 sm:p-5 lg:p-6 flex flex-col bonus-card-separator min-w-0"
                   >
                     {/* Casino Logo - Colored Area */}
                     <div
@@ -413,6 +413,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           alt={`${bonus.casinos.name} logo`}
                           width={160}
                           height={60}
+                          sizes="(max-width: 640px) 120px, 160px"
                           className="max-w-full max-h-12 sm:max-h-16 object-contain mx-auto filter brightness-110"
                         />
                       ) : (
