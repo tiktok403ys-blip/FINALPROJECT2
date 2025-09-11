@@ -7,7 +7,8 @@ import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from '@/components/glass-card'
 import { Footer } from '@/components/footer'
 import { Badge } from '@/components/ui/badge'
-import { Flag, ShieldAlert } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Flag, ShieldAlert, Search as SearchIcon, X as XIcon } from 'lucide-react'
 
 type ListItem = {
   id: string
@@ -19,6 +20,7 @@ export default function ReportsListPage() {
   const [items, setItems] = useState<ListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [channel, setChannel] = useState<RealtimeChannel | null>(null)
+  const [search, setSearch] = useState('')
 
   const fetchList = async () => {
     try {
@@ -71,6 +73,14 @@ export default function ReportsListPage() {
   const ringStyle = (s: ListItem['status']) =>
     s === 'scam' ? 'ring-red-500/30 text-red-400' : 'ring-yellow-400/30 text-yellow-300'
 
+  const normalized = search.trim().toLowerCase()
+  const filteredItems = normalized
+    ? items.filter(i =>
+        (i.casino_name || '').toLowerCase().includes(normalized) ||
+        (i.status || '').toLowerCase().includes(normalized)
+      )
+    : items
+
   return (
     <div className="min-h-screen bg-black">
       <DynamicPageHero
@@ -84,12 +94,40 @@ export default function ReportsListPage() {
       />
 
       <div className="container mx-auto px-4 py-16">
+        {/* Search bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <SearchIcon className="w-4 h-4 text-white/50 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by casino or status (scam/suspicious)"
+              className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/40"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                aria-label="Clear search"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {!loading && (
+            <div className="text-xs text-white/50 mt-2">
+              Showing {filteredItems.length} of {items.length}
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {loading && (
             <GlassCard className="p-6 text-white/70">Loading...</GlassCard>
           )}
 
-          {!loading && items.map((item) => (
+          {!loading && filteredItems.map((item) => (
             <GlassCard
               key={item.id}
               className={`relative overflow-hidden group p-5 md:p-6 border-l-4 ${accentBorder(item.status)} transition-transform hover:-translate-y-0.5`}
@@ -115,9 +153,9 @@ export default function ReportsListPage() {
             </GlassCard>
           ))}
 
-          {!loading && items.length === 0 && (
+          {!loading && filteredItems.length === 0 && (
             <GlassCard className="p-8 text-center">
-              <p className="text-gray-400">No data yet. This list will be populated via admin CRUD.</p>
+              <p className="text-gray-400">No matching results. Try another keyword or clear the search.</p>
             </GlassCard>
           )}
         </div>
