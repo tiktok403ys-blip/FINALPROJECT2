@@ -76,25 +76,37 @@ export function PageHero({ title, description, breadcrumbs, author, date, childr
 
             {/* Author & Date */}
             {(author || date) && (
-              <div className="flex items-center gap-4 text-sm text-gray-300">
-                {author && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
-                      <span className="text-black font-bold text-xs">G</span>
+              <>
+                {/* Mobile: render as a single paragraph to avoid split/stacking */}
+                <div className="flex items-center gap-2 text-sm text-gray-300 sm:hidden">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-xs">G</span>
+                  </div>
+                  <p className="text-gray-300">
+                    {author}{author && date ? " • " : ""}{date}
+                  </p>
+                </div>
+                {/* Desktop+ : original detailed layout */}
+                <div className="hidden sm:flex items-center gap-4 text-sm text-gray-300">
+                  {author && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-full flex items-center justify-center">
+                        <span className="text-black font-bold text-xs">G</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <User className="w-4 h-4" />
+                        <span>{author}</span>
+                      </div>
                     </div>
+                  )}
+                  {date && (
                     <div className="flex items-center gap-1">
-                      <User className="w-4 h-4" />
-                      <span>{author}</span>
+                      <Calendar className="w-4 h-4" />
+                      <span>{date}</span>
                     </div>
-                  </div>
-                )}
-                {date && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{date}</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Description */}
