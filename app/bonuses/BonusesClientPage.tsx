@@ -150,7 +150,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
         date="10 Dec 2024"
       />
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-10 md:py-16">
         {/* Bonuses List */}
         <div className="space-y-6">
           {bonuses?.map((bonus: Bonus & { casinos?: Casino; has_review?: boolean }, index: number) => {
@@ -182,10 +182,10 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       : 'rgba(255, 255, 255, 0.03)'
                 } as React.CSSProperties}
               >
-                <div className="flex flex-col lg:flex-row min-h-[300px]">
+                <div className="flex flex-col lg:flex-row min-h-[260px] lg:min-h-[300px]">
                   {/* Left Side - Bonus Details */}
                   <div
-                    className="lg:w-2/3 p-6 bonus-card-left"
+                    className="lg:w-2/3 p-4 sm:p-5 lg:p-6 bonus-card-left"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
@@ -204,7 +204,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                     </div>
 
                     {/* Main Bonus Title */}
-                    <h2 className="text-2xl font-bold text-white mb-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-6 line-clamp-2">
                       {bonus.bonus_amount} {bonus.title}
                     </h2>
 
@@ -236,30 +236,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                         )}
                       </div>
 
-                      {/* Maximum Bet Restrictions */}
-                      <div className="border border-white/10 rounded-lg">
-                        <div
-                          className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5"
-                          onClick={() => toggleSection(bonus.id, "maxBet")}
-                        >
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <DollarSign className="w-4 h-4 text-[#00ff88]" />
-                            <span className="text-white font-medium">Maximum bet:</span>
-                            <span className="text-red-400 font-semibold">${(bonus as any).max_bet || 5}</span>
-                            <span className="text-red-400 text-sm">(important restrictions)</span>
-                          </div>
-                          <ChevronDown
-                            className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded(bonus.id, "maxBet") ? "rotate-180" : ""}`}
-                          />
-                        </div>
-                        {isExpanded(bonus.id, "maxBet") && (
-                          <div className="px-3 pb-3 text-gray-300 text-sm">
-                            {(bonus as any).max_bet_text || (
-                              <>While using bonus funds, your maximum bet per spin/hand is limited to ${(bonus as any).max_bet || 5}. Exceeding this limit may void your bonus and winnings.</>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      
 
                       {/* Wagering Requirements */}
                       <div className="border border-white/10 rounded-lg">
@@ -417,12 +394,12 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                   </div>
 
                   {/* Right Side - Casino Info & Actions */}
-                                    <div
-                    className="lg:w-1/3 p-6 flex flex-col bonus-card-separator"
+                  <div
+                    className="lg:w-1/3 p-4 sm:p-5 lg:p-6 flex flex-col bonus-card-separator"
                   >
                     {/* Casino Logo - Colored Area */}
                     <div
-                      className="rounded-lg p-6 mb-8 text-center min-h-[80px] flex items-center justify-center bonus-card-logo"
+                      className="rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-center min-h-[64px] sm:min-h-[80px] flex items-center justify-center bonus-card-logo"
                       style={{
                         '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#000000'
                       } as React.CSSProperties}
@@ -433,7 +410,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           alt={`${bonus.casinos.name} logo`}
                           width={160}
                           height={60}
-                          className="max-w-full max-h-16 object-contain mx-auto filter brightness-110"
+                          className="max-w-full max-h-12 sm:max-h-16 object-contain mx-auto filter brightness-110"
                         />
                       ) : (
                         <div className="text-white font-bold text-xl">
@@ -460,7 +437,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                       <div className="text-center mb-3">
                         <div className="flex items-center justify-center gap-2 mb-2">
                           <MessageCircle className="w-4 h-4 text-[#00ff88]" />
-                          <span className="text-gray-300 text-sm">Message live chat with promo code</span>
+                          {bonus.how_to_get ? (
+                            <span className="text-gray-300 text-sm">{bonus.how_to_get}</span>
+                          ) : (
+                            <span className="text-gray-300 text-sm">Message live chat with promo code</span>
+                          )}
                         </div>
                         <div className="bg-white/10 rounded px-3 py-2 flex items-center justify-between">
                           <span className="text-[#00ff88] font-bold">{bonus.promo_code || "GURU2000"}</span>
