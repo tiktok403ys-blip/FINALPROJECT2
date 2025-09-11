@@ -13,6 +13,7 @@ import { QueryProvider } from "@/components/providers/query-provider"
 import { PerformanceMonitor } from "@/components/performance-monitor"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { GoogleAnalytics } from "@/components/google-analytics"
+import AntiInspect from "@/components/anti-inspect"
 import { headers, cookies } from "next/headers"
 import type { Viewport } from "next"
 import { validateEnvironment } from "@/lib/config/env-validator"
@@ -90,6 +91,7 @@ export default async function RootLayout({
             <AnalyticsProvider>
               <AuthProvider>
                 <div className="min-h-screen bg-black text-white">
+                  <AntiInspect />
                   {!isAdminSubdomain && <Navbar />}
                   <main>{children}</main>
                   {!isAdminSubdomain && !hasConsent && <CookieConsent />}
