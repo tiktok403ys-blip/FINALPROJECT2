@@ -345,9 +345,10 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
                           onClick={() => toggleSection(bonus.id, "speed")}
                         >
                           <div className="flex items-center gap-3">
-                            <Zap className="w-4 h-4 text-[#00ff88]" />
+                            <Zap className="w-4 h-4 text-[#00ff88]" aria-hidden="true" />
                             <span className="text-white font-medium">
-                              The process of getting this bonus should be relatively
+                              <span className="inline sm:hidden">Getting this bonus is</span>
+                              <span className="hidden sm:inline">The process of getting this bonus should be relatively</span>
                             </span>
                             <span className="text-[#00ff88] font-semibold">{(bonus as any).claiming_speed || 'FAST'}</span>
                           </div>
