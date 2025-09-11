@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react"
 
@@ -10,13 +9,10 @@ function Footer() {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center">
-              <Image
-                src="/logo-gurusingapore.png"
-                alt="GuruSingapore Logo"
-                width={200}
-                height={40}
-                className="h-10 w-auto"
-              />
+              <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg flex items-center justify-center">
+                <span className="text-black font-bold text-sm">G</span>
+              </div>
+              <span className="ml-2 text-white font-bold text-lg">GuruSingapore</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               Your trusted guide to the best online casinos in Singapore. We provide expert reviews, exclusive bonuses,
