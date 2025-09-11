@@ -121,6 +121,54 @@ export default function ReportsListPage() {
             </GlassCard>
           )}
         </div>
+
+        {/* Hard-coded informational content about Scam vs Suspicious */}
+        <div className="mt-12 grid lg:grid-cols-2 gap-4">
+          <GlassCard className="p-6">
+            <h3 className="text-xl font-semibold text-white mb-4">Understanding Risk Labels</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+                <div className="flex items-center gap-2 mb-2 text-red-400">
+                  <ShieldAlert className="w-5 h-5" />
+                  <span className="font-semibold">Scam (High Risk)</span>
+                </div>
+                <ul className="text-sm text-red-200/90 space-y-1 list-disc list-inside">
+                  <li>Confirmed abusive behavior (e.g., non-payment, identity misuse).</li>
+                  <li>Refusal to cooperate or systematic unfair terms.</li>
+                  <li>Very high chance of losing funds and data.</li>
+                </ul>
+                <div className="mt-3 text-sm text-red-200/90">
+                  <span className="font-semibold">Action:</span> Do not deposit or share documents. Report immediately.
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4">
+                <div className="flex items-center gap-2 mb-2 text-yellow-300">
+                  <Flag className="w-5 h-5" />
+                  <span className="font-semibold">Suspicious (Medium Risk)</span>
+                </div>
+                <ul className="text-sm text-yellow-100/90 space-y-1 list-disc list-inside">
+                  <li>Unresolved red flags (e.g., long KYC delays, clawbacks).</li>
+                  <li>Inconsistent support or multiple unresolved complaints.</li>
+                  <li>Funds may be at risk until clarified.</li>
+                </ul>
+                <div className="mt-3 text-sm text-yellow-100/90">
+                  <span className="font-semibold">Action:</span> If you must play, keep balances small, document everything, and test withdrawals early.
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+
+          <GlassCard className="p-6">
+            <h3 className="text-xl font-semibold text-white mb-4">Safety Notice</h3>
+            <ul className="text-sm text-gray-300 space-y-2 list-disc list-inside">
+              <li>Never send money outside official cashier pages or to private wallets.</li>
+              <li>Avoid “too good to be true” bonuses or unsolicited messages.</li>
+              <li>Use unique strong passwords and enable 2FA when available.</li>
+              <li>If harmed or pressured, file a report so we can investigate.</li>
+            </ul>
+          </GlassCard>
+        </div>
       </div>
 
       <Footer />
