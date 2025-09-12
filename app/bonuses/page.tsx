@@ -15,6 +15,8 @@ export const metadata = {
 export default async function BonusesPage() {
   const supabase = await createClient()
 
+  const INITIAL_LIMIT = 10
+  
   const { data: bonuses } = await supabase
     .from("bonuses")
     .select(`
@@ -25,7 +27,9 @@ export default async function BonusesPage() {
         rating
       )
     `)
+    .eq('is_active', true)
     .order("created_at", { ascending: false })
+    .limit(INITIAL_LIMIT)
 
   // Derive whether each bonus' casino has a published editorial review
   const casinoIds = (bonuses || [])

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import {
   ThumbsDown,
   Info,
   AlertTriangle,
+  Loader2,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import Link from "next/link"
@@ -30,9 +31,14 @@ import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
 import { useToast } from "@/hooks/use-toast"
 import type { Bonus, Casino } from "@/lib/types"
 
-export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { casinos?: Casino; has_review?: boolean })[] }) {
+export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses: (Bonus & { casinos?: Casino; has_review?: boolean })[] }) {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
+  const [bonuses, setBonuses] = useState(initialBonuses)
+  const [loading, setLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const { success, error } = useToast()
+  const ITEMS_PER_PAGE = 10
 
   const toggleSection = (bonusId: string, sectionKey: string) => {
     const key = `${bonusId}-${sectionKey}`
@@ -90,6 +96,40 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
       error("Copy failed", "Could not copy. Please try manually.")
     }
   }
+
+  const loadMoreBonuses = async () => {
+    if (loading || !hasMore) return
+    
+    setLoading(true)
+    try {
+      const nextPage = currentPage + 1
+      const response = await fetch(`/api/bonuses?page=${nextPage}&limit=${ITEMS_PER_PAGE}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch bonuses')
+      }
+      
+      const data = await response.json()
+      
+      if (data.bonuses && data.bonuses.length > 0) {
+        setBonuses(prev => [...prev, ...data.bonuses])
+        setCurrentPage(nextPage)
+        setHasMore(data.pagination.hasMore)
+      } else {
+        setHasMore(false)
+      }
+    } catch (err) {
+      console.error('Error loading more bonuses:', err)
+      error("Load Failed", "Could not load more bonuses. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Initialize hasMore based on initial data length
+  useEffect(() => {
+    setHasMore(initialBonuses.length >= ITEMS_PER_PAGE)
+  }, [initialBonuses.length, ITEMS_PER_PAGE])
 
   return (
     <div className="min-h-screen bg-black">
@@ -480,6 +520,39 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
             <Gift className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-4">No Bonuses Available</h3>
             <p className="text-gray-400 text-lg">We&apos;re working on adding exclusive bonus offers for you.</p>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {bonuses?.length > 0 && hasMore && (
+          <div className="text-center mt-12 mb-8">
+            <Button
+              onClick={loadMoreBonuses}
+              disabled={loading}
+              className="bg-[#00ff88] hover:bg-[#00ff88]/80 text-black font-semibold px-8 py-3 text-lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Loading More...
+                </>
+              ) : (
+                <>
+                  <Gift className="w-5 h-5 mr-2" />
+                  Load More Bonuses
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* End of Results Message */}
+        {bonuses?.length > 0 && !hasMore && !loading && (
+          <div className="text-center mt-12 mb-8">
+            <div className="inline-flex items-center px-6 py-3 bg-white/5 border border-white/10 rounded-lg">
+              <Star className="w-5 h-5 mr-2 text-[#00ff88]" />
+              <span className="text-white font-medium">You&apos;ve seen all available bonuses!</span>
+            </div>
           </div>
         )}
 
