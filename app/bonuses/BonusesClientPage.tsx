@@ -175,7 +175,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
                       : 'rgba(255, 255, 255, 0.03)'
                 } as React.CSSProperties}
               >
-                <div className="flex flex-col lg:flex-row min-h-[260px] lg:min-h-[300px] min-w-0">
+                <div className="flex flex-col lg:flex-row min-h-[260px] lg:min-h-[300px] min-w-0 bonus-card-optimized">
                   {/* Left Side - Bonus Details */}
                   <div
                     className="lg:w-2/3 p-4 sm:p-5 lg:p-6 bonus-card-left min-w-0"

@@ -691,3 +691,36 @@ html {
     color: #000000;
   }
 }
+
+/* Performance optimizations for bonus cards scrolling */
+.bonus-card-glass {
+  will-change: transform;
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Optimasi layout stability untuk bonus cards */
+.bonus-card-optimized {
+  contain: layout style;
+  transform: translateZ(0);
+}
+
+.bonus-card-optimized > div {
+  contain: layout;
+}
+
+/* Mobile optimization untuk mengurangi backdrop filter intensity */
+@media (max-width: 768px) {
+  .bonus-card-glass {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+}
+
+/* Reduce motion support untuk accessibility dan performance */
+@media (prefers-reduced-motion: reduce) {
+  .bonus-card-glass {
+    backdrop-filter: none !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+}
