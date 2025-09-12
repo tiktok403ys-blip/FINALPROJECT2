@@ -109,36 +109,66 @@ export function BonusFilter({ bonuses, onFilterChange, className }: BonusFilterP
   // Filter and sort bonuses with error handling
   useEffect(() => {
     try {
+      // Defensive check for bonuses array
+      if (!Array.isArray(bonuses) || bonuses.length === 0) {
+        onFilterChange([])
+        return
+      }
+
       let filtered = [...bonuses]
 
       // Search filter with defensive programming
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase()
-        filtered = filtered.filter(bonus => 
-          (bonus.title || '').toLowerCase().includes(searchTerm) ||
-          (bonus.description || '').toLowerCase().includes(searchTerm) ||
-          (bonus.casinos?.name || '').toLowerCase().includes(searchTerm)
-        )
+      if (filters.search && typeof filters.search === 'string') {
+        const searchTerm = filters.search.toLowerCase().trim()
+        if (searchTerm) {
+          filtered = filtered.filter(bonus => {
+            try {
+              return (
+                (bonus?.title || '').toLowerCase().includes(searchTerm) ||
+                (bonus?.description || '').toLowerCase().includes(searchTerm) ||
+                (bonus?.casinos?.name || '').toLowerCase().includes(searchTerm)
+              )
+            } catch (err) {
+              console.warn('Error filtering bonus:', bonus?.id, err)
+              return false
+            }
+          })
+        }
       }
 
-    // Bonus type filter
-    if (filters.bonusType !== "all") {
-      filtered = filtered.filter(bonus => 
-        bonus.bonus_type?.toLowerCase() === filters.bonusType
-      )
+    // Bonus type filter with safety checks
+    if (filters.bonusType && filters.bonusType !== "all") {
+      filtered = filtered.filter(bonus => {
+        try {
+          return bonus?.bonus_type?.toLowerCase() === filters.bonusType
+        } catch (err) {
+          console.warn('Error filtering by bonus type:', bonus?.id, err)
+          return false
+        }
+      })
     }
 
-    // Casino filter
-    if (filters.casino !== "all") {
-      filtered = filtered.filter(bonus => 
-        bonus.casinos?.name.toLowerCase() === filters.casino
-      )
+    // Casino filter with safety checks
+    if (filters.casino && filters.casino !== "all") {
+      filtered = filtered.filter(bonus => {
+        try {
+          return bonus?.casinos?.name?.toLowerCase() === filters.casino
+        } catch (err) {
+          console.warn('Error filtering by casino:', bonus?.id, err)
+          return false
+        }
+      })
     }
 
     // Amount range filter with null safety and type conversion
     filtered = filtered.filter(bonus => {
-      const amount = Number(bonus.bonus_amount) || 0
-      return amount >= filters.minAmount && amount <= filters.maxAmount
+      try {
+        const amount = Number(bonus?.bonus_amount) || 0
+        return amount >= (filters.minAmount || 0) && amount <= (filters.maxAmount || 10000)
+      } catch (err) {
+        console.warn('Error filtering by amount:', bonus?.id, err)
+        return false
+      }
     })
 
     // Wagering filter
@@ -197,6 +227,15 @@ export function BonusFilter({ bonuses, onFilterChange, className }: BonusFilterP
   useEffect(() => {
     debouncedSearch(searchInput)
   }, [searchInput, debouncedSearch])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const updateFilter = (key: keyof FilterState, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
