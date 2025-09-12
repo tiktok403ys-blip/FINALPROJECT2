@@ -93,13 +93,28 @@ export function BonusFilter({ bonuses, onFilterChange, className }: BonusFilterP
     }, 300)
   }, [])
 
-  // Memoized unique casinos for performance
-  const uniqueCasinos = useMemo(() => 
-    Array.from(
-      new Set(bonuses.map(bonus => bonus.casinos?.name).filter(Boolean))
-    ).map(name => ({ value: name!.toLowerCase(), label: name! })),
-    [bonuses]
-  )
+  // Memoized unique casinos for performance with safety checks
+  const uniqueCasinos = useMemo(() => {
+    try {
+      if (!Array.isArray(bonuses) || bonuses.length === 0) {
+        return []
+      }
+      return Array.from(
+        new Set(
+          bonuses
+            .filter(bonus => bonus && typeof bonus === 'object')
+            .map(bonus => bonus.casinos?.name)
+            .filter(Boolean)
+        )
+      ).map(name => ({ 
+        value: name!.toLowerCase(), 
+        label: name! 
+      }))
+    } catch (error) {
+      console.warn('Error processing unique casinos:', error)
+      return []
+    }
+  }, [bonuses])
 
   const casinoOptions = [
     { value: "all", label: "All Casinos" },
@@ -115,7 +130,8 @@ export function BonusFilter({ bonuses, onFilterChange, className }: BonusFilterP
         return
       }
 
-      let filtered = [...bonuses]
+      // Safe array spread with validation
+      let filtered = bonuses.filter(bonus => bonus && typeof bonus === 'object')
 
       // Search filter with defensive programming
       if (filters.search && typeof filters.search === 'string') {
@@ -198,8 +214,10 @@ export function BonusFilter({ bonuses, onFilterChange, className }: BonusFilterP
       filtered = filtered.filter(bonus => bonus.is_exclusive)
     }
 
-    // Sort bonuses with type safety
-    filtered.sort((a, b) => {
+    // Sort bonuses with type safety and validation
+    if (Array.isArray(filtered) && filtered.length > 0) {
+      filtered.sort((a, b) => {
+        try {
       switch (filters.sortBy) {
         case "amount_high":
           return (Number(b.bonus_amount) || 0) - (Number(a.bonus_amount) || 0)
@@ -213,10 +231,15 @@ export function BonusFilter({ bonuses, onFilterChange, className }: BonusFilterP
         case "newest":
         default:
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      }
-    })
+        }
+        } catch (sortError) {
+          console.warn('Error sorting bonuses:', sortError)
+          return 0
+        }
+      })
+    }
 
-      onFilterChange(filtered)
+    onFilterChange(filtered)
     } catch (error) {
       console.error('Filter error:', error)
       onFilterChange(bonuses) // Fallback to original data
