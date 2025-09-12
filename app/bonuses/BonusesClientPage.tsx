@@ -82,61 +82,12 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
     return new Date(expiryDate) < new Date()
   }
 
-  // Simple popup dialog for copy feedback
-  const showCopyPopup = (message: string) => {
-    const popupId = `copy-popup-${Date.now()}`
-    const popupElement = document.createElement('div')
-    popupElement.id = popupId
-    
-    popupElement.className = `
-      fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]
-      opacity-0 scale-95 transition-all duration-300 ease-out
-    `
-    
-    popupElement.innerHTML = `
-      <div class="
-        bg-black/90 backdrop-blur-sm border border-white/20
-        rounded-lg px-4 py-3 shadow-xl
-        text-white text-sm font-medium
-        flex items-center gap-2
-        min-w-[200px] max-w-[300px]
-      ">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400 flex-shrink-0">
-          <path d="m9 12 2 2 4-4"/>
-          <circle cx="12" cy="12" r="10"/>
-        </svg>
-        <span>${message}</span>
-      </div>
-    `
-    
-    document.body.appendChild(popupElement)
-    
-    // Show popup
-    requestAnimationFrame(() => {
-      popupElement.style.opacity = '1'
-      popupElement.style.transform = 'translate(-50%, -50%) scale(1)'
-    })
-    
-    // Auto hide after 2 seconds
-    setTimeout(() => {
-      if (document.getElementById(popupId)) {
-        popupElement.style.opacity = '0'
-        popupElement.style.transform = 'translate(-50%, -50%) scale(0.95)'
-        setTimeout(() => {
-          if (document.getElementById(popupId)) {
-            popupElement.remove()
-          }
-        }, 300)
-      }
-    }, 2000)
-  }
-
   const copyPromoCode = async (promoCode: string) => {
     try {
       await navigator.clipboard.writeText(promoCode)
-      showCopyPopup('Promo code copied!')
+      success("Copied", "Promo code copied to clipboard.")
     } catch (err) {
-      showCopyPopup('Copy failed - try manually')
+      error("Copy failed", "Could not copy. Please try manually.")
     }
   }
 
@@ -163,7 +114,7 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
             return (
               <GlassCard
                 key={bonus.id}
-                className={`hover:shadow-xl transition-all duration-300 border bonus-card-glass ${
+                className={`hover:shadow-xl transition-all duration-300 border bonus-card-glass cv-auto ${
                   expired
                     ? "border-red-500/30 opacity-60"
                     : expiringSoon
