@@ -290,6 +290,12 @@ function BonusesContentPage() {
   }
 
   const handleEdit = (bonus: Bonus) => {
+    // Scroll to top (Bonuses Management header)
+    const headerElement = document.getElementById('bonuses-management-header')
+    if (headerElement) {
+      headerElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    
     setEditingId(bonus.id)
     setFormData({
       title: bonus.title,
@@ -447,7 +453,7 @@ function BonusesContentPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4 md:mb-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center">
+          <h1 id="bonuses-management-header" className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center">
             <Gift className="w-8 h-8 mr-3" />
             Bonuses Management
           </h1>
