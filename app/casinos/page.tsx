@@ -319,7 +319,7 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
           fallbackDescription="Discover the best online casinos with verified reviews, ratings, and exclusive bonuses."
           breadcrumbs={[{ label: "Best online casinos" }]}
           author={{ name: "GuruSingapore Team" }}
-          date="10 Dec 2024"
+          date="10 Dec 2025"
         />
 
         <div className="container mx-auto px-4 py-16">

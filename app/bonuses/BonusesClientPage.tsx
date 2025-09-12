@@ -96,11 +96,11 @@ export default function BonusesClientPage({ bonuses }: { bonuses: (Bonus & { cas
       <DynamicPageHero
         pageName="bonuses"
         sectionType="hero"
-        fallbackTitle="Best Casino Bonuses for December 2024 - Exclusive Offers"
+        fallbackTitle="Best Casino Bonuses for December 2025 - Exclusive Offers"
         fallbackDescription="Discover the most generous casino bonuses and exclusive promotional offers available this month. Our team verifies every bonus to ensure you get the best value and fair terms. From welcome bonuses to free spins, find the perfect offer for your gaming style."
         breadcrumbs={[{ label: "Best Casino Bonuses" }]}
         author={{ name: "GuruSingapore Bonus Team" }}
-        date="10 Dec 2024"
+        date="10 Dec 2025"
       />
 
       <div className="container mx-auto px-4 py-10 md:py-16">

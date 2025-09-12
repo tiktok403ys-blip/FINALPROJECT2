@@ -137,11 +137,11 @@ export default async function ReviewsPage() {
       <DynamicPageHero
         pageName="reviews"
         sectionType="hero"
-        fallbackTitle="Casino Reviews for December 2024 - Real Player Experiences"
+        fallbackTitle="Casino Reviews for December 2025 - Real Player Experiences"
         fallbackDescription="Read honest and comprehensive casino reviews from our expert team and verified players. We test every aspect of online casinos including games, bonuses, payment methods, and customer support to help you make informed decisions."
         breadcrumbs={[{ label: "Casino Reviews" }]}
         author={{ name: "GuruSingapore Review Team" }}
-        date="10 Dec 2024"
+        date="10 Dec 2025"
       />
 
       {/* Stats Section */}
