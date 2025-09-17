@@ -447,7 +447,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
                       {bonus.casinos?.logo_url ? (
                         <Image
                           src={bonus.casinos.logo_url || "/placeholder.svg"}
-                          alt={`${bonus.casinos.name} logo`}
+                          alt={bonus.casinos?.name ? `${bonus.casinos.name} logo` : "Casino logo"}
                           width={160}
                           height={60}
                           sizes="(max-width: 640px) 120px, 160px"
