@@ -6,7 +6,7 @@ import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
 import dynamic from "next/dynamic"
 import { ReportDialog } from "@/components/report-dialog"
-import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass, CheckCircle, XCircle } from "lucide-react"
+import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass, CheckCircle, XCircle, LayoutGrid, List } from "lucide-react"
 import { Footer } from "@/components/footer"
 import { useReportsRealtime } from "@/hooks/use-reports-realtime"
 
@@ -16,6 +16,7 @@ const ReportDetailsModal = dynamic(() => import("@/components/report-details-mod
 export default function ReportsPage() {
   const { reports, stats, loading, error } = useReportsRealtime(10)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [view, setView] = useState<'list' | 'grid3'>('list')
 
   const formatTime = (num: number) => num.toString().padStart(2, "0")
 
@@ -108,24 +109,46 @@ export default function ReportsPage() {
 
         {/* Recent Reports Section */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-8">Recent Reports</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-white">Recent Reports</h2>
+            <div className="inline-flex rounded-lg border border-white/10 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setView('list')}
+                className={`px-3 py-2 text-sm flex items-center gap-2 ${view === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                aria-pressed={view === 'list'}
+              >
+                <List className="w-4 h-4" />
+                List
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('grid3')}
+                className={`px-3 py-2 text-sm flex items-center gap-2 border-l border-white/10 ${view === 'grid3' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                aria-pressed={view === 'grid3'}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Grid 3
+              </button>
+            </div>
+          </div>
+          <div className={`grid grid-cols-1 ${view === 'grid3' ? 'md:grid-cols-2 lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6`}>
             {loading ? (
               // Loading skeleton
               Array.from({ length: 3 }).map((_, i) => (
                 <GlassCard key={i} className="overflow-hidden animate-pulse">
-                  <div className="flex flex-col lg:flex-row">
-                    <div className="lg:w-1/4 bg-gray-700 p-6"></div>
-                    <div className="lg:w-3/4 p-6 bg-gray-800"></div>
+                  <div className={`${view === 'grid3' ? 'flex flex-col' : 'flex flex-col lg:flex-row'}`}>
+                    <div className={`${view === 'grid3' ? '' : 'lg:w-1/4'} bg-gray-700 p-6`}></div>
+                    <div className={`${view === 'grid3' ? '' : 'lg:w-3/4'} p-6 bg-gray-800`}></div>
                   </div>
                 </GlassCard>
               ))
             ) : reports.length > 0 ? (
               reports.map((report) => (
                 <GlassCard key={report.id} className="overflow-hidden">
-                  <div className="flex flex-col lg:flex-row">
+                  <div className={`${view === 'grid3' ? 'flex flex-col' : 'flex flex-col lg:flex-row'}`}>
                     {/* Left Side - Status */}
-                    <div className="lg:w-1/4 bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
+                    <div className={`${view === 'grid3' ? '' : 'lg:w-1/4'} bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white`}>
                       <div className="h-full flex flex-col items-center justify-center text-center">
                         {renderStatusIcon(report.status)}
                         <div className="text-sm font-medium mb-2">Current status</div>
@@ -141,7 +164,7 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Right Side - Report Details */}
-                    <div className="lg:w-3/4 p-6 bg-white/5">
+                    <div className={`${view === 'grid3' ? '' : 'lg:w-3/4'} p-6 bg-white/5`}>
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{report.title}</h3>
@@ -197,7 +220,7 @@ export default function ReportsPage() {
                 </GlassCard>
               ))
             ) : (
-              <GlassCard className="p-12 text-center lg:col-span-2">
+              <GlassCard className="p-12 text-center lg:col-span-1">
                 <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">No Reports Found</h3>
                 <p className="text-gray-400">There are currently no active reports to display.</p>
