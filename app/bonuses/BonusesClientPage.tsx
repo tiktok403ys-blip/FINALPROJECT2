@@ -28,6 +28,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
+import { BonusFilter } from "@/components/bonuses/bonus-filter"
 import { useToast } from "@/hooks/use-toast"
 import type { Bonus, Casino } from "@/lib/types"
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -35,6 +36,7 @@ import { ErrorBoundary } from "@/components/error-boundary"
 export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses: (Bonus & { casinos?: Casino; has_review?: boolean })[] }) {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
   const [bonuses, setBonuses] = useState(initialBonuses)
+  const [filteredBonuses, setFilteredBonuses] = useState(initialBonuses)
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -134,7 +136,15 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
   }, [initialBonuses.length, ITEMS_PER_PAGE])
 
   // Update filtered bonuses when bonuses change
-  // (Filter removed) nothing to sync here
+  // Sync filtered list when base bonuses change (filter logic is in BonusFilter)
+  useEffect(() => {
+    setFilteredBonuses(bonuses)
+  }, [bonuses])
+
+  // Handle filter changes coming from BonusFilter
+  const handleFilterChange = (filtered: (Bonus & { casinos?: Casino; has_review?: boolean })[]) => {
+    setFilteredBonuses(Array.isArray(filtered) ? filtered : [])
+  }
 
   // Hydration guard to prevent SSR/Client mismatch
   useEffect(() => {
@@ -156,11 +166,15 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
       />
 
       <div className="container mx-auto px-4 py-10 md:py-16">
-
+        {/* Filter Component */}
+        <BonusFilter 
+          bonuses={bonuses}
+          onFilterChange={handleFilterChange}
+        />
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-white/70 text-sm">
-            Showing {(Array.isArray(bonuses) ? bonuses.length : 0)} bonuses
+            Showing {(Array.isArray(filteredBonuses) ? filteredBonuses.length : 0)} of {(Array.isArray(bonuses) ? bonuses.length : 0)} bonuses
           </p>
         </div>
 
@@ -168,7 +182,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
         {mounted && (
           <ErrorBoundary>
             <div className="space-y-6">
-          {(Array.isArray(bonuses) ? bonuses.filter((b) => b && typeof (b as any).id === 'string') : []).map((bonus: Bonus & { casinos?: Casino; has_review?: boolean }, index: number) => {
+          {(Array.isArray(filteredBonuses) ? filteredBonuses.filter((b) => b && typeof (b as any).id === 'string') : []).map((bonus: Bonus & { casinos?: Casino; has_review?: boolean }, index: number) => {
             const typeColor = getBonusTypeColor(bonus.bonus_type || "")
             const expiringSoon = bonus.expiry_date ? isExpiringSoon(bonus.expiry_date) : false
             const expired = bonus.expiry_date ? isExpired(bonus.expiry_date) : false
@@ -539,6 +553,14 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
           </ErrorBoundary>
         )}
 
+        {mounted && !(Array.isArray(filteredBonuses) && filteredBonuses.length) && (Array.isArray(bonuses) && bonuses.length > 0) && (
+          <div className="text-center py-16">
+            <Gift className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-4">No Bonuses Match Your Filters</h3>
+            <p className="text-gray-400 text-lg">Try adjusting your filters to see more bonuses.</p>
+          </div>
+        )}
+
         {mounted && !(Array.isArray(bonuses) && bonuses.length) && (
           <div className="text-center py-16">
             <Gift className="w-16 h-16 text-gray-600 mx-auto mb-4" />
@@ -548,7 +570,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
         )}
 
         {/* Load More Button */}
-        {mounted && (Array.isArray(bonuses) && bonuses.length > 0) && hasMore && (
+        {mounted && (Array.isArray(filteredBonuses) && filteredBonuses.length > 0) && hasMore && (
           <div className="text-center mt-12 mb-8">
             <Button
               onClick={loadMoreBonuses}
@@ -571,7 +593,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
         )}
 
         {/* End of Results Message */}
-        {mounted && (Array.isArray(bonuses) && bonuses.length > 0) && !hasMore && !loading && (
+        {mounted && (Array.isArray(filteredBonuses) && filteredBonuses.length > 0) && !hasMore && !loading && (
           <div className="text-center mt-12 mb-8">
             <div className="inline-flex items-center px-6 py-3 bg-white/5 border border-white/10 rounded-lg">
               <Star className="w-5 h-5 mr-2 text-[#00ff88]" />
