@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Gift,
+  Search,
   Star,
   Zap,
   ChevronDown,
@@ -28,7 +30,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Footer } from "@/components/footer"
 import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
-import { BonusFilter } from "@/components/bonuses/bonus-filter"
 import { useToast } from "@/hooks/use-toast"
 import type { Bonus, Casino } from "@/lib/types"
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -37,6 +38,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({})
   const [bonuses, setBonuses] = useState(initialBonuses)
   const [filteredBonuses, setFilteredBonuses] = useState(initialBonuses)
+  const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -141,10 +143,27 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
     setFilteredBonuses(bonuses)
   }, [bonuses])
 
-  // Handle filter changes coming from BonusFilter
-  const handleFilterChange = (filtered: (Bonus & { casinos?: Casino; has_review?: boolean })[]) => {
-    setFilteredBonuses(Array.isArray(filtered) ? filtered : [])
-  }
+  // Simple search filter
+  useEffect(() => {
+    const term = (searchTerm || "").toLowerCase().trim()
+    if (!term) {
+      setFilteredBonuses(bonuses)
+      return
+    }
+    const next = (Array.isArray(bonuses) ? bonuses : []).filter((b: any) => {
+      try {
+        return (
+          (b?.title || "").toLowerCase().includes(term) ||
+          (b?.description || "").toLowerCase().includes(term) ||
+          (b?.bonus_type || "").toLowerCase().includes(term) ||
+          (b?.casinos?.name || "").toLowerCase().includes(term)
+        )
+      } catch {
+        return false
+      }
+    })
+    setFilteredBonuses(next)
+  }, [searchTerm, bonuses])
 
   // Hydration guard to prevent SSR/Client mismatch
   useEffect(() => {
@@ -177,11 +196,18 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
       />
 
       <div className="container mx-auto px-4 py-10 md:py-16">
-        {/* Filter Component */}
-        <BonusFilter 
-          bonuses={bonuses}
-          onFilterChange={handleFilterChange}
-        />
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative max-w-xl">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search bonuses or casinos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-[#00ff88] focus:ring-[#00ff88]/20"
+            />
+          </div>
+        </div>
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-white/70 text-sm">
@@ -567,8 +593,8 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
         {mounted && !(Array.isArray(filteredBonuses) && filteredBonuses.length) && (Array.isArray(bonuses) && bonuses.length > 0) && (
           <div className="text-center py-16">
             <Gift className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-4">No Bonuses Match Your Filters</h3>
-            <p className="text-gray-400 text-lg">Try adjusting your filters to see more bonuses.</p>
+            <h3 className="text-2xl font-bold text-white mb-4">No Results</h3>
+            <p className="text-gray-400 text-lg">Try a different search term.</p>
           </div>
         )}
 
