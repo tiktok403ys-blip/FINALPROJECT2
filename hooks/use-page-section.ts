@@ -47,11 +47,11 @@ export function usePageSection(options: UsePageSectionOptions = {}) {
       const supabase = createClient()
       let query = supabase
         .from('page_sections')
-        .select('id,page_name,section_type,heading,content,display_order,is_active,created_at,updated_at')
+        .select('id,page_name,section_type:section_name,heading:title,content,display_order,is_active,created_at,updated_at')
         .eq('is_active', true)
         .order('display_order', { ascending: true })
       if (pageName) query = query.eq('page_name', pageName)
-      if (sectionType) query = query.eq('section_type', sectionType)
+      if (sectionType) query = query.eq('section_name', sectionType)
       const { data: sections, error } = await query
       if (error) throw error
       setData(sections || [])
@@ -115,7 +115,7 @@ export function usePageSectionRealtime(options: UsePageSectionOptions = {}) {
         
         let query = supabase
           .from('page_sections')
-          .select('*')
+          .select('id,page_name,section_type:section_name,heading:title,content,display_order,is_active,created_at,updated_at')
           .eq('is_active', true)
           .order('display_order', { ascending: true })
         
@@ -124,7 +124,7 @@ export function usePageSectionRealtime(options: UsePageSectionOptions = {}) {
         }
         
         if (sectionType) {
-          query = query.eq('section_type', sectionType)
+          query = query.eq('section_name', sectionType)
         }
         
         const { data: sections, error } = await query
@@ -176,7 +176,7 @@ export function usePageSectionRealtime(options: UsePageSectionOptions = {}) {
       
       let query = supabase
         .from('page_sections')
-        .select('*')
+        .select('id,page_name,section_type:section_name,heading:title,content,display_order,is_active,created_at,updated_at')
         .eq('is_active', true)
         .order('display_order', { ascending: true })
       
@@ -185,7 +185,7 @@ export function usePageSectionRealtime(options: UsePageSectionOptions = {}) {
       }
       
       if (sectionType) {
-        query = query.eq('section_type', sectionType)
+        query = query.eq('section_name', sectionType)
       }
       
       const { data: sections, error } = await query
