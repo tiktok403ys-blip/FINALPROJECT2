@@ -110,9 +110,9 @@ export default async function HomePage() {
             <p className="text-gray-400 text-lg">Discover our highest-rated online casinos with verified reviews</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-visible">
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
-              <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors">
+              <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors snap-start shrink-0 min-w-[85%] sm:min-w-[70%] md:min-w-0">
                 <div className="text-center h-full flex flex-col">
                   <div 
                     className="relative h-20 -mx-6 -mt-6 rounded-t-lg mb-4 overflow-hidden"
