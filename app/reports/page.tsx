@@ -136,19 +136,19 @@ export default function ReportsPage() {
             {loading ? (
               // Loading skeleton
               Array.from({ length: 3 }).map((_, i) => (
-                <GlassCard key={i} className="animate-pulse">
-                  <div className={`${view === 'grid3' ? 'flex flex-col' : 'flex flex-col lg:flex-row'}`}>
-                    <div className={`${view === 'grid3' ? '' : 'lg:w-1/4'} bg-gray-700 p-6`}></div>
-                    <div className={`${view === 'grid3' ? '' : 'lg:w-3/4'} p-6 bg-gray-800`}></div>
+                <GlassCard key={i} className="animate-pulse h-full">
+                  <div className={`${view === 'grid3' ? 'flex flex-col h-full' : 'flex flex-col lg:flex-row'}`}>
+                    <div className={`${view === 'grid3' ? 'shrink-0' : 'lg:w-1/4'} bg-gray-700 p-6`}></div>
+                    <div className={`${view === 'grid3' ? 'flex-1' : 'lg:w-3/4'} p-6 bg-gray-800`}></div>
                   </div>
                 </GlassCard>
               ))
             ) : reports.length > 0 ? (
               reports.map((report) => (
-                <GlassCard key={report.id} className="">
-                  <div className={`${view === 'grid3' ? 'flex flex-col' : 'flex flex-col lg:flex-row'}`}>
+                <GlassCard key={report.id} className="h-full">
+                  <div className={`${view === 'grid3' ? 'flex flex-col h-full' : 'flex flex-col lg:flex-row'}`}>
                     {/* Left Side - Status */}
-                    <div className={`${view === 'grid3' ? '' : 'lg:w-1/4'} bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white`}>
+                    <div className={`${view === 'grid3' ? 'shrink-0' : 'lg:w-1/4'} bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white`}>
                       <div className="h-full flex flex-col items-center justify-center text-center">
                         {renderStatusIcon(report.status)}
                         <div className="text-sm font-medium mb-2">Current status</div>
@@ -164,7 +164,7 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Right Side - Report Details */}
-                    <div className={`${view === 'grid3' ? '' : 'lg:w-3/4'} p-6 bg-white/5`}>
+                    <div className={`${view === 'grid3' ? 'flex-1' : 'lg:w-3/4'} p-6 bg-white/5 flex flex-col`}> 
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-white mb-2">{report.title}</h3>
@@ -204,7 +204,7 @@ export default function ReportsPage() {
                       </div>
 
                       {/* Action Button */}
-                      <div className="flex justify-end">
+                      <div className="mt-auto flex justify-end">
                         <Button
                           variant="outline"
                           size="sm"
