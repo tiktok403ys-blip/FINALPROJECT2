@@ -111,7 +111,7 @@ export default function ReportsPage() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl font-bold text-white">Recent Reports</h2>
-            <div className="inline-flex rounded-lg border border-white/10 overflow-hidden">
+            <div className="hidden md:inline-flex rounded-lg border border-white/10 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setView('list')}
@@ -136,7 +136,7 @@ export default function ReportsPage() {
             {loading ? (
               // Loading skeleton
               Array.from({ length: 3 }).map((_, i) => (
-                <GlassCard key={i} className="overflow-hidden animate-pulse">
+                <GlassCard key={i} className="animate-pulse">
                   <div className={`${view === 'grid3' ? 'flex flex-col' : 'flex flex-col lg:flex-row'}`}>
                     <div className={`${view === 'grid3' ? '' : 'lg:w-1/4'} bg-gray-700 p-6`}></div>
                     <div className={`${view === 'grid3' ? '' : 'lg:w-3/4'} p-6 bg-gray-800`}></div>
@@ -145,7 +145,7 @@ export default function ReportsPage() {
               ))
             ) : reports.length > 0 ? (
               reports.map((report) => (
-                <GlassCard key={report.id} className="overflow-hidden">
+                <GlassCard key={report.id} className="">
                   <div className={`${view === 'grid3' ? 'flex flex-col' : 'flex flex-col lg:flex-row'}`}>
                     {/* Left Side - Status */}
                     <div className={`${view === 'grid3' ? '' : 'lg:w-1/4'} bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white`}>
@@ -167,7 +167,7 @@ export default function ReportsPage() {
                     <div className={`${view === 'grid3' ? '' : 'lg:w-3/4'} p-6 bg-white/5`}>
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{report.title}</h3>
+                          <h3 className="text-xl font-bold text-white mb-2">{report.title}</h3>
                           <div className="flex items-center gap-4 mb-4">
                             <span
                               className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(report.status)}`}
@@ -185,20 +185,20 @@ export default function ReportsPage() {
                       {/* Problem Description */}
                       <div className="mb-6">
                         <h4 className="text-[#00ff88] font-semibold mb-3">Problem Description:</h4>
-                        <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{report.description}</p>
+                        <p className="text-gray-300 text-sm leading-relaxed">{report.description}</p>
                         
                         {/* ✅ Updated: Tambahkan informasi tambahan sesuai schema */}
                         {report.reason && (
                           <div className="mt-3">
                             <h5 className="text-[#00ff88] font-medium mb-1">Reason:</h5>
-                            <p className="text-gray-300 text-sm line-clamp-2">{report.reason}</p>
+                            <p className="text-gray-300 text-sm">{report.reason}</p>
                           </div>
                         )}
                         
                         {report.casino_name && (
                           <div className="mt-3">
                             <h5 className="text-[#00ff88] font-medium mb-1">Casino:</h5>
-                            <p className="text-gray-300 text-sm line-clamp-1">{report.casino_name}</p>
+                            <p className="text-gray-300 text-sm">{report.casino_name}</p>
                           </div>
                         )}
                       </div>
