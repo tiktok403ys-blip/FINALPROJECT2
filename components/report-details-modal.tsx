@@ -11,6 +11,35 @@ export default function ReportDetailsModal({ id, onClose }: { id: string; onClos
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<any | null>(null)
 
+  // Map slug values from CRUD into human-friendly labels for public dialog
+  const CATEGORY_LABELS: Record<string, string> = {
+    payment_issue: "Payment Issue",
+    withdrawal_delay: "Withdrawal Delay",
+    bonus_dispute: "Bonus Dispute",
+    account_closure: "Account Closure",
+    unfair_terms: "Unfair Terms",
+    technical_issue: "Technical Issue",
+    customer_service: "Customer Service",
+    other: "Other",
+  }
+
+  const PRIORITY_LABELS: Record<string, string> = {
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    urgent: "Urgent",
+  }
+
+  function toTitle(input?: string | null) {
+    if (!input) return "";
+    return input
+      .toString()
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (m) => m.toUpperCase())
+  }
+
   useEffect(() => {
     const supabase = createClient()
     let cancelled = false
@@ -73,14 +102,14 @@ export default function ReportDetailsModal({ id, onClose }: { id: string; onClos
             {report.category && (
               <div>
                 <div className="text-[#00ff88] font-medium">Category</div>
-                <div className="text-white/80">{report.category}</div>
+                <div className="text-white/80">{CATEGORY_LABELS[report.category] || toTitle(report.category)}</div>
               </div>
             )}
 
             {report.priority && (
               <div>
                 <div className="text-[#00ff88] font-medium">Priority</div>
-                <div className="text-white/80">{report.priority}</div>
+                <div className="text-white/80">{PRIORITY_LABELS[report.priority] || toTitle(report.priority)}</div>
               </div>
             )}
 
