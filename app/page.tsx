@@ -13,6 +13,7 @@ import RealtimeHomeRefresher from "@/components/realtime-home-refresher"
 import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator } from "@/components/content-separator"
 import type { Casino, News, Bonus } from "@/lib/types"
 import { TopAlertTicker } from "@/components/top-alert-ticker"
+import MobileAutoSlider from "@/components/mobile-auto-slider"
 
 // Revalidate every 6 hours for static content optimization
 export const revalidate = 21600 // 6 hours instead of 1 hour
@@ -110,7 +111,9 @@ export default async function HomePage() {
             <p className="text-gray-400 text-lg">Discover our highest-rated online casinos with verified reviews</p>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth md:snap-none md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-visible">
+          {/* Mobile auto slider (only runs on mobile via matchMedia) */}
+          <MobileAutoSlider containerId="top-rated-casinos-slider" intervalMs={5000} resumeDelayMs={6000} />
+          <div id="top-rated-casinos-slider" className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth md:snap-none md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-visible">
             {topCasinos?.slice(0, 6).map((casino: Casino) => (
               <GlassCard key={casino.id} className="p-6 hover:border-[#00ff88]/30 transition-colors snap-start shrink-0 basis-[calc(100%-1rem)] sm:basis-[calc(100%-2rem)] md:basis-auto md:shrink md:min-w-0 w-auto">
                 <div className="text-center h-full flex flex-col">
