@@ -151,6 +151,16 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
     setMounted(true)
   }, [])
 
+  // Render a minimal, stable placeholder before mount to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="container mx-auto px-4 py-10 md:py-16" />
+        <Footer />
+      </div>
+    )
+  }
+
   // (Filter removed) handleFilterChange no longer needed
 
   return (
