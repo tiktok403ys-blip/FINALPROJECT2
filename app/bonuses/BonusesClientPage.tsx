@@ -164,6 +164,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
   // (Filter removed) handleFilterChange no longer needed
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-black">
       <DynamicPageHero
         pageName="bonuses"
@@ -650,5 +651,6 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }
