@@ -49,6 +49,7 @@ export function Navbar() {
   // PIN dialog removed
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [mobileActiveDropdown, setMobileActiveDropdown] = useState<string | null>(null)
+  const [hideLogo, setHideLogo] = useState(false)
 
   const pathname = usePathname()
   const mountedRef = useRef(true)
@@ -56,6 +57,8 @@ export function Navbar() {
   const supabase = createClient()
   const menuRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const logoRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLElement>(null)
 
   // Centralized auth from AuthProvider
   const { user, loading, signOut: authSignOut } = useAuth()
@@ -275,6 +278,80 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [isHomePage])
 
+  // Detect abnormal size/position for green G logo and hide it
+  const evaluateLogo = useCallback(() => {
+    try {
+      const el = logoRef.current
+      if (!el) return
+
+      // Skip checks if element is currently hidden by CSS breakpoint
+      const computed = window.getComputedStyle(el)
+      if (computed.display === 'none' || computed.visibility === 'hidden' || computed.opacity === '0') {
+        setHideLogo(false)
+        return
+      }
+
+      const rect = el.getBoundingClientRect()
+      const navRect = navRef.current?.getBoundingClientRect()
+
+      // Expected tailwind w-8 h-8 => 32px. Allow 20px..48px range.
+      const sizeOk = rect.width >= 20 && rect.width <= 48 && rect.height >= 20 && rect.height <= 48
+
+      // Approximate scale from CSS matrix (if present)
+      let scaleOk = true
+      const transform = computed.transform
+      if (transform && transform !== 'none') {
+        // matrix(a, b, c, d, tx, ty)
+        const m = transform.match(/matrix\(([^)]+)\)/)
+        if (m && m[1]) {
+          const parts = m[1].split(',').map(v => parseFloat(v.trim()))
+          if (parts.length >= 4 && parts.every(n => Number.isFinite(n))) {
+            const a = parts[0], b = parts[1], c = parts[2], d = parts[3]
+            const scaleX = Math.sqrt(a * a + b * b)
+            const scaleY = Math.sqrt(c * c + d * d)
+            const scale = Math.max(scaleX, scaleY)
+            scaleOk = scale >= 0.75 && scale <= 1.5
+          }
+        }
+      }
+
+      // Position should be within navbar bounds (with small tolerance)
+      const tol = 8
+      const positionOk = navRect
+        ? rect.top >= navRect.top - tol && rect.bottom <= navRect.bottom + tol && rect.left >= navRect.left - tol && rect.right <= navRect.right + tol
+        : rect.top >= 0 && rect.top <= 200 && rect.left >= 0 && rect.right <= window.innerWidth
+
+      const normal = sizeOk && scaleOk && positionOk
+      setHideLogo(!normal)
+    } catch {
+      // On any evaluation error, do not hide by default
+      setHideLogo(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Initial evaluation and observers
+    evaluateLogo()
+
+    const onResize = () => evaluateLogo()
+    const onScroll = () => evaluateLogo()
+    window.addEventListener('resize', onResize)
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    let ro: ResizeObserver | null = null
+    const logoEl = logoRef.current
+    if (window.ResizeObserver && logoEl) {
+      ro = new ResizeObserver(() => evaluateLogo())
+      ro.observe(logoEl)
+    }
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('scroll', onScroll)
+      if (ro) ro.disconnect()
+    }
+  }, [evaluateLogo])
+
   const handleSignOut = async () => {
     if (isSigningOut) return
 
@@ -364,6 +441,7 @@ export function Navbar() {
     <>
       {/* Desktop Navbar */}
       <nav
+        ref={navRef}
         className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
         }`}
@@ -373,10 +451,12 @@ export function Navbar() {
           <div className="flex items-center justify-between gap-8">
             {/* Logo */}
             <Link href="/" className={`flex items-center gap-2 group ${TOUCH_TARGET_SIZE}`}>
-              {/* Hide green G logo on very tight width to avoid squish */}
-              <div className="hidden sm:flex w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg items-center justify-center transition-transform">
-                <span className="text-black font-bold text-sm">G</span>
-              </div>
+              {/* Green G logo - auto-hide when abnormal size/position detected */}
+              {!hideLogo && (
+                <div ref={logoRef} className="hidden sm:flex w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg items-center justify-center transition-transform">
+                  <span className="text-black font-bold text-sm">G</span>
+                </div>
+              )}
               <span className="text-white font-bold text-lg">GuruSingapore</span>
             </Link>
 
