@@ -15,6 +15,7 @@ import { DataPointsSeparator, ExpertAnalysisSeparator, TrustedPlatformSeparator 
 import type { Casino, News, Bonus } from "@/lib/types"
 import { TopAlertTicker } from "@/components/top-alert-ticker"
 import ExclusiveBonusCard from "@/components/bonuses/ExclusiveBonusCard"
+import ExclusiveBonusesSlider from "@/components/bonuses/ExclusiveBonusesSlider"
 import MobileAutoSlider from "@/components/mobile-auto-slider"
 
 // Revalidate every 6 hours for static content optimization
@@ -178,7 +179,8 @@ export default async function HomePage() {
             {/* <p className="text-gray-400 text-lg">Claim the best casino bonuses available only through GuruSingapore</p> */}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Mobile/Tablet grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4">
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: Bonus & { casinos?: Casino }) => (
               <ExclusiveBonusCard
                 key={bonus.id}
@@ -191,6 +193,10 @@ export default async function HomePage() {
                 logoUrl={bonus.casinos?.logo_url || null}
               />
             ))}
+          </div>
+          {/* Desktop 3-row continuous slider */}
+          <div className="hidden lg:block">
+            <ExclusiveBonusesSlider items={(homeBonuses?.length ? homeBonuses : featuredBonuses) || []} />
           </div>
 
           <div className="text-center mt-8">

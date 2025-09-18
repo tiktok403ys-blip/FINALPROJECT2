@@ -1,0 +1,44 @@
+.slider { display: none; }
+
+@media (min-width: 1024px) {
+  .slider { display: block; }
+}
+
+.row { overflow: hidden; margin-bottom: 1rem; }
+
+.track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  will-change: transform;
+  animation-duration: var(--duration, 30s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-name: scroll-left;
+}
+
+.row[data-direction="right"] .track { animation-name: scroll-right; }
+
+.track:hover { animation-play-state: paused; }
+
+.item { flex: 0 0 320px; }
+
+@media (min-width: 1280px) {
+  .item { flex-basis: 340px; }
+}
+
+@keyframes scroll-left {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes scroll-right {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track { animation: none !important; }
+}
+
+
