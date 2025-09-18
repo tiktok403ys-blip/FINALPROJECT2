@@ -1,6 +1,7 @@
 import { HeroBanner } from "@/components/hero-banner"
 import { GlassCard } from "@/components/glass-card"
 import { Button } from "@/components/ui/button"
+import GlowButton from "@/components/buttons/GlowButton"
 import { createClient } from "@/lib/supabase/server"
 import { Star, TrendingUp, Trophy, Users, Shield, Award } from "lucide-react"
 import Link from "next/link"
@@ -162,9 +163,7 @@ export default async function HomePage() {
           </div>
 
           <div className="text-center mt-4 sm:mt-6 md:mt-8">
-            <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-              <Link href="/casinos">View All Casinos</Link>
-            </Button>
+            <GlowButton href="/casinos">View All Casinos</GlowButton>
           </div>
         </section>
 
@@ -195,9 +194,7 @@ export default async function HomePage() {
           </div>
 
           <div className="text-center mt-8">
-            <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-              <Link href="/bonuses">View All Bonuses</Link>
-            </Button>
+            <GlowButton href="/bonuses">View All Bonuses</GlowButton>
           </div>
         </section>
 
@@ -246,9 +243,7 @@ export default async function HomePage() {
           </div>
 
           <div className="text-center mt-8">
-            <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-              <Link href="/news">View All News</Link>
-            </Button>
+            <GlowButton href="/news">View All News</GlowButton>
           </div>
         </section>
 
@@ -307,9 +302,7 @@ export default async function HomePage() {
             </div>
 
             <div className="text-center mt-8">
-              <Button variant="outline" className="border-[#00ff88] text-[#00ff88] bg-transparent" asChild>
-                <Link href="/expert-reviews">View All Expert Reviews</Link>
-              </Button>
+              <GlowButton href="/expert-reviews">View All Expert Reviews</GlowButton>
             </div>
           </section>
         )}
