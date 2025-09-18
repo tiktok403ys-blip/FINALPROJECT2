@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowLeft, ExternalLink, Star, Users, Calendar, Clock, Shield, Award } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -148,17 +147,8 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Casino Header */}
-            <div className="flex flex-col sm:flex-row gap-6 mb-8">
-              <div className="flex-shrink-0">
-                <Image
-                  src={casino.logo_url || "/placeholder-logo.png"}
-                  alt={`${casino.name} logo`}
-                  width={120}
-                  height={120}
-                  className="rounded-xl border border-gray-700"
-                />
-              </div>
+            {/* Casino Header (text only, image removed) */}
+            <div className="flex flex-col gap-6 mb-8">
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-white mb-4">{casino.name}</h1>
                 <div className="flex flex-wrap items-center gap-4 mb-4">
