@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid, List } from 'lucide-react'
+import { Grid as GridIcon, List as ListIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -16,44 +16,32 @@ export function GridToggleButton({
   className 
 }: GridToggleButtonProps) {
   return (
-    <div className={cn(
-      "hidden md:flex items-center gap-3",
-      className
-    )}>
-      <span className="text-sm text-gray-400 font-medium tracking-wide">
-        View:
-      </span>
-      <div className="flex items-center bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-lg p-0.5">
-        <Button
-          variant="ghost"
-          size="sm"
+    <div className={cn("hidden md:flex items-center", className)}>
+      <div className="inline-flex rounded-lg border border-white/10 overflow-hidden">
+        <button
+          type="button"
           onClick={() => onToggle(false)}
           className={cn(
-            "h-8 px-4 transition-all duration-300 ease-out rounded-md border-0",
-            "hover:shadow-md active:shadow-sm",
-            !isGridView 
-              ? "bg-gray-800/80 text-white shadow-lg shadow-gray-900/20 scale-100" 
-              : "text-gray-400 hover:text-gray-300 hover:bg-gray-800/40 scale-95"
+            "px-3 py-2 text-sm flex items-center gap-2",
+            !isGridView ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
           )}
+          aria-pressed={!isGridView}
         >
-          <List className="h-4 w-4 mr-2 transition-transform duration-200 ease-out" />
+          <ListIcon className="w-4 h-4" />
           List
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
+        </button>
+        <button
+          type="button"
           onClick={() => onToggle(true)}
           className={cn(
-            "h-8 px-4 transition-all duration-300 ease-out rounded-md border-0",
-            "hover:shadow-md active:shadow-sm",
-            isGridView 
-              ? "bg-gray-800/80 text-white shadow-lg shadow-gray-900/20 scale-100" 
-              : "text-gray-400 hover:text-gray-300 hover:bg-gray-800/40 scale-95"
+            "px-3 py-2 text-sm flex items-center gap-2 border-l border-white/10",
+            isGridView ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
           )}
+          aria-pressed={isGridView}
         >
-          <Grid className="h-4 w-4 mr-2 transition-transform duration-200 ease-out" />
+          <GridIcon className="w-4 h-4" />
           Grid
-        </Button>
+        </button>
       </div>
     </div>
   )
