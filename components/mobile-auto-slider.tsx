@@ -24,8 +24,9 @@ export default function MobileAutoSlider({
     let interval: number | null = null
     let resumeTimer: number | null = null
     let pausedByUser = false
+    let isAutoScrolling = false
 
-    const items = () => Array.from(container.querySelectorAll<HTMLElement>('[data-slide-item="true"]'))
+    const items = () => Array.from(container.children).filter((n): n is HTMLElement => n instanceof HTMLElement)
 
     const start = () => {
       if (interval !== null) return
@@ -44,7 +45,9 @@ export default function MobileAutoSlider({
           }
         })
         const next = els[(idx + 1) % els.length]
+        isAutoScrolling = true
         container.scrollTo({ left: next.offsetLeft, behavior: 'smooth' })
+        window.setTimeout(() => { isAutoScrolling = false }, 700)
       }, Math.max(2500, intervalMs))
     }
 
@@ -64,6 +67,7 @@ export default function MobileAutoSlider({
     }
 
     const onUserInteract = () => {
+      if (isAutoScrolling) return
       pausedByUser = true
       clear()
       scheduleResume()
