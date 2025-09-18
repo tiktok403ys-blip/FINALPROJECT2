@@ -183,25 +183,27 @@ export default async function HomePage() {
               <GlassCard key={bonus.id} className="p-3 sm:p-4 lg:p-6 hover:border-[#00ff88]/30 transition-colors lg:bg-black/40 lg:border-white/15 bonus-card-optimized">
                 <div className="flex h-full flex-row lg:flex-col items-stretch">
                   <div
-                    className="relative w-20 lg:w-full lg:h-24 -ml-3 sm:-ml-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 lg:-mx-6 lg:-mt-6 lg:mb-3 rounded-l-xl sm:rounded-l-2xl lg:rounded-t-2xl lg:rounded-b-none flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
+                    className="relative w-20 lg:w-full lg:h-20 -ml-3 sm:-ml-4 -mr-3 sm:-mr-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 lg:-mx-6 lg:-mt-6 lg:mb-3 rounded-l-xl sm:rounded-l-2xl lg:rounded-t-2xl lg:rounded-b-none flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
                   >
-                    {bonus.casinos?.logo_url ? (
-                      <Image
-                        src={bonus.casinos.logo_url || "/placeholder.svg"}
-                        alt={`${bonus.casinos.name} logo`}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="block w-full h-full object-contain"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88] p-2">
-                        <Trophy className="w-8 h-8" />
-                        <span className="text-xs font-bold mt-1">BONUS</span>
-                      </div>
-                    )}
+                    <div className="absolute inset-0 flex items-center justify-center p-1 sm:p-2 lg:p-3">
+                      {bonus.casinos?.logo_url ? (
+                        <Image
+                          src={bonus.casinos.logo_url || "/placeholder.svg"}
+                          alt={`${bonus.casinos.name} logo`}
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                          className="object-contain"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88]">
+                          <Trophy className="w-8 h-8 lg:w-7 lg:h-7" />
+                          <span className="text-xs font-bold mt-1">BONUS</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 ml-3 lg:ml-0 lg:mt-2 flex flex-col text-left items-start">
                     <div className="flex items-center gap-1 mb-1">
