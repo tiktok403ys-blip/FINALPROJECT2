@@ -39,26 +39,24 @@
 .btn:hover.shine::before { transform: skewX(45deg) translateX(200px); }
 
 /* glow bars top/bottom */
-.glow::before,
-.glow::after {
+/* Single green fill overlay */
+.glow::before {
   content: "";
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 10px;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
   background: var(--glow-color);
-  border-radius: 10px;
-  box-shadow: 0 0 5px var(--glow-color), 0 0 15px var(--glow-color), 0 0 30px var(--glow-color), 0 0 60px var(--glow-color);
-  transition: all 0.5s ease;
+  border-radius: 30px;
+  box-shadow: 0 0 10px var(--glow-color), 0 0 30px var(--glow-color);
+  transition: width 0.4s ease;
   z-index: 0;
 }
 
-.glow::before { bottom: -5px; }
-.glow::after { top: -5px; }
+.glow::after { display: none; }
 
-.btn:hover.glow::before { bottom: 0; height: 50%; width: 80%; border-radius: 30px; }
-.btn:hover.glow::after { top: 0; height: 50%; width: 80%; border-radius: 30px; }
+.btn:hover.glow::before { width: 100%; }
 
 /* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {
@@ -66,6 +64,7 @@
 }
 
 /* Label stays above effects for readability */
-.label { position: relative; z-index: 1; font-weight: 600; }
+.label { position: relative; z-index: 1; font-weight: 600; color: #ffffff; }
+.btn:hover .label { color: #000000; }
 
 
