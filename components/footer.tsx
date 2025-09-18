@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react"
+import { Facebook, Send, MessageCircle, Mail, Phone, MapPin } from "lucide-react"
 
 function Footer() {
   return (
@@ -19,17 +19,17 @@ function Footer() {
               and comprehensive guides to help you make informed decisions.
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
+              {/* WhatsApp */}
+              <Link href="#" aria-label="WhatsApp" className="text-gray-400 hover:text-[#25D366] transition-colors">
+                <MessageCircle className="w-5 h-5" />
+              </Link>
+              {/* Telegram */}
+              <Link href="#" aria-label="Telegram" className="text-gray-400 hover:text-[#229ED9] transition-colors">
+                <Send className="w-5 h-5" />
+              </Link>
+              {/* Facebook */}
+              <Link href="#" aria-label="Facebook" className="text-gray-400 hover:text-[#1877F2] transition-colors">
                 <Facebook className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-[#8b5cf6] transition-colors">
-                <Twitter className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-[#06b6d4] transition-colors">
-                <Instagram className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-[#00ff88] transition-colors">
-                <Youtube className="w-5 h-5" />
               </Link>
             </div>
           </div>
