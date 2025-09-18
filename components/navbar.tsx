@@ -372,11 +372,9 @@ export function Navbar() {
         <div className="bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl px-6 py-3">
           <div className="flex items-center justify-between gap-8">
             {/* Logo */}
-            <Link
-              href="/"
-              className={`flex items-center gap-2 group ${TOUCH_TARGET_SIZE}`}
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg flex items-center justify-center transition-transform">
+            <Link href="/" className={`flex items-center gap-2 group ${TOUCH_TARGET_SIZE}`}>
+              {/* Hide green G logo on very tight width to avoid squish */}
+              <div className="hidden sm:flex w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-lg items-center justify-center transition-transform">
                 <span className="text-black font-bold text-sm">G</span>
               </div>
               <span className="text-white font-bold text-lg">GuruSingapore</span>
