@@ -183,7 +183,7 @@ export default async function HomePage() {
               <GlassCard key={bonus.id} className="p-3 sm:p-4 lg:p-6 hover:border-[#00ff88]/30 transition-colors lg:bg-black/40 lg:border-white/15 bonus-card-optimized">
                 <div className="flex h-full flex-row lg:flex-col items-stretch">
                   <div
-                    className="w-20 lg:w-full lg:h-24 -ml-3 sm:-ml-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 lg:ml-0 lg:mt-0 lg:mb-3 rounded-l-xl sm:rounded-l-2xl lg:rounded-t-xl lg:rounded-b-none flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
+                    className="w-20 lg:w-full lg:h-24 -ml-3 sm:-ml-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 lg:-mx-6 lg:-mt-6 lg:mb-3 rounded-l-xl sm:rounded-l-2xl lg:rounded-t-2xl lg:rounded-b-none flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
@@ -194,7 +194,7 @@ export default async function HomePage() {
                         alt={`${bonus.casinos.name} logo`}
                         width={72}
                         height={72}
-                        className="w-full h-full object-contain p-1"
+                        className="w-full h-full object-contain"
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center w-full h-full text-[#00ff88] p-2">
