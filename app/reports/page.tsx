@@ -132,6 +132,13 @@ export default function ReportsPage() {
               </button>
             </div>
           </div>
+          {/* Highlight Section Title above list */}
+          <div className="mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00ff88]/10 border border-[#00ff88]/30 text-[#00ff88] text-xs font-semibold">
+              <span className="w-2 h-2 bg-[#00ff88] rounded-full animate-pulse" />
+              Live Complaints: {loading ? '...' : stats.active}
+            </div>
+          </div>
           <div className={`grid grid-cols-1 ${view === 'grid3' ? 'md:grid-cols-2 lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6`}>
             {loading ? (
               // Loading skeleton
