@@ -47,7 +47,7 @@
 
 .glow::after { display: none; }
 
-.btn:hover.glow::before { width: 100%; }
+.glow:hover::before { width: 100%; }
 
 /* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {
