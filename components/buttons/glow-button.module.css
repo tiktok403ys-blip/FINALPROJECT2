@@ -24,17 +24,8 @@
 
 .btn:hover { letter-spacing: 3px; }
 
-.shine::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0;
-  width: 50%; height: 100%;
-  background: linear-gradient(to left, rgba(255,255,255,0.15), transparent);
-  transform: skewX(45deg) translateX(0);
-  transition: transform 0.5s ease;
-  filter: blur(0);
-  z-index: 0;
-}
+/* Disable sweep shine to keep solid fill effect */
+.shine::before { display: none; }
 
 .btn:hover.shine::before { transform: skewX(45deg) translateX(200px); }
 
@@ -50,7 +41,7 @@
   background: var(--glow-color);
   border-radius: 30px;
   box-shadow: 0 0 10px var(--glow-color), 0 0 30px var(--glow-color);
-  transition: width 0.4s ease;
+  transition: width 0.25s ease-out;
   z-index: 0;
 }
 
