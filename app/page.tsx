@@ -180,10 +180,10 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: Bonus & { casinos?: Casino }) => (
-              <GlassCard key={bonus.id} className="p-3 sm:p-4 hover:border-[#00ff88]/30 transition-colors">
-                <div className="flex items-stretch h-full">
+              <GlassCard key={bonus.id} className="p-3 sm:p-4 lg:p-6 hover:border-[#00ff88]/30 transition-colors lg:bg-black/40 lg:border-white/15 bonus-card-optimized">
+                <div className="flex h-full flex-row lg:flex-col items-stretch">
                   <div
-                    className="w-20 -ml-3 sm:-ml-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 rounded-l-xl sm:rounded-l-2xl flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
+                    className="w-20 lg:w-full lg:h-24 -ml-3 sm:-ml-4 -mt-3 sm:-mt-4 -mb-3 sm:-mb-4 lg:ml-0 lg:mt-0 lg:mb-3 rounded-l-xl sm:rounded-l-2xl lg:rounded-t-xl lg:rounded-b-none flex items-center justify-center flex-shrink-0 overflow-hidden exclusive-bonus-logo"
                     style={{
                       '--dynamic-bg-color': (bonus as any).card_bg_color || bonus.casinos?.placeholder_bg_color || '#1f2937'
                     } as React.CSSProperties}
@@ -203,7 +203,7 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 ml-3 flex flex-col text-left items-start">
+                  <div className="flex-1 ml-3 lg:ml-0 lg:mt-2 flex flex-col text-left items-start">
                     <div className="flex items-center gap-1 mb-1">
                       {bonus.is_exclusive && (
                         <span className="bg-white/10 border border-white/20 text-white/90 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide">Exclusive</span>
