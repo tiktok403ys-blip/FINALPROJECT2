@@ -13,7 +13,7 @@ export default function GlowButton({ href, children, glowColor = "#00ff88" }: Pr
   return (
     <span className={styles.wrap}>
       <Link href={href} className={`${styles.btn} ${styles.shine} ${styles.glow}`} style={{ ['--glow-color' as any]: glowColor }}>
-        {children}
+        <span className={styles.label}>{children}</span>
       </Link>
     </span>
   )

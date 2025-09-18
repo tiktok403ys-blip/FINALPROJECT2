@@ -33,6 +33,7 @@
   transform: skewX(45deg) translateX(0);
   transition: transform 0.5s ease;
   filter: blur(0);
+  z-index: 0;
 }
 
 .btn:hover.shine::before { transform: skewX(45deg) translateX(200px); }
@@ -50,6 +51,7 @@
   border-radius: 10px;
   box-shadow: 0 0 5px var(--glow-color), 0 0 15px var(--glow-color), 0 0 30px var(--glow-color), 0 0 60px var(--glow-color);
   transition: all 0.5s ease;
+  z-index: 0;
 }
 
 .glow::before { bottom: -5px; }
@@ -62,5 +64,8 @@
 @media (prefers-reduced-motion: reduce) {
   .btn, .shine::before, .glow::before, .glow::after { transition: none !important; }
 }
+
+/* Label stays above effects for readability */
+.label { position: relative; z-index: 1; font-weight: 600; }
 
 
