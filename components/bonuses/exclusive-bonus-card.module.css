@@ -32,7 +32,10 @@
 
 .exSvgWrap {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4.5rem; /* ~72px default */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,11 +43,11 @@
 }
 
 @media (min-width: 640px) {
-  .exSvgWrap { padding: 0.5rem; }
+  .exSvgWrap { padding: 0.5rem; height: 4.5rem; }
 }
 
 @media (min-width: 1024px) {
-  .exSvgWrap { padding: 0.75rem; }
+  .exSvgWrap { padding: 0.75rem; height: 5rem; } /* ~80px on desktop */
 }
 
 .exSvg {
@@ -55,6 +58,27 @@
 }
 
 .exCard:hover .exSvg {
+  transform: scale(0);
+  opacity: 0;
+}
+
+/* Explicit logo sizing like Top Rated Casinos */
+.exLogo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+@media (min-width: 640px) {
+  .exLogo { width: 64px; height: 64px; }
+}
+
+@media (min-width: 1024px) {
+  .exLogo { width: 64px; height: 64px; }
+}
+
+.exCard:hover .exLogo {
   transform: scale(0);
   opacity: 0;
 }
