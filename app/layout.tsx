@@ -15,6 +15,7 @@ import { PWAInstaller } from "@/components/pwa-installer"
 import { GoogleAnalytics } from "@/components/google-analytics"
 import DynamicFavicon from "@/components/dynamic-favicon"
 import AntiInspect from "@/components/anti-inspect"
+import BackToTop from "@/components/back-to-top"
 import { headers, cookies } from "next/headers"
 import type { Viewport } from "next"
 import { validateEnvironment } from "@/lib/config/env-validator"
@@ -101,6 +102,7 @@ export default async function RootLayout({
                   {/* {!isAdminSubdomain && <PWAInstaller />} */}
                   <WebVitals />
                   <PerformanceMonitor enableRealTime={false} />
+                  <BackToTop />
                 </div>
                 <Toaster />
               </AuthProvider>
