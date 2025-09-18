@@ -174,7 +174,7 @@ export default function ReportsPage() {
                     <div className={`${view === 'grid3' ? 'flex-1' : 'lg:w-3/4'} p-6 bg-white/5 flex flex-col`}> 
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-2">{report.title}</h3>
+                          <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">{report.title}</h3>
                           <div className="flex items-center gap-4 mb-4">
                             <span
                               className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(report.status)}`}
@@ -192,20 +192,20 @@ export default function ReportsPage() {
                       {/* Problem Description */}
                       <div className="mb-6">
                         <h4 className="text-[#00ff88] font-semibold mb-3">Problem Description:</h4>
-                        <p className="text-gray-300 text-sm leading-relaxed">{report.description}</p>
+                        <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{report.description}</p>
                         
                         {/* ✅ Updated: Tambahkan informasi tambahan sesuai schema */}
                         {report.reason && (
                           <div className="mt-3">
                             <h5 className="text-[#00ff88] font-medium mb-1">Reason:</h5>
-                            <p className="text-gray-300 text-sm">{report.reason}</p>
+                            <p className="text-gray-300 text-sm line-clamp-2">{report.reason}</p>
                           </div>
                         )}
                         
                         {report.casino_name && (
                           <div className="mt-3">
                             <h5 className="text-[#00ff88] font-medium mb-1">Casino:</h5>
-                            <p className="text-gray-300 text-sm">{report.casino_name}</p>
+                            <p className="text-gray-300 text-sm line-clamp-1">{report.casino_name}</p>
                           </div>
                         )}
                       </div>
