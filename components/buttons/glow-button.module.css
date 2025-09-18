@@ -56,6 +56,6 @@
 
 /* Label stays above effects for readability */
 .label { position: relative; z-index: 1; font-weight: 600; color: #ffffff; }
-.btn:hover .label { color: #000000; }
+.btn:hover .label { color: #ffffff; }
 
 
