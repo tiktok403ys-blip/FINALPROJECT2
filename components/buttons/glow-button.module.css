@@ -25,29 +25,13 @@
 .btn:hover { letter-spacing: 3px; }
 
 /* Disable sweep shine to keep solid fill effect */
-.shine::before { display: none; }
+.shine::before { display: none !important; }
 
 .btn:hover.shine::before { transform: skewX(45deg) translateX(200px); }
 
 /* glow bars top/bottom */
-/* Single green fill overlay */
-.glow::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 0%;
-  background: var(--glow-color);
-  border-radius: 30px;
-  box-shadow: 0 0 10px var(--glow-color), 0 0 30px var(--glow-color);
-  transition: width 0.25s ease-out;
-  z-index: 0;
-}
-
-.glow::after { display: none; }
-
-.glow:hover::before { width: 100%; }
+/* Disable pseudo elements entirely */
+.glow::before, .glow::after { display: none !important; content: none !important; }
 
 /* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {
@@ -56,6 +40,23 @@
 
 /* Label stays above effects for readability */
 .label { position: relative; z-index: 1; font-weight: 600; color: #ffffff; }
-.btn:hover .label { color: #ffffff; }
+.btn:hover .label, .btn:focus-visible .label { color: #ffffff; }
+
+/* Desktop pointer: solid green fill on hover */
+@media (pointer: fine) {
+  .glow:hover {
+    background: var(--glow-color, #00ff88);
+    border-color: rgba(255,255,255,0.25);
+    box-shadow: 0 20px 35px -10px rgba(0,255,136,0.35), 0 0 0 1px rgba(255,255,255,0.12);
+    letter-spacing: 2px;
+  }
+}
+
+/* Keyboard accessibility */
+.glow:focus-visible {
+  background: var(--glow-color, #00ff88);
+  border-color: rgba(255,255,255,0.25);
+  box-shadow: 0 0 0 3px rgba(0,255,136,0.35), 0 0 0 1px rgba(255,255,255,0.12);
+}
 
 
