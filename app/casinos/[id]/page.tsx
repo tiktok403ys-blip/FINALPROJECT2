@@ -4,7 +4,7 @@ import Image from "next/image"
 import { ArrowLeft, ExternalLink, Star, Users, Calendar, Clock, Shield, Award } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GlassCard } from "@/components/glass-card"
 import { createClient } from "@/lib/supabase/server"
 import { ContentSections } from "@/components/content-sections"
 
@@ -213,14 +213,14 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
 
           {/* Sidebar - Quick Overview */}
           <div className="lg:col-span-1">
-            <Card className="bg-gray-800/50 border-gray-700 sticky top-32">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+            <GlassCard className="sticky top-32">
+              <div className="px-6 pt-6">
+                <h3 className="text-white font-semibold flex items-center gap-2">
                   <Award className="w-5 h-5 text-[#00ff88]" />
                   Quick Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 flex items-center gap-2">
                     <Shield className="w-4 h-4" />
@@ -256,8 +256,8 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
                     24/7
                   </Badge>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
           </div>
         </div>
       </div>
