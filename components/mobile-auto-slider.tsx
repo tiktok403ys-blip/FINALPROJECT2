@@ -25,6 +25,7 @@ export default function MobileAutoSlider({
     let resumeTimer: number | null = null
     let pausedByUser = false
     let isAutoScrolling = false
+    let direction: 1 | -1 = 1
 
     const items = () => Array.from(container.children).filter((n): n is HTMLElement => n instanceof HTMLElement)
 
@@ -44,7 +45,16 @@ export default function MobileAutoSlider({
             idx = i
           }
         })
-        const next = els[(idx + 1) % els.length]
+        // Compute next index with ping-pong behavior
+        let nextIdx = idx + direction
+        if (nextIdx >= els.length || nextIdx < 0) {
+          direction = (direction === 1 ? -1 : 1)
+          nextIdx = idx + direction
+          // Clamp just in case
+          if (nextIdx >= els.length) nextIdx = els.length - 1
+          if (nextIdx < 0) nextIdx = 0
+        }
+        const next = els[nextIdx]
         isAutoScrolling = true
         container.scrollTo({ left: next.offsetLeft, behavior: 'smooth' })
         window.setTimeout(() => { isAutoScrolling = false }, 700)
