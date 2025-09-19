@@ -34,7 +34,16 @@ export default function SocialLinksAdminPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      setRows((data as any) || [])
+      const incoming = ((data as any) || []) as SocialLink[]
+      const presetKeys = ['whatsapp','telegram','facebook']
+      const byIcon = new Map(incoming.map(r => [r.icon, r]))
+      presetKeys.forEach((key, idx) => {
+        if (!byIcon.has(key)) {
+          const label = key.charAt(0).toUpperCase() + key.slice(1)
+          incoming.push({ name: label, icon: key, url: '', sort_order: (incoming.length + idx + 1), is_active: true })
+        }
+      })
+      setRows(incoming)
     }
     setLoading(false)
   }, [supabase])
@@ -100,17 +109,11 @@ export default function SocialLinksAdminPage() {
             <>
               {/* Preset 3 fixed forms for WhatsApp, Telegram, Facebook */}
               <div className="grid grid-cols-1 gap-3">
-                {[
+                {[ 
                   { key: 'whatsapp', label: 'WhatsApp' },
                   { key: 'telegram', label: 'Telegram' },
                   { key: 'facebook', label: 'Facebook' }
                 ].map((preset) => {
-                  const idx = rows.findIndex(r => r.icon === preset.key)
-                  const row = idx >= 0 ? rows[idx] : { name: preset.label, icon: preset.key, url: '', sort_order: idx >= 0 ? rows[idx].sort_order : rows.length + 1, is_active: true }
-                  if (idx < 0) {
-                    // ensure preset exists in rows (in-memory)
-                    rows.push(row as any)
-                  }
                   const i = rows.findIndex(r => r.icon === preset.key)
                   return (
                     <div key={preset.key} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-center bg-white/5 p-3 rounded-lg">
@@ -142,23 +145,25 @@ export default function SocialLinksAdminPage() {
               <hr className="border-white/10" />
               <div className="text-xs text-gray-400">{ICON_TIPS}</div>
               <div className="space-y-3">
-                {rows.map((row, i) => (
+                {rows
+                  .filter((row) => !['whatsapp','telegram','facebook'].includes(row.icon))
+                  .map((row, i) => (
                   <div key={row.id || `tmp-${i}`} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-center bg-white/5 p-3 rounded-lg">
                     <Input
                       value={row.name}
-                      onChange={(e) => updateRow(i, { name: e.target.value })}
+                      onChange={(e) => updateRow(rows.findIndex(r => r.icon === row.icon), { name: e.target.value })}
                       placeholder="Name (e.g., Facebook)"
                       className="bg-white/5 border-white/20 text-white placeholder:text-white/50 md:col-span-2"
                     />
                     <Input
                       value={row.icon}
-                      onChange={(e) => updateRow(i, { icon: e.target.value })}
+                      onChange={(e) => updateRow(rows.findIndex(r => r.icon === row.icon), { icon: e.target.value })}
                       placeholder="Icon key (facebook/telegram/whatsapp)"
                       className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                     />
                     <Input
                       value={row.url}
-                      onChange={(e) => updateRow(i, { url: e.target.value })}
+                      onChange={(e) => updateRow(rows.findIndex(r => r.icon === row.icon), { url: e.target.value })}
                       placeholder="https://..."
                       className="bg-white/5 border-white/20 text-white placeholder:text-white/50 md:col-span-2"
                     />
@@ -166,20 +171,18 @@ export default function SocialLinksAdminPage() {
                       <Input
                         type="number"
                         value={row.sort_order}
-                        onChange={(e) => updateRow(i, { sort_order: Number(e.target.value) })}
+                        onChange={(e) => updateRow(rows.findIndex(r => r.icon === row.icon), { sort_order: Number(e.target.value) })}
                         className="bg-white/5 border-white/20 text-white w-20"
                       />
                       <label className="text-xs text-gray-400">Order</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Switch checked={row.is_active} onCheckedChange={(v) => updateRow(i, { is_active: !!v })} />
+                      <Switch checked={row.is_active} onCheckedChange={(v) => updateRow(rows.findIndex(r => r.icon === row.icon), { is_active: !!v })} />
                       <span className="text-xs text-gray-300">Active</span>
                     </div>
-                    {!["whatsapp","telegram","facebook"].includes(row.icon) && (
-                      <div className="flex items-center justify-end gap-2 md:col-span-6">
-                        <Button variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => removeRow(i)}>Delete</Button>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-end gap-2 md:col-span-6">
+                      <Button variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => removeRow(rows.findIndex(r => r.icon === row.icon))}>Delete</Button>
+                    </div>
                   </div>
                 ))}
               </div>
