@@ -86,31 +86,31 @@ function SocialLinksAdminPage() {
   const save = async () => {
     setSaving(true)
     try {
-      // Ensure the user is authenticated; if not, RLS will block silently
-      const { data: userData, error: userErr } = await supabase.auth.getUser()
-      if (userErr || !userData?.user) {
-        toast.error('You must be logged in as admin to save')
-        return
-      }
-      const toDelete = rows.filter((r: any) => r._delete && r.id)
-      for (const r of toDelete) {
-        const { error } = await supabase.from('social_links').delete().eq('id', r.id)
-        if (error) throw error
-      }
+      // Build payload and call server API to avoid client-side RLS/session pitfalls
       const clean = rows.filter((r: any) => !r._delete)
-      // upsert by unique icon
-      const invalid = clean.filter(r => !(r.icon?.trim() && r.name?.trim() && r.url?.trim()))
       const payload = clean
         .filter(r => r.icon?.trim() && r.name?.trim() && r.url?.trim())
-        .map(r => ({ name: r.name, icon: r.icon, url: r.url, sort_order: r.sort_order, is_active: r.is_active, id: r.id }))
-      if (invalid.length && payload.length === 0) {
+        .map(r => ({ id: r.id, name: r.name.trim(), icon: r.icon.trim().toLowerCase(), url: r.url.trim(), sort_order: r.sort_order, is_active: r.is_active }))
+      if (payload.length === 0) {
         toast.error('Please fill name, icon, and url for at least one link')
         return
       }
-      if (payload.length) {
-        const { error } = await supabase.from('social_links').upsert(payload, { onConflict: 'icon' })
-        if (error) throw error
+      const res = await fetch('/api/admin/social-links', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload })
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json?.error || 'Failed to save')
+
+      // Perform deletions after successful upsert
+      const toDelete = rows.filter((r: any) => r._delete && r.id)
+      for (const r of toDelete) {
+        const idStr = String(r.id)
+        await fetch(`/api/admin/social-links?id=${encodeURIComponent(idStr)}`, { method: 'DELETE', credentials: 'include' })
       }
+
       toast.success('Social links saved')
       await load()
     } catch (e: any) {
