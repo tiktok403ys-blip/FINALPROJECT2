@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
 import PageHero from "@/components/page-hero"
 import { AlertTriangle, DollarSign, Clock, Heart, Shield, Phone, Globe } from "lucide-react"
 
@@ -202,7 +201,7 @@ export default function ResponsibleGamblingPage() {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

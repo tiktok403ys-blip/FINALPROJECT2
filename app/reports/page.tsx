@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import dynamic from "next/dynamic"
 import { ReportDialog } from "@/components/report-dialog"
 import { Shield, AlertTriangle, FileText, Users, Flag, Clock, Calendar, ExternalLink, Hourglass, CheckCircle, XCircle, LayoutGrid, List } from "lucide-react"
-import { Footer } from "@/components/footer"
 import { useReportsRealtime } from "@/hooks/use-reports-realtime"
 
 // Ensure stable identity for dynamically imported modal across re-renders
@@ -308,7 +307,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

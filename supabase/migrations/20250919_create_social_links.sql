@@ -28,7 +28,7 @@ create trigger tg_social_links_updated_at
 before update on public.social_links
 for each row execute function public.set_updated_at();
 
--- RLS policies (example: allow read to anon, write to authenticated with admin role via custom claim)
+-- RLS policies (allow read to anon for active links, write to authenticated admins using admin_users table)
 alter table public.social_links enable row level security;
 
 -- Read policy: allow everyone to read only active links
@@ -39,23 +39,58 @@ to anon, authenticated
 using (is_active = true);
 
 -- Write policies: authenticated users with claim 'role' in ('admin','super_admin')
+drop policy if exists social_links_admin_insert on public.social_links;
 create policy social_links_admin_insert
 on public.social_links
 for insert
 to authenticated
-with check ((coalesce(current_setting('request.jwt.claims', true), '{}')::jsonb ->> 'role') in ('admin','super_admin'));
+with check (
+  exists (
+    select 1
+    from public.admin_users au
+    where au.user_id = auth.uid()
+      and au.is_active = true
+      and au.role in ('admin','super_admin')
+  )
+);
 
+drop policy if exists social_links_admin_update on public.social_links;
 create policy social_links_admin_update
 on public.social_links
 for update
 to authenticated
-using ((coalesce(current_setting('request.jwt.claims', true), '{}')::jsonb ->> 'role') in ('admin','super_admin'))
-with check ((coalesce(current_setting('request.jwt.claims', true), '{}')::jsonb ->> 'role') in ('admin','super_admin'));
+using (
+  exists (
+    select 1
+    from public.admin_users au
+    where au.user_id = auth.uid()
+      and au.is_active = true
+      and au.role in ('admin','super_admin')
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.admin_users au
+    where au.user_id = auth.uid()
+      and au.is_active = true
+      and au.role in ('admin','super_admin')
+  )
+);
 
+drop policy if exists social_links_admin_delete on public.social_links;
 create policy social_links_admin_delete
 on public.social_links
 for delete
 to authenticated
-using ((coalesce(current_setting('request.jwt.claims', true), '{}')::jsonb ->> 'role') in ('admin','super_admin'));
+using (
+  exists (
+    select 1
+    from public.admin_users au
+    where au.user_id = auth.uid()
+      and au.is_active = true
+      and au.role in ('admin','super_admin')
+  )
+);
 
 

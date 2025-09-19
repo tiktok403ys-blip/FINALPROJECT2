@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
 import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { Shield, CheckCircle, Users, Award, Scale, Eye, Heart, Globe, Target, Search, TestTube, BarChart, Monitor } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -389,7 +388,7 @@ export default function FairGamblingCodexPage() {
         </section>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </>
   )
 }

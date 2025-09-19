@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { DynamicPageHero } from '@/components/dynamic-page-hero'
 import { GlassCard } from '@/components/glass-card'
-import { Footer } from '@/components/footer'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Flag, ShieldAlert, Search as SearchIcon, X as XIcon } from 'lucide-react'
@@ -209,7 +208,7 @@ export default function ReportsListPage() {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

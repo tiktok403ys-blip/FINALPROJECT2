@@ -1,7 +1,21 @@
 import Link from "next/link"
 import { Facebook, Send, MessageCircle, Mail, Phone, MapPin } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
 
-function Footer() {
+// Mark as server component explicitly
+export default async function Footer() {
+  // Load active social links from DB; fallback to none if unavailable
+  let socialLinks: Array<{ icon: string; url: string }> = []
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('social_links')
+      .select('icon, url, is_active, sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+    socialLinks = (data as any) || []
+  } catch {}
+
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -19,18 +33,32 @@ function Footer() {
               and comprehensive guides to help you make informed decisions.
             </p>
             <div className="flex space-x-4">
-              {/* WhatsApp */}
-              <Link href="#" aria-label="WhatsApp" className="text-gray-400 hover:text-[#25D366] transition-colors">
-                <MessageCircle className="w-5 h-5" />
-              </Link>
-              {/* Telegram */}
-              <Link href="#" aria-label="Telegram" className="text-gray-400 hover:text-[#229ED9] transition-colors">
-                <Send className="w-5 h-5" />
-              </Link>
-              {/* Facebook */}
-              <Link href="#" aria-label="Facebook" className="text-gray-400 hover:text-[#1877F2] transition-colors">
-                <Facebook className="w-5 h-5" />
-              </Link>
+              {socialLinks.map((link, idx) => {
+                const iconKey = (link.icon || '').toLowerCase()
+                const common = "text-gray-400 transition-colors"
+                if (iconKey === 'whatsapp') {
+                  return (
+                    <Link key={idx} href={link.url || '#'} aria-label="WhatsApp" className={`${common} hover:text-[#25D366]`} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="w-5 h-5" />
+                    </Link>
+                  )
+                }
+                if (iconKey === 'telegram') {
+                  return (
+                    <Link key={idx} href={link.url || '#'} aria-label="Telegram" className={`${common} hover:text-[#229ED9]`} target="_blank" rel="noopener noreferrer">
+                      <Send className="w-5 h-5" />
+                    </Link>
+                  )
+                }
+                if (iconKey === 'facebook') {
+                  return (
+                    <Link key={idx} href={link.url || '#'} aria-label="Facebook" className={`${common} hover:text-[#1877F2]`} target="_blank" rel="noopener noreferrer">
+                      <Facebook className="w-5 h-5" />
+                    </Link>
+                  )
+                }
+                return null
+              })}
             </div>
           </div>
 
@@ -140,6 +168,3 @@ function Footer() {
     </footer>
   )
 }
-
-export default Footer
-export { Footer }

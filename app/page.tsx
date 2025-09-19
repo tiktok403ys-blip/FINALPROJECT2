@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server"
 import { Star, TrendingUp, Trophy, Users, Shield, Award } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { Footer } from "@/components/footer"
 import { LogoSlider } from "@/components/logo-slider"
 import { WhyChooseUs, LiveStats, HowItWorks, RecentActivity } from "@/components/content-sections"
 import RealtimeCasinosRefresher from "@/components/realtime-casinos-refresher"
@@ -366,8 +365,7 @@ export default async function HomePage() {
         <RecentActivity />
       </div>
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

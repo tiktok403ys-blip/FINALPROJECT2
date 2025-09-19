@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
+// Footer is now rendered from RootLayout
 import PageHero from "@/components/page-hero"
 import { Shield, Eye, Lock, UserCheck, Mail, Database } from "lucide-react"
 
@@ -167,7 +167,7 @@ export default function PrivacyPage() {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

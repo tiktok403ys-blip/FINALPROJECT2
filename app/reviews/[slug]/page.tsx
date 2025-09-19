@@ -17,7 +17,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { Footer } from "@/components/footer"
 import { notFound } from "next/navigation"
 import type { Review } from "@/lib/types"
 import { WriteReviewForm } from "@/components/reviews/write-review-form"
@@ -643,7 +642,7 @@ export default async function ReviewsPage({ params }: PageProps) {
         )}
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

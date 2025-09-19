@@ -17,7 +17,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { Footer } from "@/components/footer"
 import { notFound } from "next/navigation"
 import type { CasinoReview } from "@/lib/types"
 import { ExpertReviewsRealtimeRefresher } from "@/components/reviews/expert-reviews-realtime-refresher"
@@ -429,7 +428,7 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

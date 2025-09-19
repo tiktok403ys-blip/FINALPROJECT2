@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { Star, Building2, Calendar, MessageCircle, ThumbsUp, Award } from "lucide-react"
 import Link from "next/link"
-import { Footer } from "@/components/footer"
 import Image from "next/image"
 
 export const metadata = {
@@ -274,7 +273,7 @@ export default async function ExpertReviewsPage() {
           </div>
         </section>
 
-        <Footer />
+        {/* Footer is now rendered from RootLayout */}
       </div>
     </>
   )

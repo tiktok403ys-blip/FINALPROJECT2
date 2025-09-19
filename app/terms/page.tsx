@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
+// Footer is now rendered from RootLayout
 import PageHero from "@/components/page-hero"
 import { FileText, Shield, AlertCircle, Scale } from "lucide-react"
 
@@ -143,7 +143,7 @@ export default function TermsPage() {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

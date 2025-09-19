@@ -28,7 +28,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import Link from "next/link"
 import Image from "next/image"
-import { Footer } from "@/components/footer"
 import { BonusFeedback } from "@/components/bonuses/bonus-feedback"
 import { useToast } from "@/hooks/use-toast"
 import type { Bonus, Casino } from "@/lib/types"
@@ -175,7 +174,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
     return (
       <div className="min-h-screen bg-black">
         <div className="container mx-auto px-4 py-10 md:py-16" />
-        <Footer />
+        {/* Footer is now rendered from RootLayout */}
       </div>
     )
   }
@@ -675,7 +674,7 @@ export default function BonusesClientPage({ bonuses: initialBonuses }: { bonuses
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
     </ErrorBoundary>
   )

@@ -12,7 +12,6 @@ import { Eye, EyeOff, Mail, Lock, User, Chrome } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Footer } from "@/components/footer"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -296,8 +295,7 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }

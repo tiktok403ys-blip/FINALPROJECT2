@@ -10,6 +10,7 @@ import { WebVitals } from "@/components/web-vitals"
 import { Toaster } from "@/components/ui/toast"
 import { AnalyticsProvider } from "@/components/analytics-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
+import Footer from "@/components/footer"
 import { PerformanceMonitor } from "@/components/performance-monitor"
 import { PWAInstaller } from "@/components/pwa-installer"
 import { GoogleAnalytics } from "@/components/google-analytics"
@@ -102,6 +103,7 @@ export default async function RootLayout({
                   {/* {!isAdminSubdomain && <PWAInstaller />} */}
                   <WebVitals />
                   <PerformanceMonitor enableRealTime={false} />
+                  {!isAdminSubdomain && <Footer />}
                   <BackToTop />
                 </div>
                 <Toaster />

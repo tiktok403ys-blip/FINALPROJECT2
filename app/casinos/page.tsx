@@ -26,7 +26,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { Footer } from "@/components/footer"
 import type { Casino } from "@/lib/types"
 
 // Advanced React Ecosystem imports
@@ -542,7 +541,7 @@ export default async function CasinosPage({ searchParams }: { searchParams?: Pro
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
         </div>
       </RealtimeCasinoProvider>
     </QueryProvider>

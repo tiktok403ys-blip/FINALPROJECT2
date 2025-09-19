@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
+// Footer is now rendered from RootLayout
 import PageHero from "@/components/page-hero"
 import { Shield, Eye, Settings, Cookie, Info, Globe } from "lucide-react"
 
@@ -260,7 +260,7 @@ export default function CookiePolicyPage() {
         </div>
       </div>
 
-      <Footer />
+      {/* Footer is now rendered from RootLayout */}
     </div>
   )
 }
