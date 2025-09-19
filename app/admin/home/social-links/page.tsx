@@ -69,20 +69,13 @@ export default function SocialLinksAdminPage() {
         if (error) throw error
       }
       const clean = rows.filter((r: any) => !r._delete)
-      for (const r of clean) {
-        if (!r.name?.trim() || !r.icon?.trim() || !r.url?.trim()) continue
-        if (r.id) {
-          const { error } = await supabase
-            .from('social_links')
-            .update({ name: r.name, icon: r.icon, url: r.url, sort_order: r.sort_order, is_active: r.is_active })
-            .eq('id', r.id)
-          if (error) throw error
-        } else {
-          const { error } = await supabase
-            .from('social_links')
-            .insert([{ name: r.name, icon: r.icon, url: r.url, sort_order: r.sort_order, is_active: r.is_active }])
-          if (error) throw error
-        }
+      // upsert by unique icon
+      const payload = clean
+        .filter(r => r.name?.trim() && r.icon?.trim() && r.url?.trim())
+        .map(r => ({ name: r.name, icon: r.icon, url: r.url, sort_order: r.sort_order, is_active: r.is_active, id: r.id }))
+      if (payload.length) {
+        const { error } = await supabase.from('social_links').upsert(payload, { onConflict: 'icon' })
+        if (error) throw error
       }
       toast.success('Social links saved')
       await load()
@@ -105,6 +98,48 @@ export default function SocialLinksAdminPage() {
             <div className="text-gray-400">Loading...</div>
           ) : (
             <>
+              {/* Preset 3 fixed forms for WhatsApp, Telegram, Facebook */}
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { key: 'whatsapp', label: 'WhatsApp' },
+                  { key: 'telegram', label: 'Telegram' },
+                  { key: 'facebook', label: 'Facebook' }
+                ].map((preset) => {
+                  const idx = rows.findIndex(r => r.icon === preset.key)
+                  const row = idx >= 0 ? rows[idx] : { name: preset.label, icon: preset.key, url: '', sort_order: idx >= 0 ? rows[idx].sort_order : rows.length + 1, is_active: true }
+                  if (idx < 0) {
+                    // ensure preset exists in rows (in-memory)
+                    rows.push(row as any)
+                  }
+                  const i = rows.findIndex(r => r.icon === preset.key)
+                  return (
+                    <div key={preset.key} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-center bg-white/5 p-3 rounded-lg">
+                      <Input
+                        value={rows[i].name}
+                        onChange={(e) => updateRow(i, { name: e.target.value })}
+                        placeholder={`${preset.label} Name`}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/50 md:col-span-2"
+                      />
+                      <Input
+                        value={rows[i].icon}
+                        disabled
+                        className="bg-white/5 border-white/20 text-white md:col-span-1"
+                      />
+                      <Input
+                        value={rows[i].url}
+                        onChange={(e) => updateRow(i, { url: e.target.value })}
+                        placeholder={`https://... (${preset.label})`}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/50 md:col-span-2"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Switch checked={rows[i].is_active} onCheckedChange={(v) => updateRow(i, { is_active: !!v })} />
+                        <span className="text-xs text-gray-300">Active</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <hr className="border-white/10" />
               <div className="text-xs text-gray-400">{ICON_TIPS}</div>
               <div className="space-y-3">
                 {rows.map((row, i) => (
@@ -140,9 +175,11 @@ export default function SocialLinksAdminPage() {
                       <Switch checked={row.is_active} onCheckedChange={(v) => updateRow(i, { is_active: !!v })} />
                       <span className="text-xs text-gray-300">Active</span>
                     </div>
-                    <div className="flex items-center justify-end gap-2 md:col-span-6">
-                      <Button variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => removeRow(i)}>Delete</Button>
-                    </div>
+                    {!["whatsapp","telegram","facebook"].includes(row.icon) && (
+                      <div className="flex items-center justify-end gap-2 md:col-span-6">
+                        <Button variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => removeRow(i)}>Delete</Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
