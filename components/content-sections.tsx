@@ -324,10 +324,10 @@ export function RecentActivity() {
 }
 
 // Main ContentSections component that combines all sections
-export function ContentSections() {
+export function ContentSections({ whyChooseUsDescriptions = true }: { whyChooseUsDescriptions?: boolean }) {
   return (
     <>
-      <WhyChooseUs />
+      <WhyChooseUs showDescriptions={whyChooseUsDescriptions} />
       <LiveStats />
       <HowItWorks />
       <RecentActivity />

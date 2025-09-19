@@ -198,7 +198,7 @@ export default async function CasinoPage({ params }: CasinoPageProps) {
             </div>
 
             {/* Content Sections */}
-            <ContentSections />
+            <ContentSections whyChooseUsDescriptions={false} />
           </div>
 
           {/* Sidebar - Quick Overview */}
