@@ -28,14 +28,19 @@ export async function POST(request: Request) {
 
     const clean = payload
       .filter(r => r && (r.icon || '').trim() && (r.name || '').trim() && (r.url || '').trim())
-      .map(r => ({
-        id: r.id,
-        name: r.name?.trim(),
-        icon: r.icon?.trim().toLowerCase(),
-        url: r.url?.trim(),
-        sort_order: r.sort_order ?? 0,
-        is_active: r.is_active ?? true,
-      }))
+      .map(r => {
+        const row: any = {
+          name: r.name?.trim(),
+          icon: r.icon?.trim().toLowerCase(),
+          url: r.url?.trim(),
+          sort_order: r.sort_order ?? 0,
+          is_active: r.is_active ?? true,
+        }
+        if (r.id) {
+          row.id = r.id // only include id when present to avoid null violation
+        }
+        return row
+      })
 
     if (clean.length === 0) {
       return NextResponse.json({ success: true, updated: 0 })
