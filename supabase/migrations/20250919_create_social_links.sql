@@ -38,6 +38,22 @@ for select
 to anon, authenticated
 using (is_active = true);
 
+-- Admin read policy: allow authenticated admins to read all rows (active/inactive)
+drop policy if exists social_links_admin_read on public.social_links;
+create policy social_links_admin_read
+on public.social_links
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.admin_users au
+    where au.user_id = auth.uid()
+      and au.is_active = true
+      and au.role in ('admin','super_admin')
+  )
+);
+
 -- Write policies: authenticated users with claim 'role' in ('admin','super_admin')
 drop policy if exists social_links_admin_insert on public.social_links;
 create policy social_links_admin_insert

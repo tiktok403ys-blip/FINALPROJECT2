@@ -19,7 +19,7 @@ interface SocialLink {
 
 const ICON_TIPS = "Supported examples: facebook, telegram, whatsapp (match footer mapping)."
 
-export default function SocialLinksAdminPage() {
+function SocialLinksAdminPage() {
   const supabase = createClient()
   const [rows, setRows] = useState<SocialLink[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,6 +86,12 @@ export default function SocialLinksAdminPage() {
   const save = async () => {
     setSaving(true)
     try {
+      // Ensure the user is authenticated; if not, RLS will block silently
+      const { data: userData, error: userErr } = await supabase.auth.getUser()
+      if (userErr || !userData?.user) {
+        toast.error('You must be logged in as admin to save')
+        return
+      }
       const toDelete = rows.filter((r: any) => r._delete && r.id)
       for (const r of toDelete) {
         const { error } = await supabase.from('social_links').delete().eq('id', r.id)
@@ -216,5 +222,4 @@ export default function SocialLinksAdminPage() {
     </div>
   )
 }
-
-
+export default SocialLinksAdminPage
