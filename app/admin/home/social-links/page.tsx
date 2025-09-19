@@ -50,6 +50,20 @@ export default function SocialLinksAdminPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Realtime updates: reload when social_links changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('social_links_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'social_links' }, () => {
+        load()
+      })
+      .subscribe()
+
+    return () => {
+      try { supabase.removeChannel(channel) } catch {}
+    }
+  }, [supabase, load])
+
   const addRow = () => {
     const maxSort = rows.reduce((m, r) => Math.max(m, r.sort_order || 0), 0)
     setRows(prev => [...prev, { name: '', icon: '', url: '', sort_order: maxSort + 1, is_active: true }])
@@ -79,9 +93,14 @@ export default function SocialLinksAdminPage() {
       }
       const clean = rows.filter((r: any) => !r._delete)
       // upsert by unique icon
+      const invalid = clean.filter(r => !(r.icon?.trim() && r.name?.trim() && r.url?.trim()))
       const payload = clean
-        .filter(r => r.name?.trim() && r.icon?.trim() && r.url?.trim())
+        .filter(r => r.icon?.trim() && r.name?.trim() && r.url?.trim())
         .map(r => ({ name: r.name, icon: r.icon, url: r.url, sort_order: r.sort_order, is_active: r.is_active, id: r.id }))
+      if (invalid.length && payload.length === 0) {
+        toast.error('Please fill name, icon, and url for at least one link')
+        return
+      }
       if (payload.length) {
         const { error } = await supabase.from('social_links').upsert(payload, { onConflict: 'icon' })
         if (error) throw error
