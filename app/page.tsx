@@ -45,6 +45,23 @@ export default async function HomePage() {
   const { data: homeBonuses } = await supabase
     .rpc('bonuses_random', { p_limit: 27, p_only_featured: true, p_seed: new Date().toISOString().slice(0,10) })
 
+  // Enrich homeBonuses with casino relation (logo/rating) while preserving order from RPC
+  let homeBonusesWithCasinos: any[] | null = null
+  try {
+    const ids = (homeBonuses || []).map((b: any) => b.id).filter(Boolean)
+    if (ids.length > 0) {
+      const { data: bonusesJoined } = await supabase
+        .from('bonuses')
+        .select('*, casinos(name, logo_url, rating)')
+        .in('id', ids)
+
+      if (bonusesJoined && bonusesJoined.length > 0) {
+        const byId = new Map(bonusesJoined.map((b: any) => [b.id, b]))
+        homeBonusesWithCasinos = ids.map((id: any) => byId.get(id)).filter(Boolean)
+      }
+    }
+  } catch {}
+
   // Fetch latest news with real data
   const { data: latestNews } = await supabase
     .from("news")
@@ -169,7 +186,7 @@ export default async function HomePage() {
 
           {/* Mobile/Tablet grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4">
-            {(homeBonuses?.length ? homeBonuses : featuredBonuses)?.map((bonus: Bonus & { casinos?: Casino }) => (
+            {(homeBonusesWithCasinos?.length ? homeBonusesWithCasinos : featuredBonuses)?.map((bonus: Bonus & { casinos?: Casino }) => (
               <ExclusiveBonusCard
                 key={bonus.id}
                 title={bonus.title}
@@ -184,7 +201,7 @@ export default async function HomePage() {
           </div>
           {/* Desktop 3-row continuous slider */}
           <div className="hidden lg:block">
-            <ExclusiveBonusesSlider items={(homeBonuses?.length ? homeBonuses : featuredBonuses) || []} />
+            <ExclusiveBonusesSlider items={(homeBonusesWithCasinos?.length ? homeBonusesWithCasinos : featuredBonuses) || []} />
           </div>
 
           <div className="text-center mt-8">
