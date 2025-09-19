@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Shield, Award, Users, TrendingUp, Clock, Star, Gift, MessageSquare, CheckCircle, DollarSign } from "lucide-react"
 import Link from "next/link"
 
-export function WhyChooseUs() {
+export function WhyChooseUs({ showDescriptions = true }: { showDescriptions?: boolean }) {
   const features = [
     {
       icon: Shield,
@@ -61,9 +61,11 @@ export function WhyChooseUs() {
               </h3>
               
               {/* Description - Mobile Tiny, Desktop Normal */}
-              <p className="text-gray-400 text-xs sm:text-xs md:text-sm lg:text-base xl:text-lg leading-tight sm:leading-normal">
-                {feature.description}
-              </p>
+              {showDescriptions && (
+                <p className="text-gray-400 text-xs sm:text-xs md:text-sm lg:text-base xl:text-lg leading-tight sm:leading-normal">
+                  {feature.description}
+                </p>
+              )}
             </div>
           ))}
         </div>
