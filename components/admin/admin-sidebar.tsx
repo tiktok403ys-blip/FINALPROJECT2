@@ -313,6 +313,18 @@ export function AdminSidebar() {
                       >
                         Favicon
                       </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+                          pathname === '/admin/home/social-links' && "bg-white/20 text-white"
+                        )}
+                        onClick={() => {
+                          handleNavigation('/admin/home/social-links')
+                        }}
+                      >
+                        Social Links
+                      </Button>
                     </div>
                   )}
                 </div>
