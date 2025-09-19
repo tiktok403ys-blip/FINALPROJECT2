@@ -95,7 +95,7 @@ export default async function RootLayout({
             <AnalyticsProvider>
               <AuthProvider>
                 <div className="min-h-screen bg-black text-white">
-                  <AntiInspect />
+                  {!isAdminSubdomain && <AntiInspect />}
                   {!isAdminSubdomain && <Navbar />}
                   <main>{children}</main>
                   {!isAdminSubdomain && !hasConsent && <CookieConsent />}
