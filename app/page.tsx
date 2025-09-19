@@ -41,14 +41,9 @@ export default async function HomePage() {
     .select("title, content, image_url")
     .eq("page_name","home").eq("section_name","hero").limit(1).maybeSingle()
 
-  // Exclusive bonuses for home
+  // Exclusive bonuses for home (deterministic random from DB via RPC)
   const { data: homeBonuses } = await supabase
-    .from("bonuses")
-    .select(`*, casinos(name, logo_url, rating)`) // if FK exists; fallback to fields only
-    .eq("is_featured_home", true)
-    .eq("is_active", true)
-    .order("home_rank", { ascending: true, nullsFirst: false })
-    .limit(6)
+    .rpc('bonuses_random', { p_limit: 27, p_only_featured: true, p_seed: new Date().toISOString().slice(0,10) })
 
   // Fetch latest news with real data
   const { data: latestNews } = await supabase
@@ -58,20 +53,13 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(3)
 
-  // Fetch featured bonuses
+  // Fallback featured bonuses if RPC unavailable
   const { data: featuredBonuses } = await supabase
     .from("bonuses")
-    .select(`
-      *,
-      casinos (
-        name,
-        logo_url,
-        rating
-      )
-    `)
+    .select(`*, casinos(name, logo_url, rating)`) 
     .eq("is_active", true)
     .order("created_at", { ascending: false })
-    .limit(6)
+    .limit(27)
 
   // Fetch recent reviews
   const { data: recentReviews } = await supabase
