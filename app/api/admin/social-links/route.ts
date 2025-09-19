@@ -46,12 +46,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, updated: 0 })
     }
 
-    const { error } = await supabase
-      .from('social_links')
-      .upsert(clean, { onConflict: 'icon' })
+    // Avoid mixing rows with and without id in a single upsert call,
+    // because Postgres will include NULL for missing id values.
+    const toCreate = clean.filter((r: any) => !('id' in r))
+    const toUpdate = clean.filter((r: any) => ('id' in r))
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    if (toCreate.length > 0) {
+      const { error: createErr } = await supabase
+        .from('social_links')
+        .upsert(toCreate, { onConflict: 'icon' })
+      if (createErr) {
+        return NextResponse.json({ error: createErr.message }, { status: 400 })
+      }
+    }
+
+    if (toUpdate.length > 0) {
+      const { error: updateErr } = await supabase
+        .from('social_links')
+        .upsert(toUpdate, { onConflict: 'icon' })
+      if (updateErr) {
+        return NextResponse.json({ error: updateErr.message }, { status: 400 })
+      }
     }
 
     return NextResponse.json({ success: true, updated: clean.length })
