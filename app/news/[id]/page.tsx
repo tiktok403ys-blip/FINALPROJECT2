@@ -2,8 +2,9 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/server"
-import { Calendar, ArrowLeft } from "lucide-react"
+import { Calendar, ArrowLeft, Facebook, Send, MessageCircle } from "lucide-react"
 import { GlassCard } from "@/components/glass-card"
+import { headers } from "next/headers"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -62,6 +63,16 @@ export default async function NewsDetailPage({ params }: PageProps) {
 
   if (!article) notFound()
 
+  // Build canonical URL for sharing (keep slug if present in param)
+  const h = await headers()
+  const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || h.get("host") || "localhost:3000"
+  const canonicalUrl = `https://${host}/news/${id}`
+  const encodedUrl = encodeURIComponent(canonicalUrl)
+  const encodedTitle = encodeURIComponent(article.title)
+  const whatsappUrl = `https://wa.me/?text=${encodedTitle}%20-%20${encodedUrl}`
+  const telegramUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+
   return (
     <div className="min-h-screen bg-black pt-24">
       <div className="container mx-auto px-4 py-16 max-w-3xl">
@@ -115,6 +126,40 @@ export default async function NewsDetailPage({ params }: PageProps) {
             <p className="text-gray-300 leading-relaxed">{article.excerpt}</p>
           </GlassCard>
         )}
+
+        {/* Share Buttons */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-400">Share:</span>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Share on WhatsApp"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm"
+            >
+              <MessageCircle className="w-4 h-4 text-green-400" /> WhatsApp
+            </a>
+            <a
+              href={telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Share on Telegram"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm"
+            >
+              <Send className="w-4 h-4 text-sky-400" /> Telegram
+            </a>
+            <a
+              href={facebookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Share on Facebook"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm"
+            >
+              <Facebook className="w-4 h-4 text-blue-500" /> Facebook
+            </a>
+          </div>
+        </div>
 
         <article className="prose prose-invert max-w-none">
           <p className="text-gray-200 leading-8 whitespace-pre-line">{article.content}</p>
