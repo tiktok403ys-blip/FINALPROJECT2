@@ -244,7 +244,7 @@ export default async function ReviewsPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Header with Back Button - Fixed navbar overlap */}
-      <div className="pt-28 pb-8">
+      <div className="pt-24 sm:pt-28 pb-6 sm:pb-8">
         {/* Mobile-only plain back link */}
         <Link href="/casinos" className="sm:hidden inline-flex items-center gap-2 text-[#00ff88] hover:text-[#00ff88]/80 mb-4 font-semibold text-xs px-4">
           <ArrowLeft className="w-4 h-4" />
@@ -262,11 +262,11 @@ export default async function ReviewsPage({ params }: PageProps) {
             </Link>
           </Button>
 
-          <div className="mb-12">
-            <h1 className="text-5xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+          <div className="mb-8 sm:mb-12">
+            <h1 className="text-2xl sm:text-5xl font-bold text-white mb-4 sm:mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               {casino.name} Reviews
             </h1>
-            <p className="text-gray-400 text-xl leading-relaxed max-w-4xl">
+            <p className="text-gray-400 text-sm sm:text-xl leading-relaxed max-w-4xl">
               Read authentic reviews from players who have experienced {casino.name}. Get insights into games, customer
               service, payouts, and overall gaming experience from our verified community.
             </p>
@@ -274,60 +274,60 @@ export default async function ReviewsPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pb-16">
+      <div className="container mx-auto px-4 pb-12 sm:pb-16">
         <ReviewsRealtimeRefresher casinoId={casino.id} />
         {/* Casino Overview - Enhanced */}
-        <div className="mb-16">
-          <GlassCard className="p-8 border border-white/10">
-            <div className="flex flex-col xl:flex-row gap-12">
+        <div className="mb-10 sm:mb-16">
+          <GlassCard className="p-4 sm:p-8 border border-white/10">
+            <div className="flex flex-col xl:flex-row gap-6 sm:gap-12">
               {/* Casino Info */}
               <div className="flex-1">
-                <div className="flex items-start gap-8 mb-8">
+                <div className="flex items-start gap-6 sm:gap-8 mb-6 sm:mb-8">
                   {/* Enhanced Logo - Made Wider and Bigger */}
-                  <div className="w-32 h-32 bg-gradient-to-br from-white/20 to-white/5 rounded-3xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl flex-shrink-0">
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 bg-gradient-to-br from-white/20 to-white/5 rounded-2xl sm:rounded-3xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl flex-shrink-0">
                     {casino.logo_url ? (
                       <Image
                         src={casino.logo_url || "/placeholder.svg"}
                         alt={`${casino.name} logo`}
                         width={128}
                         height={128}
-                        className="max-w-full max-h-full object-contain p-2"
+                        className="max-w-full max-h-full object-contain p-1 sm:p-2"
                       />
                     ) : (
-                      <span className="text-white font-bold text-4xl">{casino.name.charAt(0)}</span>
+                      <span className="text-white font-bold text-2xl sm:text-4xl">{casino.name.charAt(0)}</span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-3xl font-bold text-white mb-3">{casino.name}</h2>
-                    <div className="flex flex-wrap items-center gap-4 mb-4">
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-[#00ff88]/20 border border-[#00ff88]/30 rounded-full">
+                    <h2 className="text-xl sm:text-3xl font-bold text-white mb-2 sm:mb-3">{casino.name}</h2>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-[#00ff88]/20 border border-[#00ff88]/30 rounded-full">
                         <Shield className="w-4 h-4 text-[#00ff88]" />
-                        <span className="text-[#00ff88] font-semibold text-sm">Safety Score: {casino.rating}/10</span>
+                        <span className="text-[#00ff88] font-semibold text-xs sm:text-sm">Safety Score: {casino.rating}/10</span>
                       </div>
                       {casino.license && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                        <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
                           <Award className="w-4 h-4 text-emerald-400" />
-                          <span className="text-emerald-400 font-semibold text-sm">Licensed & Regulated</span>
+                          <span className="text-emerald-400 font-semibold text-xs sm:text-sm">Licensed & Regulated</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-full">
+                      <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-full">
                         <Users className="w-4 h-4 text-blue-400" />
-                        <span className="text-blue-400 font-semibold text-sm">{totalReviews} Reviews</span>
+                        <span className="text-blue-400 font-semibold text-xs sm:text-sm">{totalReviews} Reviews</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {casino.description && (
-                  <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl">
-                    <p className="text-gray-300 leading-relaxed text-lg">{casino.description}</p>
+                  <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white/5 border border-white/10 rounded-2xl">
+                    <p className="text-gray-300 leading-relaxed text-sm sm:text-lg">{casino.description}</p>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-3 sm:gap-4">
                   {casino.website_url && (
                     <Button
-                      className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold text-sm sm:text-base px-4 py-2 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                       asChild
                     >
                       <Link href={casino.website_url} target="_blank" rel="noopener noreferrer">
@@ -338,7 +338,7 @@ export default async function ReviewsPage({ params }: PageProps) {
                   )}
                   <Button
                     variant="outline"
-                    className="border-2 border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold px-8 py-3 rounded-xl transition-all duration-300"
+                    className="border-2 border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold text-sm sm:text-base px-4 py-2 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300"
                     asChild
                   >
                     <Link href={`/casinos/${casino.id}`}>Full Casino Review</Link>
@@ -348,18 +348,18 @@ export default async function ReviewsPage({ params }: PageProps) {
 
               {/* Enhanced Rating Summary */}
               <div className="xl:w-96">
-                <GlassCard className="p-8 border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
+                <GlassCard className="p-4 sm:p-8 border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
                   <div className="flex items-center gap-3 mb-6">
                     <TrendingUp className="w-6 h-6 text-[#00ff88]" />
-                    <h3 className="text-xl font-bold text-white">Player Ratings</h3>
+                    <h3 className="text-base sm:text-xl font-bold text-white">Player Ratings</h3>
                   </div>
 
                   <div className="text-center mb-8">
                     <div
-                      className={`inline-flex items-center justify-center w-24 h-24 rounded-full border-4 ${getRatingBgColor(Number.parseFloat(averageRating.toString()))} mb-4`}
+                      className={`inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 ${getRatingBgColor(Number.parseFloat(averageRating.toString()))} mb-3 sm:mb-4`}
                     >
                       <div className="text-center">
-                        <div className={`text-3xl font-bold ${getRatingColor(Number.parseFloat(averageRating.toString()))}`}>
+                        <div className={`text-2xl sm:text-3xl font-bold ${getRatingColor(Number.parseFloat(averageRating.toString()))}`}>
                           {averageRating}
                         </div>
                         <div className="text-xs text-gray-400">out of 5</div>
@@ -369,7 +369,7 @@ export default async function ReviewsPage({ params }: PageProps) {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 sm:w-6 sm:h-6 ${
                             i < Math.floor(Number.parseFloat(averageRating.toString()))
                               ? "text-[#00ff88] fill-current"
                               : "text-gray-600"
@@ -377,10 +377,10 @@ export default async function ReviewsPage({ params }: PageProps) {
                         />
                       ))}
                     </div>
-                    <div className={`text-lg font-semibold ${getRatingColor(Number.parseFloat(averageRating.toString()))} mb-1`}>
+                    <div className={`text-sm sm:text-lg font-semibold ${getRatingColor(Number.parseFloat(averageRating.toString()))} mb-1`}>
                       {getRatingLabel(Number.parseFloat(averageRating.toString()))}
                     </div>
-                    <div className="text-gray-400 text-sm">Based on {totalReviews} verified reviews</div>
+                    <div className="text-gray-400 text-xs sm:text-sm">Based on {totalReviews} verified reviews</div>
                   </div>
 
                   {/* Enhanced Rating Distribution */}
@@ -491,13 +491,13 @@ export default async function ReviewsPage({ params }: PageProps) {
         <div className="space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-white mb-2">Player Reviews</h2>
-              <p className="text-gray-400">Real experiences from verified players ({totalReviews} reviews)</p>
+              <h2 className="text-xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">Player Reviews</h2>
+              <p className="text-gray-400 text-xs sm:text-sm">Real experiences from verified players ({totalReviews} reviews)</p>
             </div>
             <div className="w-full sm:w-auto">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full sm:w-auto">Write a Review</Button>
+                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5">Write a Review</Button>
                 </DialogTrigger>
                 <DialogContent className="bg-black/90 border border-white/10 max-w-2xl">
                   <DialogHeader>
@@ -512,7 +512,7 @@ export default async function ReviewsPage({ params }: PageProps) {
           {reviews?.map((review: Review, index: number) => (
             <GlassCard
               key={review.id}
-              className={`p-8 border border-white/10 hover:border-white/20 transition-all duration-300 ${index === 0 ? "ring-2 ring-[#00ff88]/20" : ""}`}
+              className={`p-4 sm:p-8 border border-white/10 hover:border-white/20 transition-all duration-300 ${index === 0 ? "ring-2 ring-[#00ff88]/20" : ""}`}
             >
               {index === 0 && (
                 <div className="flex items-center gap-2 mb-4">
@@ -522,15 +522,15 @@ export default async function ReviewsPage({ params }: PageProps) {
               )}
 
               {/* Enhanced Review Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 sm:mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-black font-bold text-lg">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-[#00ff88] to-[#00cc6a] rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-black font-bold text-sm sm:text-lg">
                       {review.reviewer_name?.charAt(0).toUpperCase() || "A"}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">{review.reviewer_name || "Anonymous Player"}</h3>
+                    <h3 className="text-white font-bold text-sm sm:text-lg">{review.reviewer_name || "Anonymous Player"}</h3>
                     <div className="flex items-center gap-3 mt-1">
                       <div className="flex items-center gap-1">
                        {[...Array(5)].map((_, i) => (
@@ -542,7 +542,7 @@ export default async function ReviewsPage({ params }: PageProps) {
                           />
                         ))}
                       </div>
-                      <span className={`font-bold text-lg ${getRatingColor(review.rating || 0)}`}>
+                      <span className={`font-bold text-sm sm:text-lg ${getRatingColor(review.rating || 0)}`}>
                         {review.rating}/5
                       </span>
                       <span
@@ -553,7 +553,7 @@ export default async function ReviewsPage({ params }: PageProps) {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-400 text-sm bg-white/5 px-3 py-2 rounded-lg">
+                <div className="flex items-center gap-2 text-gray-400 text-xs sm:text-sm bg-white/5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg">
                   <Calendar className="w-4 h-4" />
                   {formatDate(review.created_at)}
                 </div>
@@ -561,23 +561,23 @@ export default async function ReviewsPage({ params }: PageProps) {
 
               {/* Enhanced Review Content */}
               <div className="mb-8">
-                <h4 className="text-white font-bold text-xl mb-4 leading-tight">{review.title}</h4>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                  <p className="text-gray-300 leading-relaxed text-lg">{review.content}</p>
+                <h4 className="text-white font-bold text-base sm:text-xl mb-3 sm:mb-4 leading-tight">{review.title}</h4>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
+                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">{review.content}</p>
                 </div>
               </div>
 
               {/* Enhanced Detailed Ratings */}
                {(review.game_variety_rating || review.customer_service_rating || review.payout_speed_rating) && (
-                <div className="mb-8 p-6 bg-gradient-to-r from-white/5 to-white/10 border border-white/10 rounded-xl">
-                  <h5 className="text-white font-bold mb-4 flex items-center gap-2">
+                <div className="mb-8 p-4 sm:p-6 bg-gradient-to-r from-white/5 to-white/10 border border-white/10 rounded-xl">
+                  <h5 className="text-white font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <Star className="w-5 h-5 text-[#00ff88]" />
                     Detailed Category Ratings
                   </h5>
                   <div className="grid sm:grid-cols-3 gap-6">
                     {review.game_variety_rating && (
-                      <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-gray-400 text-sm font-medium mb-2">Game Variety</div>
+                      <div className="text-center p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-gray-400 text-xs sm:text-sm font-medium mb-2">Game Variety</div>
                         <div className="flex items-center justify-center mb-2">
                           {[...Array(5)].map((_, i) => (
                             <Star
@@ -588,13 +588,13 @@ export default async function ReviewsPage({ params }: PageProps) {
                             />
                           ))}
                           </div>
-                          <div className="text-white font-bold text-lg">{review.game_variety_rating}/5</div>
+                          <div className="text-white font-bold text-sm sm:text-base">{review.game_variety_rating}/5</div>
                       </div>
                     )}
 
                     {review.customer_service_rating && (
-                      <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-gray-400 text-sm font-medium mb-2">Customer Service</div>
+                      <div className="text-center p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-gray-400 text-xs sm:text-sm font-medium mb-2">Customer Service</div>
                         <div className="flex items-center justify-center mb-2">
                           {[...Array(5)].map((_, i) => (
                             <Star
@@ -605,13 +605,13 @@ export default async function ReviewsPage({ params }: PageProps) {
                             />
                           ))}
                           </div>
-                          <div className="text-white font-bold text-lg">{review.customer_service_rating}/5</div>
+                          <div className="text-white font-bold text-sm sm:text-base">{review.customer_service_rating}/5</div>
                       </div>
                     )}
 
                     {review.payout_speed_rating && (
-                      <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-gray-400 text-sm font-medium mb-2">Payout Speed</div>
+                      <div className="text-center p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-gray-400 text-xs sm:text-sm font-medium mb-2">Payout Speed</div>
                         <div className="flex items-center justify-center mb-2">
                           {[...Array(5)].map((_, i) => (
                             <Star
@@ -622,7 +622,7 @@ export default async function ReviewsPage({ params }: PageProps) {
                             />
                           ))}
                           </div>
-                          <div className="text-white font-bold text-lg">{review.payout_speed_rating}/5</div>
+                          <div className="text-white font-bold text-sm sm:text-base">{review.payout_speed_rating}/5</div>
                       </div>
                     )}
                   </div>
@@ -632,7 +632,7 @@ export default async function ReviewsPage({ params }: PageProps) {
               {/* Enhanced Review Actions */}
               <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-white/10">
                 <HelpfulVote reviewId={review.id} helpful={review.helpful_count || 0} notHelpful={review.not_helpful_count || 0} />
-                <div className="ml-auto text-gray-500 text-sm flex items-center gap-2">
+                <div className="ml-auto text-gray-500 text-xs sm:text-sm flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   <span>Verified Review</span>
                 </div>
@@ -646,11 +646,11 @@ export default async function ReviewsPage({ params }: PageProps) {
             <div className="w-24 h-24 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-700">
               <MessageCircle className="w-12 h-12 text-gray-600" />
             </div>
-            <h3 className="text-3xl font-bold text-white mb-4">No Reviews Yet</h3>
-            <p className="text-gray-400 text-xl mb-8 max-w-md mx-auto">
+            <h3 className="text-xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">No Reviews Yet</h3>
+            <p className="text-gray-400 text-sm sm:text-base mb-6 sm:mb-8 max-w-md mx-auto">
               Be the first to share your experience with {casino.name} and help other players make informed decisions!
             </p>
-            <Button className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+            <Button className="bg-gradient-to-r from-[#00ff88] to-[#00cc6a] text-black hover:from-[#00cc6a] hover:to-[#00ff88] font-semibold px-4 py-2 sm:px-8 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
               <MessageCircle className="w-5 h-5 mr-2" />
               Write the First Review
             </Button>
