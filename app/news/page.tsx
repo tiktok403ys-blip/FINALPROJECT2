@@ -16,6 +16,19 @@ export const metadata = {
 // Revalidate every 30 minutes for news content
 export const revalidate = 1800
 
+function toPreviewText(
+  excerpt?: string | null,
+  content?: string | null,
+  maxLength: number = 160,
+): string {
+  const source = excerpt ?? content ?? ""
+  // Remove <img> tags first, then any remaining HTML tags
+  const withoutImgs = source.replace(/<img[^>]*>/gi, "")
+  const withoutTags = withoutImgs.replace(/<[^>]+>/g, "")
+  const text = withoutTags.trim()
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text
+}
+
 export default async function NewsPage() {
   const supabase = await createClient()
 
@@ -77,22 +90,19 @@ export default async function NewsPage() {
         )}
 
         <div className="max-w-4xl mx-auto">
-          {/* Featured Article */}
+          {/* Featured Article (with image, no extra wrapper) */}
         {news && news.length > 0 && (
             <GlassCard className="p-5 sm:p-8 mb-8 sm:mb-12 hover:bg-white/10 transition-colors">
               {news[0].featured_image && (
-                <div className="w-full h-40 sm:h-56 bg-white/5 rounded-lg overflow-hidden border border-white/10 mb-4 sm:mb-6">
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={news[0].featured_image}
-                      alt={news[0].title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 768px"
-                      className="object-contain bg-black/20"
-                      priority
-                    />
-                  </div>
-                </div>
+                <Image
+                  src={news[0].featured_image}
+                  alt={news[0].title}
+                  width={1200}
+                  height={540}
+                  sizes="(max-width: 640px) 100vw, 768px"
+                  className="w-full h-auto rounded-lg mb-4 sm:mb-6 object-cover"
+                  priority
+                />
               )}
               <div className="flex items-center mb-3">
                 <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
@@ -110,7 +120,7 @@ export default async function NewsPage() {
                 </Link>
               </h2>
               <p className="text-gray-400 text-base sm:text-lg mb-4 sm:mb-6">
-                {news[0].excerpt || (news[0].content?.length > 200 ? `${news[0].content.substring(0, 200)}...` : news[0].content)}
+                {toPreviewText(news[0].excerpt, news[0].content, 200)}
               </p>
               <div className="flex items-center text-sm text-gray-400">
                 <Calendar className="w-4 h-4 mr-1" />
@@ -127,17 +137,14 @@ export default async function NewsPage() {
             {news?.slice(1).map((article: News) => (
               <GlassCard key={article.id} className="p-4 sm:p-6 hover:bg-white/10 transition-colors">
                 {article.featured_image && (
-                  <div className="w-full h-32 sm:h-40 bg-white/5 rounded-lg overflow-hidden border border-white/10 mb-3">
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={article.featured_image}
-                        alt={article.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 50vw"
-                        className="object-contain bg-black/20"
-                      />
-                    </div>
-                  </div>
+                  <Image
+                    src={article.featured_image}
+                    alt={article.title}
+                    width={800}
+                    height={450}
+                    sizes="(max-width: 640px) 100vw, 50vw"
+                    className="w-full h-auto rounded-md mb-3 object-cover"
+                  />
                 )}
                 <div className="flex items-center mb-3">
                   {article.category && (
@@ -152,7 +159,7 @@ export default async function NewsPage() {
                   </Link>
                 </h3>
                 <p className="text-gray-400 text-sm sm:text-base mb-3 sm:mb-4 line-clamp-3">
-                  {article.excerpt || (article.content ? (article.content.length > 160 ? `${article.content.substring(0, 160)}...` : article.content) : '')}
+                  {toPreviewText(article.excerpt, article.content, 160)}
                 </p>
                 <div className="flex items-center text-sm text-gray-400">
                   <Calendar className="w-4 h-4 mr-1" />
