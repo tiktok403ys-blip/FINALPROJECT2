@@ -242,7 +242,7 @@ export default async function ExpertReviewsPage() {
                       {/* Action Buttons */}
                       <div className="space-y-2">
                         <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full text-xs sm:text-sm py-2 sm:py-2.5" asChild>
-                          <Link href={`/expert-reviews/${review.casino_id}-${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}`}>
+                          <Link href={`/expert-reviews/${review.slug || `${review.casino_id}-${(review.casinos?.name || '').toLowerCase().replace(/\s+/g, "-")}`}`}>
                             Read Full Review
                           </Link>
                         </Button>

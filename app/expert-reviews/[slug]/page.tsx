@@ -16,10 +16,13 @@ import {
   CheckCircle,
   Plus,
   Minus,
+  Facebook,
+  Send,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { headers } from "next/headers"
 import type { CasinoReview } from "@/lib/types"
 import { ExpertReviewsRealtimeRefresher } from "@/components/reviews/expert-reviews-realtime-refresher"
 import { CasinoScreenshotsSection } from "@/components/casino-screenshots-section"
@@ -36,41 +39,111 @@ export const revalidate = 900
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
   const supabase = await createClient()
-  const casinoId = slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
 
-  const { data: casino } = await supabase.from("casinos").select("name").eq("id", casinoId).single()
+  let reviewTitle: string | null = null
+  let casinoName: string | null = null
+  let featuredImage: string | null = null
+
+  // Try load by slug first
+  const { data: bySlug } = await supabase
+    .from("casino_reviews")
+    .select("title, casinos(name, logo_url)")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .single()
+
+  if (bySlug) {
+    reviewTitle = (bySlug as any).title || null
+    casinoName = (bySlug as any).casinos?.name || null
+    featuredImage = (bySlug as any).casinos?.logo_url || null
+  } else {
+    // Fallback: extract UUID and load by casino_id
+    const casinoId = slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
+    if (casinoId) {
+      const { data: review } = await supabase
+        .from("casino_reviews")
+        .select("title, casinos(name, logo_url)")
+        .eq("casino_id", casinoId)
+        .eq("is_published", true)
+        .single()
+      if (review) {
+        reviewTitle = (review as any).title || null
+        casinoName = (review as any).casinos?.name || null
+        featuredImage = (review as any).casinos?.logo_url || null
+      }
+    }
+  }
+
+  const title = reviewTitle
+    ? `${reviewTitle} - Expert Review`
+    : `${casinoName || "Casino"} Expert Review - GuruSingapore`
+  const description = `Read our comprehensive expert review of ${casinoName || "this casino"}. Professional analysis, ratings, and detailed insights from our expert team.`
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+  const images = featuredImage
+    ? [featuredImage.startsWith("http") ? featuredImage : (base ? `${base}/storage/v1/object/public/${featuredImage}` : featuredImage)]
+    : []
+
+  const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
+  const canonical = `https://${host}/expert-reviews/${slug}`
 
   return {
-    title: `${casino?.name || "Casino"} Expert Review - GuruSingapore`,
-    description: `Read our comprehensive expert review of ${casino?.name || "this casino"}. Professional analysis, ratings, and detailed insights from our expert team.`,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, images },
+    twitter: { card: "summary_large_image", title, description, images },
   }
 }
 
 export default async function ExpertReviewDetailPage({ params }: PageProps) {
   const { slug } = await params
   const supabase = await createClient()
-  const casinoId = slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
 
-  if (!casinoId) {
-    notFound()
-  }
+  let expertReview: any | null = null
+  let casino: any | null = null
+  const h = await headers()
 
-  const { data: casino } = await supabase.from("casinos").select("*").eq("id", casinoId).single()
-
-  if (!casino) {
-    notFound()
-  }
-
-  const { data: expertReview } = await supabase
+  // Prefer loading by slug
+  const { data: bySlug } = await supabase
     .from("casino_reviews")
     .select("*")
-    .eq("casino_id", casinoId)
+    .eq("slug", slug)
     .eq("is_published", true)
     .single()
 
-  if (!expertReview) {
-    notFound()
+  if (bySlug) {
+    expertReview = bySlug
+    const { data: c } = await supabase.from("casinos").select("*").eq("id", bySlug.casino_id).single()
+    casino = c
+  } else {
+    // Fallback to legacy ID-based URL
+    const casinoId = slug.match(/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)?.[1]
+    if (!casinoId) notFound()
+    const { data: c } = await supabase.from("casinos").select("*").eq("id", casinoId).single()
+    if (!c) notFound()
+    casino = c
+    const { data: byId } = await supabase
+      .from("casino_reviews")
+      .select("*")
+      .eq("casino_id", casinoId)
+      .eq("is_published", true)
+      .single()
+    if (!byId) notFound()
+    expertReview = byId
+    if (expertReview.slug && expertReview.slug !== slug) {
+      redirect(`/expert-reviews/${expertReview.slug}`)
+    }
   }
+
+  // Build share URLs once
+  const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || h.get("host") || "localhost:3000"
+  const canonicalUrl = `https://${host}/expert-reviews/${expertReview.slug || slug}`
+  const encodedUrl = encodeURIComponent(canonicalUrl)
+  const encodedTitle = encodeURIComponent(expertReview.title)
+  const whatsappUrl = `https://wa.me/?text=${encodedTitle}%20-%20${encodedUrl}`
+  const telegramUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -138,7 +211,7 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
             "@type": "ListItem",
             "position": 3,
             "name": `${casino.name} Expert Review`,
-            "item": `https://gurusingapore.com/expert-reviews/${slug}`
+            "item": `https://gurusingapore.com/expert-reviews/${expertReview.slug || slug}`
           }
         ]
       },
@@ -342,6 +415,39 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
               <div className="flex items-center gap-1 sm:gap-2">
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                 {expertReview.updated_at !== expertReview.created_at ? "Updated" : "Published"}
+              </div>
+            </div>
+            {/* Share Buttons */}
+            <div className="mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-xs sm:text-sm text-gray-400">Share:</span>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on WhatsApp"
+                  className="inline-flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm"
+                >
+                  <MessageCircle className="w-4 h-4 text-green-400" /> WhatsApp
+                </a>
+                <a
+                  href={telegramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on Telegram"
+                  className="inline-flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm"
+                >
+                  <Send className="w-4 h-4 text-sky-400" /> Telegram
+                </a>
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on Facebook"
+                  className="inline-flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm"
+                >
+                  <Facebook className="w-4 h-4 text-blue-500" /> Facebook
+                </a>
               </div>
             </div>
           </div>
