@@ -211,14 +211,14 @@ export default async function ReviewsPage() {
                           <Star
                             key={i}
                             className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                              i < Math.floor((review.rating || 0) / 2)
+                              i < Math.floor(review.rating || 0)
                                 ? "text-[#00ff88] fill-current"
                                 : "text-gray-600"
                             }`}
                           />
                         ))}
                       </div>
-                      <span className="text-white ml-2 font-semibold text-sm sm:text-base">{(review.rating || 0) / 2}/5.0</span>
+                      <span className="text-white ml-2 font-semibold text-sm sm:text-base">{review.rating || 0}/5.0</span>
                     </div>
 
                     {/* Review Meta */}
