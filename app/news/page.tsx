@@ -117,7 +117,7 @@ export default async function NewsPage() {
                 <span>{new Date(news[0].created_at).toLocaleDateString()}</span>
                 <span className="mx-2">•</span>
                 <User className="w-4 h-4 mr-1" />
-                <span>Casino Guide Team</span>
+                <span>{news[0].author || 'GuruSingapore'}</span>
               </div>
             </GlassCard>
           )}
@@ -159,7 +159,7 @@ export default async function NewsPage() {
                   <span>{new Date(article.created_at).toLocaleDateString()}</span>
                   <span className="mx-2">•</span>
                   <User className="w-4 h-4 mr-1" />
-                  <span>Casino Guide Team</span>
+                  <span>{article.author || 'GuruSingapore'}</span>
                 </div>
               </GlassCard>
             ))}
