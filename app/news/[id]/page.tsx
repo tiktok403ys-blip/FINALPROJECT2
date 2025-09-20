@@ -11,8 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
-  const [rawId, ...rest] = id.split('-')
-  const articleId = rawId
+  const articleId = id.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/)?.[0] || id
   const supabase = await createClient()
   const { data } = await supabase
     .from("news_articles")
@@ -52,8 +51,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function NewsDetailPage({ params }: PageProps) {
   const { id } = await params
-  const [rawId, ...rest] = id.split('-')
-  const articleId = rawId
+  const articleId = id.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/)?.[0] || id
   const supabase = await createClient()
   const { data: article } = await supabase
     .from("news_articles")
