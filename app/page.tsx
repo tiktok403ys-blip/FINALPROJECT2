@@ -228,10 +228,10 @@ export default async function HomePage() {
                     <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
                     <span className="text-[#00ff88] text-sm font-semibold">{article.category}</span>
                   </div>
-                  {article.image_url && (
+                  {article.featured_image && (
                     <div className="w-full h-40 bg-white/10 rounded-lg mb-4 overflow-hidden">
                       <Image
-                        src={article.image_url || "/placeholder.svg"}
+                        src={article.featured_image || "/placeholder.svg"}
                         alt={article.title}
                         width={320}
                         height={160}

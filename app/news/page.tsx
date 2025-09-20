@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Calendar, User, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { Input, Button } from "@/components/ui"
+import Image from "next/image"
 import RealtimeNewsRefresher from "@/components/realtime-news-refresher"
 import type { News } from "@/lib/types"
 
@@ -79,6 +80,20 @@ export default async function NewsPage() {
           {/* Featured Article */}
         {news && news.length > 0 && (
             <GlassCard className="p-5 sm:p-8 mb-8 sm:mb-12 hover:bg-white/10 transition-colors">
+              {news[0].featured_image && (
+                <div className="w-full h-40 sm:h-56 bg-white/5 rounded-lg overflow-hidden border border-white/10 mb-4 sm:mb-6">
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={news[0].featured_image}
+                      alt={news[0].title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 768px"
+                      className="object-contain bg-black/20"
+                      priority
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex items-center mb-3">
                 <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
                 <span className="text-[#00ff88] text-sm font-medium">Featured</span>
@@ -94,7 +109,9 @@ export default async function NewsPage() {
                   {news[0].title}
                 </Link>
               </h2>
-              <p className="text-gray-400 text-base sm:text-lg mb-4 sm:mb-6">{news[0].excerpt}</p>
+              <p className="text-gray-400 text-base sm:text-lg mb-4 sm:mb-6">
+                {news[0].excerpt || (news[0].content?.length > 200 ? `${news[0].content.substring(0, 200)}...` : news[0].content)}
+              </p>
               <div className="flex items-center text-sm text-gray-400">
                 <Calendar className="w-4 h-4 mr-1" />
                 <span>{new Date(news[0].created_at).toLocaleDateString()}</span>
@@ -109,6 +126,19 @@ export default async function NewsPage() {
           <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
             {news?.slice(1).map((article: News) => (
               <GlassCard key={article.id} className="p-4 sm:p-6 hover:bg-white/10 transition-colors">
+                {article.featured_image && (
+                  <div className="w-full h-32 sm:h-40 bg-white/5 rounded-lg overflow-hidden border border-white/10 mb-3">
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={article.featured_image}
+                        alt={article.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 50vw"
+                        className="object-contain bg-black/20"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center mb-3">
                   {article.category && (
                     <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-1 rounded text-xs font-medium">
@@ -121,7 +151,9 @@ export default async function NewsPage() {
                     {article.title}
                   </Link>
                 </h3>
-                <p className="text-gray-400 text-sm sm:text-base mb-3 sm:mb-4 line-clamp-3">{article.excerpt}</p>
+                <p className="text-gray-400 text-sm sm:text-base mb-3 sm:mb-4 line-clamp-3">
+                  {article.excerpt || (article.content ? (article.content.length > 160 ? `${article.content.substring(0, 160)}...` : article.content) : '')}
+                </p>
                 <div className="flex items-center text-sm text-gray-400">
                   <Calendar className="w-4 h-4 mr-1" />
                   <span>{new Date(article.created_at).toLocaleDateString()}</span>

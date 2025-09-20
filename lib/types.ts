@@ -78,9 +78,10 @@ export interface News {
   content: string | null
   excerpt: string | null
   category: string | null
-  image_url: string | null
-  author_id: string | null
-  published: boolean
+  featured_image?: string | null
+  author?: string | null
+  status?: 'draft' | 'published' | 'archived'
+  published_at?: string | null
   created_at: string
   updated_at: string
 }
