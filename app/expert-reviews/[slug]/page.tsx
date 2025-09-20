@@ -270,9 +270,9 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Expert Rating Summary */}
+              {/* Expert Rating Summary (simplified, no extra card) */}
               <div className="xl:w-96">
-                <GlassCard className="p-4 sm:p-6 md:p-8 border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
+                <div className="p-4 sm:p-6 md:p-8 rounded-2xl border border-white/10 bg-white/5">
                   <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                     <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-[#00ff88]" />
                     <h3 className="text-lg sm:text-xl font-bold text-white">Expert Rating</h3>
@@ -313,15 +313,15 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
                       </span>
                     </div>
                   </div>
-                </GlassCard>
+                </div>
               </div>
             </div>
           </GlassCard>
         </div>
 
-        {/* Expert Review Content */}
+        {/* Expert Review Content (simplified, fewer wrappers) */}
         <div className="mb-8 sm:mb-12 md:mb-16">
-          <GlassCard className="p-4 sm:p-6 md:p-8 border border-white/10">
+          <div className="p-4 sm:p-6 md:p-8 rounded-2xl border border-white/10 bg-white/5">
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6">{expertReview.title}</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">
@@ -342,9 +342,7 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
 
             {/* Review Content */}
             <div className="prose prose-invert max-w-none">
-              <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 mb-6 sm:mb-8">
-                <p className="text-gray-300 leading-relaxed text-sm sm:text-base md:text-lg whitespace-pre-wrap">{expertReview.content}</p>
-              </div>
+              <p className="text-gray-300 leading-relaxed text-sm sm:text-base md:text-lg whitespace-pre-wrap">{expertReview.content}</p>
             </div>
 
             {/* Pros and Cons */}
@@ -385,46 +383,42 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
                 )}
               </div>
             )}
-          </GlassCard>
+          </div>
         </div>
 
-        {/* Casino Screenshots Section */}
-        <div className="mb-8 sm:mb-12 md:mb-16">
-          <GlassCard className="p-4 sm:p-6 md:p-8 border border-white/10">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Casino Screenshots & Visuals</h2>
-            <CasinoScreenshotsSection casinoId={casino.id} />
-          </GlassCard>
+        {/* Casino Screenshots Section (no card wrapper) */}
+        <div className="mb-8 sm:mb-12 md:mb-16 px-3 sm:px-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Casino Screenshots & Visuals</h2>
+          <CasinoScreenshotsSection casinoId={casino.id} />
         </div>
 
-        {/* Related Links */}
-        <div className="mb-8 sm:mb-12 md:mb-16">
-          <GlassCard className="p-4 sm:p-6 md:p-8 border border-white/10">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Related Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <Button
-                variant="outline"
-                className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold p-3 sm:p-4 h-auto flex-col gap-2 text-xs sm:text-sm"
-                asChild
-              >
-                <Link href={`/reviews/${casino.id}-${casino.name.toLowerCase().replace(/\s+/g, "-")}`}>
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>Read Player Reviews</span>
-                  <span className="text-xs text-gray-400">Community feedback</span>
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold p-3 sm:p-4 h-auto flex-col gap-2 text-xs sm:text-sm"
-                asChild
-              >
-                <Link href={`/casinos/${casino.id}`}>
-                  <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>Casino Details</span>
-                  <span className="text-xs text-gray-400">Complete information</span>
-                </Link>
-              </Button>
-            </div>
-          </GlassCard>
+        {/* Related Links (no card wrapper) */}
+        <div className="mb-8 sm:mb-12 md:mb-16 px-3 sm:px-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Related Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <Button
+              variant="outline"
+              className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold p-3 sm:p-4 h-auto flex-col gap-2 text-xs sm:text-sm"
+              asChild
+            >
+              <Link href={`/reviews/${casino.id}-${casino.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span>Read Player Reviews</span>
+                <span className="text-xs text-gray-400">Community feedback</span>
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 font-semibold p-3 sm:p-4 h-auto flex-col gap-2 text-xs sm:text-sm"
+              asChild
+            >
+              <Link href={`/casinos/${casino.id}`}>
+                <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span>Casino Details</span>
+                <span className="text-xs text-gray-400">Complete information</span>
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
