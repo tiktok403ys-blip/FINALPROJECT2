@@ -14,6 +14,8 @@ import {
   Building2,
   Clock,
   CheckCircle,
+  Plus,
+  Minus,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -173,10 +175,15 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
       
       {/* Header with Back Button */}
       <div className="pt-20 sm:pt-24 md:pt-28 pb-4 sm:pb-6 md:pb-8">
+        {/* Mobile-only plain link without wrapper */}
+        <Link href="/expert-reviews" className="sm:hidden inline-flex items-center gap-2 text-[#00ff88] hover:text-[#00ff88]/80 mb-4 font-semibold text-xs px-3">
+          <ArrowLeft className="w-3 h-3" />
+          Back to Expert Reviews
+        </Link>
         <div className="container mx-auto px-3 sm:px-4">
           <Button
             variant="outline"
-            className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 mb-4 sm:mb-6 md:mb-8 font-semibold text-xs sm:text-sm"
+            className="hidden sm:inline-flex border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 mb-4 sm:mb-6 md:mb-8 font-semibold text-xs sm:text-sm"
             asChild
           >
             <Link href="/expert-reviews">
@@ -319,71 +326,69 @@ export default async function ExpertReviewDetailPage({ params }: PageProps) {
           </GlassCard>
         </div>
 
-        {/* Expert Review Content (simplified, fewer wrappers) */}
+        {/* Expert Review Content (no wrapper) */}
         <div className="mb-8 sm:mb-12 md:mb-16">
-          <div className="p-4 sm:p-6 md:p-8 rounded-2xl border border-white/10 bg-white/5">
-            <div className="mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6">{expertReview.title}</h2>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {formatDate(expertReview.created_at)}
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Expert Analysis
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {expertReview.updated_at !== expertReview.created_at ? "Updated" : "Published"}
-                </div>
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6">{expertReview.title}</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                {formatDate(expertReview.created_at)}
+              </div>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                Expert Analysis
+              </div>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                {expertReview.updated_at !== expertReview.created_at ? "Updated" : "Published"}
               </div>
             </div>
-
-            {/* Review Content */}
-            <div className="prose prose-invert max-w-none">
-              <p className="text-gray-300 leading-relaxed text-sm sm:text-base md:text-lg whitespace-pre-wrap">{expertReview.content}</p>
-            </div>
-
-            {/* Pros and Cons */}
-            {(expertReview.pros?.length > 0 || expertReview.cons?.length > 0) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
-                {expertReview.pros?.length > 0 && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
-                    <h3 className="text-lg sm:text-xl font-bold text-emerald-400 mb-3 sm:mb-4 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Pros
-                    </h3>
-                    <ul className="space-y-1.5 sm:space-y-2">
-                      {expertReview.pros.map((pro: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-gray-300 text-sm sm:text-base">
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></div>
-                          <span>{pro}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {expertReview.cons?.length > 0 && (
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
-                    <h3 className="text-lg sm:text-xl font-bold text-red-400 mb-3 sm:mb-4 flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Cons
-                    </h3>
-                    <ul className="space-y-1.5 sm:space-y-2">
-                      {expertReview.cons.map((con: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-gray-300 text-sm sm:text-base">
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
-                          <span>{con}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* Review Content */}
+          <div className="prose prose-invert max-w-none">
+            <p className="text-gray-300 leading-relaxed text-sm sm:text-base md:text-lg whitespace-pre-wrap">{expertReview.content}</p>
+          </div>
+
+          {/* Pros and Cons */}
+          {(expertReview.pros?.length > 0 || expertReview.cons?.length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
+              {expertReview.pros?.length > 0 && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+                  <h3 className="text-lg sm:text-xl font-bold text-emerald-400 mb-3 sm:mb-4 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Pros
+                  </h3>
+                  <ul className="space-y-1.5 sm:space-y-2">
+                    {expertReview.pros.map((pro: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-300 text-sm sm:text-base">
+                        <Plus className="w-4 h-4 text-emerald-400 mt-1.5 flex-shrink-0" />
+                        <span>{pro}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {expertReview.cons?.length > 0 && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+                  <h3 className="text-lg sm:text-xl font-bold text-red-400 mb-3 sm:mb-4 flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Cons
+                  </h3>
+                  <ul className="space-y-1.5 sm:space-y-2">
+                    {expertReview.cons.map((con: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-300 text-sm sm:text-base">
+                        <Minus className="w-4 h-4 text-red-400 mt-1.5 flex-shrink-0" />
+                        <span>{con}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Casino Screenshots Section (no card wrapper) */}
