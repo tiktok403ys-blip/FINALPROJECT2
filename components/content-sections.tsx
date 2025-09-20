@@ -231,11 +231,16 @@ export function RecentActivity() {
 
   const fetchRecentActivity = useCallback(async () => {
     const [casinos, news] = await Promise.all([
-      supabase.from("casinos").select("name, rating, created_at").order("created_at", { ascending: false }).limit(3),
       supabase
-        .from("news")
+        .from("casinos")
+        .select("name, rating, created_at")
+        .order("created_at", { ascending: false })
+        .limit(3),
+      supabase
+        .from("news_articles")
         .select("title, category, created_at")
-        .eq("published", true)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(3),
     ])

@@ -61,13 +61,18 @@ export default async function HomePage() {
     }
   } catch {}
 
-  // Fetch latest news with real data
-  const { data: latestNews } = await supabase
-    .from("news")
+  // Fetch published news articles and pick random ones for Home
+  const { data: latestNewsSource } = await supabase
+    .from("news_articles")
     .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false })
-    .limit(3)
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false, nullsFirst: false })
+    .limit(12)
+
+  const latestNews: News[] = (latestNewsSource || [])
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 3)
 
   // Fallback featured bonuses if RPC unavailable
   const { data: featuredBonuses } = await supabase
@@ -226,21 +231,22 @@ export default async function HomePage() {
                 <div className="flex flex-col h-full">
                   <div className="flex items-center mb-3">
                     <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
-                    <span className="text-[#00ff88] text-sm font-semibold">{article.category}</span>
+                    {article.category && (
+                      <span className="text-[#00ff88] text-sm font-semibold">{article.category}</span>
+                    )}
                   </div>
                   {article.featured_image && (
-                    <div className="w-full h-40 bg-white/10 rounded-lg mb-4 overflow-hidden">
-                      <Image
-                        src={article.featured_image || "/placeholder.svg"}
-                        alt={article.title}
-                        width={320}
-                        height={160}
-                        className="w-full h-full object-contain bg-black/20"
-                      />
-                    </div>
+                    <Image
+                      src={article.featured_image || "/placeholder.svg"}
+                      alt={article.title}
+                      width={480}
+                      height={256}
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      className="w-full h-auto rounded-lg mb-4 object-cover"
+                    />
                   )}
                   <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 min-h-[3rem]" title={article.title}>{article.title}</h3>
-                  <p className="text-gray-400 mb-4 text-sm line-clamp-3 flex-grow">{article.excerpt}</p>
+                  <p className="text-gray-400 mb-4 text-sm line-clamp-3 flex-grow">{article.excerpt || (article.content ? (article.content.length > 160 ? `${article.content.slice(0,160)}...` : article.content) : '')}</p>
                   <div className="flex items-center justify-between mt-auto">
                     <span className="text-gray-500 text-xs">{new Date(article.created_at).toLocaleDateString()}</span>
                     <Button variant="ghost" className="text-[#00ff88] p-0 h-auto" asChild>
