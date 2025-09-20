@@ -34,7 +34,7 @@ export default function AdminPlayerReviewsPage() {
   const [rows, setRows] = useState<PlayerReviewRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [status, setStatus] = useState<"all" | "approved" | "pending">("all")
+  const [status, setStatus] = useState<"all" | "approved" | "pending">("pending")
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "pending">("newest")
   const [page, setPage] = useState(1)
   const pageSize = 12
@@ -48,6 +48,9 @@ export default function AdminPlayerReviewsPage() {
     const { data } = await supabase
       .from("player_reviews")
       .select("*, casinos(name)")
+      // Only show pending guest submissions for moderation
+      .eq("is_approved", false)
+      .is("user_id", null)
       .order("created_at", { ascending: false })
       .range(from, to)
     setRows(data || [])
@@ -71,6 +74,7 @@ export default function AdminPlayerReviewsPage() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return rows
+      // Rows are already pending guests from fetch; keep search-only filter
       .filter((r) => (status === "approved" ? r.is_approved : status === "pending" ? !r.is_approved : true))
       .filter((r) =>
         (r.title || "").toLowerCase().includes(q) ||
@@ -88,7 +92,9 @@ export default function AdminPlayerReviewsPage() {
   }, [filtered, sortBy])
 
   const batchApprove = async (onlyPending = true) => {
-    const ids = rows.filter((r) => (onlyPending ? !r.is_approved : true)).map((r) => r.id)
+    const ids = rows
+      .filter((r) => (onlyPending ? (!r.is_approved && r.user_id === null) : r.user_id === null))
+      .map((r) => r.id)
     if (ids.length === 0) return
     const { error } = await supabase.from("player_reviews").update({ is_approved: true }).in("id", ids)
     if (!error) {
@@ -99,6 +105,8 @@ export default function AdminPlayerReviewsPage() {
   }
 
   const toggleApproved = async (row: PlayerReviewRow) => {
+    // Only allow approving pending guest submissions
+    if (row.user_id !== null) return
     const { error } = await supabase.from("player_reviews").update({ is_approved: !row.is_approved }).eq("id", row.id)
     if (!error) {
       await adminAuth.logAdminAction("toggle_approved", "player_reviews", row.id, { is_approved: !row.is_approved })
@@ -137,26 +145,9 @@ export default function AdminPlayerReviewsPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="all" className="bg-black">All</option>
-            <option value="pending" className="bg-black">Pending</option>
-            <option value="approved" className="bg-black">Approved</option>
-          </select>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="newest" className="bg-black">Newest first</option>
-            <option value="oldest" className="bg-black">Oldest first</option>
-            <option value="pending" className="bg-black">Pending first</option>
-          </select>
+          <span className="text-gray-400 text-sm hidden sm:inline">Moderating guest reviews (pending only)</span>
           <Button variant="outline" className="border-green-500 text-green-500 bg-transparent hover:bg-green-500/10" onClick={() => batchApprove(true)}>
-            Approve All Pending
+            Approve All
           </Button>
         </div>
       </div>
@@ -171,9 +162,7 @@ export default function AdminPlayerReviewsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="bg-white/10 text-gray-300 px-2 py-1 rounded text-xs">{r.casinos?.name || "Unknown"}</span>
-                    <span className={`px-2 py-1 rounded text-xs ${r.is_approved ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>
-                      {r.is_approved ? "Approved" : "Hidden"}
-                    </span>
+                    <span className="px-2 py-1 rounded text-xs bg-gray-500/20 text-gray-300">Pending (Guest)</span>
                   </div>
                   <h3 className="text-xl font-bold text-white mb-1">{r.title}</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">

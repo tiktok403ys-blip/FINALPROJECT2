@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 const schema = z.object({
   title: z.string().min(3, "Title too short"),
@@ -33,6 +34,9 @@ export function WriteReviewForm({ casinoId, onSubmitted }: { casinoId: string; o
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { success, error: toastError } = useToast()
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const [successOpen, setSuccessOpen] = useState(false)
+  const [successTitle, setSuccessTitle] = useState("")
+  const [successDesc, setSuccessDesc] = useState("")
 
   const checkAuthStatus = useCallback(async () => {
     const { data } = await supabase.auth.getUser()
@@ -104,7 +108,11 @@ export function WriteReviewForm({ casinoId, onSubmitted }: { casinoId: string; o
         }
         reset()
         onSubmitted?.()
+        // Toast (ringkas) + Dialog (aksi OK)
         success("Thank you!", user ? "Your review is published." : "Your review is submitted and awaiting approval.")
+        setSuccessTitle(user ? "Submit success" : "Submitted successfully")
+        setSuccessDesc(user ? "Thank you – your review has been published." : "Your review has been submitted and is awaiting admin approval.")
+        setSuccessOpen(true)
         router.refresh()
       }
     } catch (e) {
@@ -116,6 +124,18 @@ export function WriteReviewForm({ casinoId, onSubmitted }: { casinoId: string; o
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+        <DialogContent className="bg-black/90 border border-white/10 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">{successTitle}</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-300">{successDesc}</p>
+          <DialogFooter>
+            <Button onClick={() => setSuccessOpen(false)} className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80">OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {error && <div className="text-red-400 text-sm">{error}</div>}
 
       {!isLoggedIn && (
