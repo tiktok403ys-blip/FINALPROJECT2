@@ -11,8 +11,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
+  const [rawId, ...rest] = id.split('-')
+  const articleId = rawId
   const supabase = await createClient()
-  const { data } = await supabase.from("news").select("title, excerpt, image_url").eq("id", id).single()
+  const { data } = await supabase
+    .from("news_articles")
+    .select("title, excerpt, featured_image")
+    .eq("id", articleId)
+    .eq("status", "published")
+    .single()
   const title = data?.title ? `${data.title} - News` : "News"
   const description = data?.excerpt || "Latest casino industry news."
   const toPublicUrl = (val?: string | null) => {
@@ -21,7 +28,7 @@ export async function generateMetadata({ params }: PageProps) {
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
     return base ? `${base}/storage/v1/object/public/${val}` : null
   }
-  const resolvedImage = toPublicUrl(data?.image_url)
+  const resolvedImage = toPublicUrl(data?.featured_image)
   const images = resolvedImage ? [resolvedImage] : []
   const host = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000"
   const canonical = `https://${host}/news/${id}`
@@ -45,8 +52,15 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function NewsDetailPage({ params }: PageProps) {
   const { id } = await params
+  const [rawId, ...rest] = id.split('-')
+  const articleId = rawId
   const supabase = await createClient()
-  const { data: article } = await supabase.from("news").select("*").eq("id", id).eq("published", true).single()
+  const { data: article } = await supabase
+    .from("news_articles")
+    .select("*")
+    .eq("id", articleId)
+    .eq("status", "published")
+    .single()
 
   if (!article) notFound()
 
@@ -86,10 +100,10 @@ export default async function NewsDetailPage({ params }: PageProps) {
           {article.category && <span className="text-[#00ff88]">{article.category}</span>}
         </div>
 
-        {article.image_url && (
+        {article.featured_image && (
           <div className="w-full h-64 sm:h-80 bg-white/5 rounded-xl overflow-hidden border border-white/10 mb-8">
             <Image 
-              src={article.image_url || "/placeholder.svg"} 
+              src={article.featured_image || "/placeholder.svg"} 
               alt={article.title} 
               width={768}
               height={320}

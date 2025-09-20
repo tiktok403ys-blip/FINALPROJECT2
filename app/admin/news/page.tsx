@@ -71,6 +71,8 @@ function NewsContentPage() {
     'Regulations',
     'Technology',
     'Events',
+    'Policy',
+    'Market Analysis',
     'General'
   ]
 
@@ -159,6 +161,13 @@ function NewsContentPage() {
       published_at: article.published_at
     })
     setTagsInput(article.tags.join(', '))
+  }
+
+  const slugify = (title: string) => {
+    return (title || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
   }
 
   const handleDelete = async (id: string) => {
@@ -547,7 +556,17 @@ function NewsContentPage() {
               )}
               <div className="flex justify-between items-center text-xs text-white/50">
                 <span>Created: {new Date(article.created_at).toLocaleDateString()}</span>
-                <span>Updated: {new Date(article.updated_at).toLocaleDateString()}</span>
+                <div className="flex items-center gap-3">
+                  <span>Updated: {new Date(article.updated_at).toLocaleDateString()}</span>
+                  <a
+                    href={`/news/${article.id}-${slugify(article.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#00ff88] hover:underline"
+                  >
+                    View
+                  </a>
+                </div>
               </div>
             </CardContent>
           </Card>

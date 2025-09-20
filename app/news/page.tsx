@@ -18,10 +18,11 @@ export default async function NewsPage() {
   const supabase = await createClient()
 
   const { data: news } = await supabase
-    .from("news")
+    .from("news_articles")
     .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false })
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false, nullsFirst: false })
 
   const categories = [...new Set(news?.map((article) => article.category).filter(Boolean))]
 
