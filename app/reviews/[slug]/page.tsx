@@ -20,6 +20,7 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 import type { Review } from "@/lib/types"
 import { WriteReviewForm } from "@/components/reviews/write-review-form"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { HelpfulVote } from "@/components/reviews/helpful-vote"
 import { ReviewsRealtimeRefresher } from "@/components/reviews/realtime-refresher"
 
@@ -494,7 +495,17 @@ export default async function ReviewsPage({ params }: PageProps) {
               <p className="text-gray-400">Real experiences from verified players ({totalReviews} reviews)</p>
             </div>
             <div className="w-full sm:w-auto">
-              <WriteReviewForm casinoId={casino.id} />
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full sm:w-auto">Write a Review</Button>
+                </DialogTrigger>
+                <DialogContent className="bg-black/90 border border-white/10 max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-white">Write a Review for {casino.name}</DialogTitle>
+                  </DialogHeader>
+                  <WriteReviewForm casinoId={casino.id} onSubmitted={() => {}} />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
