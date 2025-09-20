@@ -100,7 +100,7 @@ export default async function NewsPage() {
                   width={1200}
                   height={540}
                   sizes="(max-width: 640px) 100vw, 768px"
-                  className="w-full h-auto rounded-lg mb-4 sm:mb-6 object-cover"
+                  className="w-full h-auto max-h-44 sm:max-h-none rounded-lg mb-4 sm:mb-6 object-cover"
                   priority
                 />
               )}
@@ -143,7 +143,7 @@ export default async function NewsPage() {
                     width={800}
                     height={450}
                     sizes="(max-width: 640px) 100vw, 50vw"
-                    className="w-full h-auto rounded-md mb-3 object-cover"
+                    className="w-full h-auto max-h-36 sm:max-h-none rounded-md mb-3 object-cover"
                   />
                 )}
                 <div className="flex items-center mb-3">

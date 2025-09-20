@@ -110,15 +110,14 @@ export default async function NewsDetailPage({ params }: PageProps) {
         </div>
 
         {article.featured_image && (
-          <div className="w-full h-48 sm:h-80 bg-white/5 rounded-xl overflow-hidden border border-white/10 mb-6 sm:mb-8">
-            <Image 
-              src={article.featured_image || "/placeholder.svg"} 
-              alt={article.title} 
-              width={768}
-              height={320}
-              className="w-full h-full object-contain bg-black/20" 
-            />
-          </div>
+          <Image
+            src={article.featured_image || "/placeholder.svg"}
+            alt={article.title}
+            width={768}
+            height={320}
+            sizes="(max-width: 640px) 100vw, 768px"
+            className="w-full h-auto rounded-xl mb-6 sm:mb-8 object-contain"
+          />
         )}
 
         {article.excerpt && (
