@@ -18,9 +18,9 @@ export const revalidate = 1800
 export default async function ReviewsPage() {
   const supabase = await createClient()
 
-  // Get casino reviews with casino data
+  // Get latest approved player reviews with casino data
   const { data: reviews } = await supabase
-    .from("casino_reviews")
+    .from("player_reviews")
     .select(`
       *,
       casinos (
@@ -31,14 +31,14 @@ export default async function ReviewsPage() {
         website_url
       )
     `)
-    .eq("is_published", true)
+    .eq("is_approved", true)
     .order("created_at", { ascending: false })
 
   // Get total stats from real data
   const { count: totalReviews } = await supabase
-    .from("casino_reviews")
+    .from("player_reviews")
     .select("*", { count: "exact", head: true })
-    .eq("is_published", true)
+    .eq("is_approved", true)
 
   const { count: totalCasinos } = await supabase.from("casinos").select("*", { count: "exact", head: true })
 
@@ -53,12 +53,7 @@ export default async function ReviewsPage() {
     ? Math.round((reviews.filter((review) => (review.rating || 0) >= 4).length / reviews.length) * 100)
     : 0
 
-  const createSlug = (name: string, id: string) => {
-    return `${id}-${name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")}`
-  }
+  // Slug not required here; detail route uses /casinos/[id]/review
 
   // JSON-LD structured data for SEO
   const jsonLd = {
@@ -241,7 +236,7 @@ export default async function ReviewsPage() {
                     {/* Action Buttons */}
                     <div className="space-y-2">
                       <Button className="bg-[#00ff88] text-black hover:bg-[#00ff88]/80 w-full text-xs sm:text-sm py-2 sm:py-2.5" asChild>
-                        <Link href={`/reviews/${review.casino_id}-${review.casinos?.name?.toLowerCase().replace(/\s+/g, "-")}`}>
+                        <Link href={`/casinos/${review.casino_id}/review`}>
                           Read Full Review
                         </Link>
                       </Button>

@@ -244,10 +244,15 @@ export default async function ReviewsPage({ params }: PageProps) {
       />
       {/* Header with Back Button - Fixed navbar overlap */}
       <div className="pt-28 pb-8">
+        {/* Mobile-only plain back link */}
+        <Link href="/casinos" className="sm:hidden inline-flex items-center gap-2 text-[#00ff88] hover:text-[#00ff88]/80 mb-4 font-semibold text-xs px-4">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Casinos
+        </Link>
         <div className="container mx-auto px-4">
           <Button
             variant="outline"
-            className="border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 mb-8 font-semibold"
+            className="hidden sm:inline-flex border-[#00ff88]/50 text-[#00ff88] bg-transparent hover:bg-[#00ff88]/10 mb-8 font-semibold"
             asChild
           >
             <Link href="/casinos">
