@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Calendar, User, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { Input, Button } from "@/components/ui"
+import RealtimeNewsRefresher from "@/components/realtime-news-refresher"
 import type { News } from "@/lib/types"
 
 export const metadata = {
@@ -28,6 +29,7 @@ export default async function NewsPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <RealtimeNewsRefresher />
       <DynamicPageHero
         pageName="news"
         sectionType="hero"
