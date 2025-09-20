@@ -503,7 +503,7 @@ export default async function ReviewsPage({ params }: PageProps) {
                   <DialogHeader>
                     <DialogTitle className="text-white">Write a Review for {casino.name}</DialogTitle>
                   </DialogHeader>
-                  <WriteReviewForm casinoId={casino.id} onSubmitted={() => {}} />
+                  <WriteReviewForm casinoId={casino.id} />
                 </DialogContent>
               </Dialog>
             </div>
