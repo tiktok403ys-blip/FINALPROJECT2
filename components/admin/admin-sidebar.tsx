@@ -58,7 +58,7 @@ const navigationItems: NavigationItem[] = [
   },
   {
     title: 'Player Reviews',
-    href: '/admin/reviews',
+    href: '/admin/player-reviews',
     icon: MessageSquare
   },
   {
