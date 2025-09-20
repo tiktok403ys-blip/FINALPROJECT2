@@ -77,8 +77,8 @@ export default async function NewsPage() {
 
         <div className="max-w-4xl mx-auto">
           {/* Featured Article */}
-          {news && news.length > 0 && (
-            <GlassCard className="p-8 mb-12 hover:bg-white/10 transition-colors">
+        {news && news.length > 0 && (
+            <GlassCard className="p-5 sm:p-8 mb-8 sm:mb-12 hover:bg-white/10 transition-colors">
               <div className="flex items-center mb-3">
                 <TrendingUp className="w-5 h-5 text-[#00ff88] mr-2" />
                 <span className="text-[#00ff88] text-sm font-medium">Featured</span>
@@ -89,12 +89,12 @@ export default async function NewsPage() {
                   </>
                 )}
               </div>
-              <h2 className="text-2xl font-bold text-white mb-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
                 <Link href={`/news/${news[0].id}`} className="hover:text-[#00ff88] transition-colors">
                   {news[0].title}
                 </Link>
               </h2>
-              <p className="text-gray-400 text-lg mb-6">{news[0].excerpt}</p>
+              <p className="text-gray-400 text-base sm:text-lg mb-4 sm:mb-6">{news[0].excerpt}</p>
               <div className="flex items-center text-sm text-gray-400">
                 <Calendar className="w-4 h-4 mr-1" />
                 <span>{new Date(news[0].created_at).toLocaleDateString()}</span>
@@ -106,9 +106,9 @@ export default async function NewsPage() {
           )}
 
           {/* News Grid */}
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
             {news?.slice(1).map((article: News) => (
-              <GlassCard key={article.id} className="p-6 hover:bg-white/10 transition-colors">
+              <GlassCard key={article.id} className="p-4 sm:p-6 hover:bg-white/10 transition-colors">
                 <div className="flex items-center mb-3">
                   {article.category && (
                     <span className="bg-[#00ff88]/20 text-[#00ff88] px-2 py-1 rounded text-xs font-medium">
@@ -116,12 +116,12 @@ export default async function NewsPage() {
                     </span>
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-white mb-3">
+                <h3 className="text-base sm:text-lg font-bold text-white mb-2 sm:mb-3">
                   <Link href={`/news/${article.id}`} className="hover:text-[#00ff88] transition-colors">
                     {article.title}
                   </Link>
                 </h3>
-                <p className="text-gray-400 mb-4 line-clamp-3">{article.excerpt}</p>
+                <p className="text-gray-400 text-sm sm:text-base mb-3 sm:mb-4 line-clamp-3">{article.excerpt}</p>
                 <div className="flex items-center text-sm text-gray-400">
                   <Calendar className="w-4 h-4 mr-1" />
                   <span>{new Date(article.created_at).toLocaleDateString()}</span>

@@ -74,8 +74,8 @@ export default async function NewsDetailPage({ params }: PageProps) {
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
 
   return (
-    <div className="min-h-screen bg-black pt-24">
-      <div className="container mx-auto px-4 py-16 max-w-3xl">
+    <div className="min-h-screen bg-black pt-20 sm:pt-24">
+      <div className="container mx-auto px-4 py-10 sm:py-16 max-w-3xl">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -101,8 +101,8 @@ export default async function NewsDetailPage({ params }: PageProps) {
           <ArrowLeft className="w-4 h-4" /> Back to News
         </Link>
 
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">{article.title}</h1>
-        <div className="flex items-center text-sm text-gray-400 mb-6">
+        <h1 className="text-2xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">{article.title}</h1>
+        <div className="flex flex-wrap items-center text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6 gap-2">
           <Calendar className="w-4 h-4 mr-1" />
           <span>{new Date(article.created_at).toLocaleDateString()}</span>
           {article.category && <span className="mx-2">•</span>}
@@ -110,7 +110,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
         </div>
 
         {article.featured_image && (
-          <div className="w-full h-64 sm:h-80 bg-white/5 rounded-xl overflow-hidden border border-white/10 mb-8">
+          <div className="w-full h-48 sm:h-80 bg-white/5 rounded-xl overflow-hidden border border-white/10 mb-6 sm:mb-8">
             <Image 
               src={article.featured_image || "/placeholder.svg"} 
               alt={article.title} 
@@ -128,15 +128,15 @@ export default async function NewsDetailPage({ params }: PageProps) {
         )}
 
         {/* Share Buttons */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400">Share:</span>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-xs sm:text-sm text-gray-400">Share:</span>
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Share on WhatsApp"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm"
+              className="inline-flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm"
             >
               <MessageCircle className="w-4 h-4 text-green-400" /> WhatsApp
             </a>
@@ -145,7 +145,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Share on Telegram"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm"
+              className="inline-flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm"
             >
               <Send className="w-4 h-4 text-sky-400" /> Telegram
             </a>
@@ -154,7 +154,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Share on Facebook"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm"
+              className="inline-flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm"
             >
               <Facebook className="w-4 h-4 text-blue-500" /> Facebook
             </a>
